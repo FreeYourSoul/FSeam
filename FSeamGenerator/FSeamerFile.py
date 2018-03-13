@@ -16,7 +16,10 @@ LOCKING_HEAD = "#ifndef FREESOULS___CLASSNAME___HPP \n"\
 LOCKING_FOOTER = "\n#endif\n"
 BASE_HEADER_CODE = "#include "
 
+
 class FSeamerFile:
+
+    # =====Public methods =====
 
     def __init__(self, pathFile):
         self._map = dict()
@@ -29,33 +32,48 @@ class FSeamerFile:
             print(e)
             sys.exit(1)
 
-    # =====Public methods =====
-
     def seamParse(self):
-
         self._codeSeam = self._codeSeam.replace(FILENAME, self._fileName)
-        self._codeSeam += self.extractHeaders()
+        self._codeSeam += self._extractHeaders()
         classes = self._cppHeader.classes
 
         for c in classes:
             className = c
             for encapsulationLevel in classes[c]["methods"]:
                 self._codeSeam += "\n// " + className + " " + encapsulationLevel
-                self._codeSeam += self.extractMethodsFromClass(className, classes[c]["methods"][encapsulationLevel])
+                self._codeSeam += self._extractMethodsFromClass(className,
+                                                                classes[c]["methods"][encapsulationLevel])
             self._codeSeam = self._codeSeam.replace(CLASSNAME, className)
         return self._codeSeam
 
+    def getFSeamGeneratedFileName(self):
+        return self._fileName.replace(".hh", "Mock.cc")
+
+    def getDataStructureContent(self, content):
+        if not content:
+            content = HEADER_INFO
+            content += LOCKING_HEAD
+            content = content.replace(FILENAME, "DataMock.hpp")
+            content = content.replace(CLASSNAME, "DATAMOCK")
+        content += "namespace FSeam {\n"
+        for className, methods in self._map.items():
+            if methods and className not in content:
+                struct = "struct " + className + "Data {\n"
+                for methodName in methods:
+                    struct += methodName + "ReturnValue;\n"
+                content += struct + "\n};\n\n"
+        return content + "}\n" + LOCKING_FOOTER
+
     # =====Privates methods =====
 
-
-    def extractHeaders(self):
+    def _extractHeaders(self):
         fseamerCodeHeaders = "//includes\n"
         for incl in self._cppHeader.includes:
             fseamerCodeHeaders += BASE_HEADER_CODE + incl + "\n"
         fseamerCodeHeaders += "#include <MockData.hpp>\n#include <MockVerifier.hpp>\n"
         return fseamerCodeHeaders
 
-    def extractMethodsFromClass(self, className, methodsData):
+    def _extractMethodsFromClass(self, className, methodsData):
         methods = "\n// Methods Mocked Implementation for class " + className + "\n"
         lstMethodName = list()
 
@@ -80,13 +98,13 @@ class FSeamerFile:
                     signature += ", "
             signature += ")"
 
-            methodContent = self.generateMethodContent(returnType, className, methodsName)
+            methodContent = self._generateMethodContent(returnType, className, methodsName)
             methods += "\n" + signature + "{\n" + methodContent + "\n}\n"
 
         self._map[className] = lstMethodName
         return methods
 
-    def generateMethodContent(self, returnType, className, methodName):
+    def _generateMethodContent(self, returnType, className, methodName):
         additional = ", &data"
         content = "    FSeam::" + className + "Data data;\n"
         returnStatement = "\n    return *data." + methodName + "ReturnValue;"
@@ -102,24 +120,6 @@ class FSeamerFile:
         content += returnStatement
         return content
 
-    def getFSeamGeneratedFileName(self):
-        return self._fileName.replace(".hh", "Mock.cc")
-
-    def getDataStructureContent(self, content):
-        if not content:
-            content = HEADER_INFO
-            content += LOCKING_HEAD
-            content = content.replace(FILENAME, "DataMock.hpp")
-            content = content.replace(CLASSNAME, "DATAMOCK")
-        content += "namespace FSeam {\n"
-        for className, methods in self._map.items():
-            if methods and className not in content:
-                struct = "struct " + className + "Data {\n"
-                for methodName in methods:
-                    struct += methodName + "ReturnValue;\n"
-                content += struct + "\n};\n\n"
-        return content + "}\n" + LOCKING_FOOTER
-
 
 def generateFSeamFiles(filePath, destinationFolder):
     if not str.endswith(filePath, ".hh"):
@@ -131,7 +131,6 @@ def generateFSeamFiles(filePath, destinationFolder):
     fileCreated = open(os.path.normpath(destinationFolder + "/" + fileName), "w")
     fileCreated.write(fileContent)
     fileCreated.close()
-
     print(fg.cyan + "FSeam generated file " + fileName + " at " + os.path.abspath(destinationFolder) + fg.rs)
 
     fileCreatedMockDataPath = os.path.normpath(destinationFolder + "/MockData.hpp")
