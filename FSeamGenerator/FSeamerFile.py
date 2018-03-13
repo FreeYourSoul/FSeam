@@ -9,9 +9,8 @@ CLASSNAME = "__CLASSNAME__"
 HEADER_INFO = "/**\n" \
               " * FSeam generated class for __CLASSNAME__\n" \
               " * Please do not modify\n" \
-              " */\n"
+              " */\n\n"
 BASE_HEADER_CODE = "#include "
-
 
 class FSeamerFile:
 
@@ -28,7 +27,7 @@ class FSeamerFile:
     # =====Public methods =====
 
     def seam(self):
-        self._codeSeam += self._codeSeam.replace(CLASSNAME, self._fileName)
+        self._codeSeam = self._codeSeam.replace(CLASSNAME, self._fileName)
         self._codeSeam += self.extractHeaders()
         classes = self._cppHeader.classes
 
@@ -42,9 +41,10 @@ class FSeamerFile:
     # =====Privates methods =====
 
     def extractHeaders(self):
-        fseamerCodeHeaders = "//includes\n#include <MockData.hpp>\n#include <MockVerifier.hpp>\n"
+        fseamerCodeHeaders = "//includes\n"
         for incl in self._cppHeader.includes:
             fseamerCodeHeaders += BASE_HEADER_CODE + incl + "\n"
+        fseamerCodeHeaders += "#include <MockData.hpp>\n#include <MockVerifier.hpp>\n"
         return fseamerCodeHeaders
 
     def extractMethodsFromClass(self, className, methodsData):
@@ -54,7 +54,7 @@ class FSeamerFile:
             classFullName = methodData["path"]
             returnType = methodData["rtnType"]
             methodsName = methodData["name"]
-            signature = returnType + " " + classFullName + methodsName + "("
+            signature = returnType + " " + classFullName + "::" + methodsName + "("
             parametersType = [t["type"] for t in methodData["parameters"]]
             parametersName = [t["name"] for t in methodData["parameters"]]
 
@@ -66,7 +66,8 @@ class FSeamerFile:
             signature += ")"
             print("signature method->\n%s" % signature)
 
-            methodContent = self.generateMethodContent(returnType, className, methodData["name"])
+
+            methodContent = self.generateMethodContent(returnType, className, methodsName)
 
             methods += "\n" + signature + "{\n" + methodContent + "\n}\n"
 
@@ -74,7 +75,7 @@ class FSeamerFile:
 
     def generateMethodContent(self, returnType, className, methodName):
         additional = ", &data"
-        content = "    FSeam::GatewayData data;\n"
+        content = "    FSeam::" + className + "Data data;\n"
         returnStatement = "\n    return " + methodName + "ReturnValue;"
 
         if 'void' == returnType:
