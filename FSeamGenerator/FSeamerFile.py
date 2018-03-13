@@ -12,7 +12,7 @@ HEADER_INFO = "/**\n" \
               " * Please do not modify\n" \
               " */\n\n"
 LOCKING_HEAD = "#ifndef FREESOULS___CLASSNAME___HPP \n"\
-               "#define FREESOULS___CLASSNAME___HPP\n\n"
+               "#define FREESOULS___CLASSNAME___HPP\n\nusing std;\n\n"
 LOCKING_FOOTER = "\n#endif\n"
 BASE_HEADER_CODE = "#include "
 
@@ -66,7 +66,10 @@ class FSeamerFile:
             returnType = methodData["rtnType"]
             methodsName = methodData["name"]
             if returnType != "void":
-                lstMethodName.append(returnType + " " + methodsName)
+                if "*" in returnType or "share_ptr" in returnType or "unique_ptr" in returnType:
+                    lstMethodName.append(returnType + " " + methodsName)
+                else:
+                    lstMethodName.append(returnType + " *" + methodsName)
             signature = returnType + " " + classFullName + "::" + methodsName + "("
             parametersType = [t["type"] for t in methodData["parameters"]]
             parametersName = [t["name"] for t in methodData["parameters"]]
@@ -77,7 +80,6 @@ class FSeamerFile:
                     signature += ", "
             signature += ")"
 
-            print("signature method->\n%s" % signature)
             methodContent = self.generateMethodContent(returnType, className, methodsName)
             methods += "\n" + signature + "{\n" + methodContent + "\n}\n"
 
@@ -87,7 +89,7 @@ class FSeamerFile:
     def generateMethodContent(self, returnType, className, methodName):
         additional = ", &data"
         content = "    FSeam::" + className + "Data data;\n"
-        returnStatement = "\n    return " + methodName + "ReturnValue;"
+        returnStatement = "\n    return *data." + methodName + "ReturnValue;"
 
         if 'void' == returnType:
             returnStatement = ""
@@ -133,9 +135,11 @@ def generateFSeamFiles(filePath, destinationFolder):
     print(fg.cyan + "FSeam generated file " + fileName + " at " + os.path.abspath(destinationFolder) + fg.rs)
 
     fileCreatedMockDataPath = os.path.normpath(destinationFolder + "/MockData.hpp")
-    fileCreatedMockData = open(fileCreatedMockDataPath, "r")
-    fileCreatedMockDataContent = fileCreatedMockData.read().replace(LOCKING_FOOTER, "")
-    fileCreatedMockData.close()
+    fileCreatedMockDataContent = ""
+    if os.path.exists(fileCreatedMockDataPath):
+        fileCreatedMockData = open(fileCreatedMockDataPath, "r")
+        fileCreatedMockDataContent = fileCreatedMockData.read().replace(LOCKING_FOOTER, "")
+        fileCreatedMockData.close()
     fileCreatedMockData = open(fileCreatedMockDataPath, "w")
     fileCreatedMockData.write(fSeamerFile.getDataStructureContent(fileCreatedMockDataContent))
     fileCreatedMockData.close()
