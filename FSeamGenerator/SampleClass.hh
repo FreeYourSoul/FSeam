@@ -51,6 +51,7 @@ namespace Alpha
         AlphaClass();
 
         void alphaMethod();
+        int alphaMethod2()
 
         string alphaString;
     };
@@ -61,6 +62,8 @@ namespace Alpha
         {
         public:
             OmegaClass();
+
+            const std::string &omegaString();
 
             string omegaString;
         };

@@ -1,5 +1,5 @@
 #!/usr/bin/python
 
-from FSeamGenerator import FSeamerFile
+import FSeamerFile
 
-FSeamerFile.generateFSeamFile("SampleClass.hh", ".")
+FSeamerFile.generateFSeamFiles("SampleClass.hh", ".")
