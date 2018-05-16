@@ -115,8 +115,8 @@ class FSeamerFile:
             content = ""
 
         content += "    FSeam::MockVerifier::instance().getMock(this)->invokeDupedMethod(\"" + className + \
-                   "\", __FUNCTION__" + additional + ");\n"
-        content += "    FSeam::MockVerifier::instance().getMock(this)->methodCall(\"" + className + "\", __FUNCTION__);"
+                   "\", __func__" + additional + ");\n"
+        content += "    FSeam::MockVerifier::instance().getMock(this)->methodCall(\"" + className + "\", __func__);"
         content += returnStatement
         return content
 
