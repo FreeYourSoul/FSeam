@@ -29,6 +29,8 @@ public:
      */
     void meth3(const string & victory, vector<string> & v2);
 
+    void methodImpl() {}
+
     /**********************************
      * Method 4 description
      *
