@@ -39,6 +39,9 @@ install(TARGETS fseam fseam-static
 install(FILES ${FSEAM_HEADERS}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
+# GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
+set(FSEAM_CMAKECONFIG_INSTALL_DIR "share/cmake/${PROJECT_NAME}" CACHE STRING "install path for FSeamConfig.cmake")
+
 export(EXPORT ${PROJECT_NAME}-targets
      FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
 
@@ -52,11 +55,17 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Conf
 
 install(EXPORT ${PROJECT_NAME}-targets
         FILE ${PROJECT_NAME}Targets.cmake
-        DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
+        DESTINATION ${FSEAM_CMAKECONFIG_INSTALL_DIR})
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-        DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
+        DESTINATION ${FSEAM_CMAKECONFIG_INSTALL_DIR})
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FSeamModule.cmake
+        DESTINATION ${FSEAM_CMAKECONFIG_INSTALL_DIR})
 
-project(FSeam)
+# option(FSEAM_BUILD_TESTS "Whether or not to build the tests" ON)
+# if (FSEAM_BUILD_TESTS)
+#     enable_testing()
+#     add_subdirectory(tests)
+# endif()
 

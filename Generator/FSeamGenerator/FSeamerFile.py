@@ -47,7 +47,7 @@ class FSeamerFile:
         return self._codeSeam
 
     def getFSeamGeneratedFileName(self):
-        return self._fileName.replace(".hh", "Mock.cc")
+        return self._fileName.replace(".hh", ".fseam.cc")
 
     def getDataStructureContent(self, content):
         if not content:
@@ -80,26 +80,27 @@ class FSeamerFile:
         if className in self._map:
             lstMethodName = self._map[className]
         for methodData in methodsData:
-            classFullName = methodData["path"]
-            returnType = methodData["rtnType"]
-            methodsName = methodData["name"]
-            if returnType != "void":
-                if "*" in returnType or "share_ptr" in returnType or "unique_ptr" in returnType:
-                    lstMethodName.append(returnType + " " + methodsName)
-                else:
-                    lstMethodName.append(returnType + " *" + methodsName)
-            signature = returnType + " " + classFullName + "::" + methodsName + "("
-            parametersType = [t["type"] for t in methodData["parameters"]]
-            parametersName = [t["name"] for t in methodData["parameters"]]
+            if not methodData["defined"]:
+                classFullName = methodData["path"]
+                returnType = methodData["rtnType"]
+                methodsName = methodData["name"]
+                if returnType != "void":
+                    if "*" in returnType or "share_ptr" in returnType or "unique_ptr" in returnType:
+                        lstMethodName.append(returnType + " " + methodsName)
+                    else:
+                        lstMethodName.append(returnType + " *" + methodsName)
+                signature = returnType + " " + classFullName + "::" + methodsName + "("
+                parametersType = [t["type"] for t in methodData["parameters"]]
+                parametersName = [t["name"] for t in methodData["parameters"]]
 
-            for i in range(len(parametersType)):
-                signature += parametersType[i] + " " + parametersName[i]
-                if i == 0 and len(parametersType) > 1:
-                    signature += ", "
-            signature += ")"
+                for i in range(len(parametersType)):
+                    signature += parametersType[i] + " " + parametersName[i]
+                    if i == 0 and len(parametersType) > 1:
+                        signature += ", "
+                signature += ")"
 
-            methodContent = self._generateMethodContent(returnType, className, methodsName)
-            methods += "\n" + signature + "{\n" + methodContent + "\n}\n"
+                methodContent = self._generateMethodContent(returnType, className, methodsName)
+                methods += "\n" + signature + "{\n" + methodContent + "\n}\n"
 
         self._map[className] = lstMethodName
         return methods
