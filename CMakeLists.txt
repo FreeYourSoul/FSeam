@@ -1,0 +1,62 @@
+cmake_minimum_required(VERSION 3.0.0)
+
+# The version number.
+set (VERSION_MAJOR 1)
+set (VERSION_MINOR 0)
+set (VERSION_PATCH 0)
+set (FSEAM_VERSION ${VERSION_MAJOR}${VERSION_MINOR}${VERSION_PATCH})
+
+project(FSeam VERSION ${FSEAM_VERSION})
+
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+# configure a header file to pass some of the CMake settings
+# to the source code
+configure_file (
+        "${CMAKE_CURRENT_SOURCE_DIR}/FSeam/Versioner.hh.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/FSeam/Versioner.hh")
+
+message(STATUS "FSeam v${FSEAM_VERSION}")
+
+set(FSEAM_HEADERS
+        ${CMAKE_CURRENT_SOURCE_DIR}/FSeam/MockVerifier.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/FSeam/Versioner.hh)
+
+foreach (target fseam fseam-static)
+  add_library(${target} INTERFACE)
+  target_include_directories(${target} INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/FSeam/>
+                                                 $<INSTALL_INTERFACE:include>)
+endforeach()
+
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+install(TARGETS fseam fseam-static
+        EXPORT ${PROJECT_NAME}-targets)
+
+install(FILES ${FSEAM_HEADERS}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+export(EXPORT ${PROJECT_NAME}-targets
+     FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
+
+configure_package_config_file(${PROJECT_NAME}Config.cmake.in
+                        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+                        INSTALL_DESTINATION ${FSEAM_CMAKECONFIG_INSTALL_DIR})
+
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+                        VERSION ${FSEAM_VERSION}                        
+                        COMPATIBILITY AnyNewerVersion)
+
+install(EXPORT ${PROJECT_NAME}-targets
+        FILE ${PROJECT_NAME}Targets.cmake
+        DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+        DESTINATION ${CPPZMQ_CMAKECONFIG_INSTALL_DIR})
+
+project(FSeam)
+

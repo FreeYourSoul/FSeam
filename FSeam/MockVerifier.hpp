@@ -6,7 +6,6 @@
 #define FREESOULS_MOCKVERIFIER_HH
 
 #include <string>
-#include <FysBus.hh>
 #include <functional>
 #include <map>
 
