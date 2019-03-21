@@ -24,6 +24,11 @@ set(FSEAM_HEADERS
         ${CMAKE_CURRENT_SOURCE_DIR}/FSeam/MockVerifier.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/FSeam/Versioner.hh)
 
+set(FSEAM_GENERATOR_PYTH
+        ${CMAKE_CURRENT_SOURCE_DIR}/Generator/FSeamerFile.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/Generator/CppHeaderParser.py)
+        
+
 foreach (target fseam fseam-static)
   add_library(${target} INTERFACE)
   target_include_directories(${target} INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/FSeam/>
@@ -36,8 +41,8 @@ include(CMakePackageConfigHelpers)
 install(TARGETS fseam fseam-static
         EXPORT ${PROJECT_NAME}-targets)
 
-install(FILES ${FSEAM_HEADERS}
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${FSEAM_HEADERS} TYPE INCLUDE)
+install(PROGRAMS ${FSEAM_GENERATOR_PYTH} TYPE BIN)
 
 # GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
 set(FSEAM_CMAKECONFIG_INSTALL_DIR "share/cmake/${PROJECT_NAME}" CACHE STRING "install path for FSeamConfig.cmake")
