@@ -25,6 +25,9 @@ class FSeamerFile:
     # =====Public methods =====
 
     def __init__(self, pathFile):
+        """
+        :param pathFile: cpp header file that will be parsed at the "seamParse" call
+        """
         self.mapClassMethods = dict()
         self.codeSeam = HEADER_INFO
         self.headerPath = os.path.normpath(pathFile)
@@ -37,6 +40,11 @@ class FSeamerFile:
             sys.exit(1)
 
     def seamParse(self):
+        """
+        Parse the header file and return the cpp file corresponding to the FSeam mock implementation of the given
+        header file
+        :return: FSeam cpp content to be filed into a file
+        """
         self.codeSeam = self.codeSeam.replace(FILENAME, self.fileName)
         self.codeSeam += self._extractHeaders()
         _classes = self._cppHeader.classes
@@ -49,6 +57,13 @@ class FSeamerFile:
         return self.codeSeam
 
     def isSeamFileUpToDate(self, fileFSeamPath):
+        """
+        Check if the newly created file (the FSeam mock file) has been updated sooner than the header it is originated
+        from
+        :param fileFSeamPath: path of the FSeam file
+        :return: True if the file given as parameter is more up to date than the initial header file used for its
+                 generation
+        """
         if not os.path.exists(fileFSeamPath):
             return False
         fileMockedTime = os.stat(fileFSeamPath).st_mtime
@@ -56,9 +71,27 @@ class FSeamerFile:
         return fileMockedTime > fileToMockTime
 
     def getFSeamGeneratedFileName(self):
-        return self.fileName.replace(".hh", ".fseam.cc")
+        """
+        :return: name of the file to generate: <headerFileNameWithoutExtension>.fseam.cc
+        """
+        return self.fileName.replace(".hh", ".fseam.cc").replace("hpp", "fseam.cc")
 
-    def getDataStructureContent(self, content):
+    def generateDataStructureContent(self, content):
+        """
+        Generate a MockData.hpp file that contains:
+        - DataModel structures used by FSeam in order to track the number of call made for each method,
+                    the dupe made on those method, the arguments used when called, the return value and so on...
+        - Helpers   some helper variable to be used by the client of FSeam in test, in order to not misspell methods
+                    names
+        - Internals Some internals helper used by FSeam in order to work properly (template specification to get naming
+                    of the mocked class)
+
+        If no content is provided as argument, a brand new file is generated, if a content is provided. The data for the
+        each method re-made are overridden by the new one.
+
+        :param content: content of the current MockData.hpp file (if any)
+        :return: Content of the MockData.hpp file
+        """
         if not content or len(content) < 10:
             content = HEADER_INFO.replace(FILENAME, "DataMock.hpp")
             content += LOCKING_HEAD.replace(CLASSNAME, "DATAMOCK")
@@ -70,8 +103,8 @@ class FSeamerFile:
             _helperMethod = "// Methods Helper\nnamespace " + className + " {\n"
             for methodName in methods:
                 _struct += self._extractDataStructMethod(methodName)
-                _helperMethod += INDENT + "using " + methodName.upper() + " = \"" + methodName + "\";\n"
-            content += _struct + "\n};\n" + _helperMethod + "\n}\n"
+                _helperMethod += INDENT + "static const std::string " + methodName.upper() + " = \"" + methodName + "\";\n"
+            content += _struct + "};\n" + _helperMethod + "\n}\n"
             content += "// NameTypeTraits\ntemplate <> struct TypeParseTraits {\n" + INDENT + "using ClassName = \"" + className + "\";\n}"
             content += " // End of DataStructure" + className + "\n\n\n"
         content += "}\n"
@@ -79,13 +112,6 @@ class FSeamerFile:
         return content + LOCKING_FOOTER
 
     # =====Privates methods =====
-
-    def _clearDataStructureData(self, content, className):
-        indexBegin = content.find("\nstruct " + className + "Data {\n")
-        indexEnd = content.find("} // End of DataStructure" + className) + len("\n// End of DataStructure" + className)
-        if indexBegin > 0 and indexEnd > len("\n// End of DataStructure" + className) + 1:
-            content = content[0: indexBegin] + content[indexEnd + 1:]
-        return content
 
     def _extractHeaders(self):
         _fseamerCodeHeaders = "// includes\n"
@@ -143,7 +169,8 @@ class FSeamerFile:
         self.mapClassMethods[className] = _lstMethodName
         return _methods
 
-    def _generateMethodContent(self, returnType, className, methodName):
+    @staticmethod
+    def _generateMethodContent(returnType, className, methodName):
         _content = INDENT + "FSeam::" + className + "Data data;\n"
         _additional = ", &data"
         _returnStatement = INDENT + "return *data." + methodName + "ReturnValue;"
@@ -160,9 +187,27 @@ class FSeamerFile:
         _content += _returnStatement
         return _content
 
+    @staticmethod
+    def _clearDataStructureData(content, className):
+        indexBegin = content.find("\nstruct " + className + "Data {\n")
+        indexEnd = content.find("} // End of DataStructure" + className) + len("\n// End of DataStructure" + className)
+        if indexBegin > 0 and indexEnd > len("\n// End of DataStructure" + className) + 1:
+            content = content[0: indexBegin] + content[indexEnd + 1:]
+        return content
 
-# API function
+
 def generateFSeamFile(filePath, destinationFolder, forceGeneration=False):
+    """
+    Client exposed method, will create the FSeam mock file and fill them with the content provided by the FSeam parser
+
+    :param filePath: path of the cpp header file to parse in order to generate the seam mock
+    :param destinationFolder: folder in which the generated folder will be created
+    :param forceGeneration: if there are no need to generate the FSeam mock (mock, apparently, up to date) this flag
+                            make it able to bypass those check and to generate brand new mock anyway (the MockData.hpp
+                            won't be deleted, the usual process of removing only the part re-generated will stays as is)
+                            by default, this flag is set to False
+    :return: no return
+    """
     if not str.endswith(filePath, ".hh") and not str.endswith(filePath, ".hpp"):
         raise NameError("Error file " + filePath + " is not a .hh file")
 
@@ -183,15 +228,14 @@ def generateFSeamFile(filePath, destinationFolder, forceGeneration=False):
         with open(_fileCreatedMockDataPath, "r") as _fileCreatedMockData:
             _fileCreatedMockDataContent = _fileCreatedMockData.read().replace(LOCKING_FOOTER, "")
     with open(_fileCreatedMockDataPath, "w") as _fileCreatedMockData:
-        _fileCreatedMockData.write(_fSeamerFile.getDataStructureContent(_fileCreatedMockDataContent))
+        _fileCreatedMockData.write(_fSeamerFile.generateDataStructureContent(_fileCreatedMockDataContent))
     print(fg.cyan + "FSeam generated file MockData.hpp at " + os.path.abspath(destinationFolder) + fg.rs)
 
 
 if __name__ == '__main__':
     _args = sys.argv[1:]
     if len(_args) < 2:
-        print(fg.red + "Error missing argument for generation" + fg.rs)
-        exit(1)
+        raise NameError("Error missing argument for generation")
     _forceGeneration = False
     if len(_args) > 2:
         _forceGeneration = _args[2]
