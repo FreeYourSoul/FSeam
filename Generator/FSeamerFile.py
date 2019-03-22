@@ -2,6 +2,8 @@
 import CppHeaderParser
 import os
 import ntpath
+import time
+import datetime
 import sys
 from sty import fg
 
@@ -11,7 +13,7 @@ HEADER_INFO = "/**\n" \
               " * FSeam generated class for __FILENAME__\n" \
               " * Please do not modify\n" \
               " */\n\n"
-LOCKING_HEAD = "#ifndef FREESOULS___CLASSNAME___HPP \n"\
+LOCKING_HEAD = "#ifndef FREESOULS___CLASSNAME___HPP \n" \
                "#define FREESOULS___CLASSNAME___HPP\n\nusing std;\n\n"
 LOCKING_FOOTER = "\n#endif\n"
 BASE_HEADER_CODE = "#include "
@@ -45,6 +47,13 @@ class FSeamerFile:
                                                                _classes[c]["methods"][encapsulationLevel])
             self.codeSeam = self.codeSeam.replace(CLASSNAME, _className)
         return self.codeSeam
+
+    def isSeamFileUpToDate(self, fileFSeamPath):
+        if not os.path.exists(fileFSeamPath):
+            return False
+        fileMockedTime = os.stat(fileFSeamPath).st_mtime
+        fileToMockTime = os.stat(self.headerPath).st_mtime
+        return fileMockedTime > fileToMockTime
 
     def getFSeamGeneratedFileName(self):
         return self.fileName.replace(".hh", ".fseam.cc")
@@ -118,7 +127,7 @@ class FSeamerFile:
             _content = ""
 
         _content += "    FSeam::MockVerifier::instance().getMock(this)->invokeDupedMethod(\"" + className + \
-                   "\", __func__" + _additional + ");\n"
+                    "\", __func__" + _additional + ");\n"
         _content += "    FSeam::MockVerifier::instance().getMock(this)->methodCall(\"" + className + "\", __func__);"
         _content += _returnStatement
         return _content
@@ -126,13 +135,18 @@ class FSeamerFile:
 
 # API function
 def generateFSeamFiles(filePath, destinationFolder):
-    if not str.endswith(filePath, ".hh"):
+    if not str.endswith(filePath, ".hh") and not str.endswith(filePath, ".hpp"):
         raise NameError("Error file " + filePath + " is not a .hh file")
 
     _fSeamerFile = FSeamerFile(filePath)
     _fileContent = _fSeamerFile.seamParse()
     _fileName = _fSeamerFile.getFSeamGeneratedFileName()
-    _fileCreated = open(os.path.normpath(destinationFolder + "/" + _fileName), "w")
+    _fileFSeamPath = os.path.normpath(destinationFolder + "/" + _fileName)
+    if _fSeamerFile.isSeamFileUpToDate(_fileFSeamPath):
+        print (fg.yellow + "FSeam file is already generated at path " + _fileFSeamPath + fg.rs)
+        return
+
+    _fileCreated = open(_fileFSeamPath, "w")
     _fileCreated.write(_fileContent)
     _fileCreated.close()
     print(fg.cyan + "FSeam generated file " + _fileName + " at " + os.path.abspath(destinationFolder) + fg.rs)
@@ -147,4 +161,3 @@ def generateFSeamFiles(filePath, destinationFolder):
     _fileCreatedMockData.write(_fSeamerFile.getDataStructureContent(_fileCreatedMockDataContent))
     _fileCreatedMockData.close()
     print(fg.cyan + "FSeam generated file MockData.hpp at " + os.path.abspath(destinationFolder) + fg.rs)
-
