@@ -7,6 +7,8 @@ import datetime
 import sys
 from sty import fg
 
+INDENT = "    "
+INDENT2 = INDENT + INDENT
 FILENAME = "__FILENAME__"
 CLASSNAME = "__CLASSNAME__"
 HEADER_INFO = "/**\n" \
@@ -78,7 +80,7 @@ class FSeamerFile:
     # =====Privates methods =====
 
     def _extractHeaders(self):
-        _fseamerCodeHeaders = "//includes\n"
+        _fseamerCodeHeaders = "// includes\n"
         for incl in self._cppHeader.includes:
             _fseamerCodeHeaders += BASE_HEADER_CODE + incl + "\n"
         _fseamerCodeHeaders += "#include <MockData.hpp>\n#include <MockVerifier.hpp>\n"
@@ -90,15 +92,15 @@ class FSeamerFile:
             _paramType = param["type"]
             _paramName = param["name"]
             if "*" in _returnType or "shared_ptr" in _returnType or "unique_ptr" in _returnType:
-                _methodData += "    " + _paramType + " " + _paramName + "ParamValue;\n"
+                _methodData += INDENT + _paramType + " " + _paramName + "ParamValue;\n"
             else:
-                _methodData += "    " + _paramType + " *" + _paramName + "ParamValue;\n"
+                _methodData += INDENT+ _paramType + " *" + _paramName + "ParamValue;\n"
         _returnType = self.functionSignatureMapping[methodName]["rtnType"]
         if _returnType != "void":
             if "*" in _returnType or "shared_ptr" in _returnType or "unique_ptr" in _returnType:
-                _methodData += "    " + _returnType + " " + methodName + "ReturnValue;\n"
+                _methodData += INDENT + _returnType + " " + methodName + "ReturnValue;\n"
             else:
-                _methodData += "    " + _returnType + " *" + methodName + "ReturnValue;\n"
+                _methodData += INDENT + _returnType + " *" + methodName + "ReturnValue;\n"
         return _methodData
 
     def _registerMethodIntoMethodSignatureMap(self, name, retType, params):
@@ -127,25 +129,28 @@ class FSeamerFile:
                     if i == 0 and len(_parametersType) > 1:
                         _signature += ", "
                 _signature += ")"
-
                 methodContent = self._generateMethodContent(_returnType, className, _methodsName)
                 _methods += "\n" + _signature + " {\n" + methodContent + "\n}\n"
+                _methods += "// Methods Helper\nnamespace " +  className + " {\n" + INDENT +"using " + _methodsName.uppercase() + " = \"" + _methodsName + "\";\n}\n\n"
         
         #rename mapClassMethods
         self.map[className] = _lstMethodName
         return _methods
 
     def _generateMethodContent(self, returnType, className, methodName):
-        _content = "    FSeam::" + className + "Data data;\n"
+        _content = INDENT + "FSeam::" + className + "Data data;\n"
         _additional = ", &data"
-        _returnStatement = "    return *data." + methodName + "ReturnValue;"
+        _returnStatement = INDENT + "return *data." + methodName + "ReturnValue;"
 
         if 'void' == returnType:
             _returnStatement = ""
             _additional = ""
-            _content = ""            
-        _content += "    FSeam::MockVerifier::instance().getMock(this)->invokeDupedMethod(__func__" + _additional + ");\n"
-        _content += "    FSeam::MockVerifier::instance().getMock(this)->methodCall(__func__, std::any(data));\n"
+            _content = ""
+        _content += INDENT + "auto *mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n" 
+        _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this) :\n" 
+        _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock<" + className + ">();\n\n"
+        _content += INDENT + "mockVerifier->invokeDupedMethod(__func__" + _additional + ");\n"
+        _content += INDENT + "mockVerifier->methodCall(__func__, std::any(data));\n"
         _content += _returnStatement
         return _content
 

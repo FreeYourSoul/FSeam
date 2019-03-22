@@ -1,5 +1,8 @@
 set(FSEAM_GENERATOR_DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/fseam)
 
+option(FSEAM_FORCE_GENERATION "Force the generation of the file " ON)
+option(FSEAM_CLEANUP_DATA "Cleanup the data file  " OFF)
+
 function (generateFSeamMock fileToMockName)
 
     set (FSeamMockName ${fileToMockName}.fseam.cpp)
