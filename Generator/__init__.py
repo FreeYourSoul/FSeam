@@ -2,4 +2,4 @@
 
 import FSeamerFile
 
-FSeamerFile.generateFSeamFile("SampleClass.hh", ".")
+FSeamerFile.generateFSeamFile("SampleClass.hh", ".", True)

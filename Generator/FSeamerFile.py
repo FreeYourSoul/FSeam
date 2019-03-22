@@ -2,8 +2,7 @@
 import CppHeaderParser
 import os
 import ntpath
-import time
-import datetime
+import re
 import sys
 from sty import fg
 
@@ -26,7 +25,7 @@ class FSeamerFile:
     # =====Public methods =====
 
     def __init__(self, pathFile):
-        self.map = dict()
+        self.mapClassMethods = dict()
         self.codeSeam = HEADER_INFO
         self.headerPath = os.path.normpath(pathFile)
         self.fileName = ntpath.basename(self.headerPath)
@@ -60,24 +59,33 @@ class FSeamerFile:
         return self.fileName.replace(".hh", ".fseam.cc")
 
     def getDataStructureContent(self, content):
-        if not content:
-            content = HEADER_INFO
-            content += LOCKING_HEAD
-            content = content.replace(FILENAME, "DataMock.hpp")
-            content = content.replace(CLASSNAME, "DATAMOCK")
+        if not content or len(content) < 10:
+            content = HEADER_INFO.replace(FILENAME, "DataMock.hpp")
+            content += LOCKING_HEAD.replace(CLASSNAME, "DATAMOCK")
         content += "namespace FSeam {\n"
-        for className, methods in self.map.items():
-            if methods and className not in content:
-                _struct = "struct " + className + "Data {\n"
-                for methodName in methods:
-                    _struct += self._extractDataStructMethod(methodName)                    
-                content += _struct + "\n};\n"
-                content += "template <> struct TypeParseTraits { using ClassName = \"" + className + "\";}\n"
+        for className, methods in self.mapClassMethods.items():
+            if methods or className in content:
+                content = self._clearDataStructureData(content, className)
+            _struct = "\nstruct " + className + "Data {\n"
+            _helperMethod = "// Methods Helper\nnamespace " + className + " {\n"
+            for methodName in methods:
+                _struct += self._extractDataStructMethod(methodName)
+                _helperMethod += INDENT + "using " + methodName.upper() + " = \"" + methodName + "\";\n"
+            content += _struct + "\n};\n" + _helperMethod + "\n}\n"
+            content += "// NameTypeTraits\ntemplate <> struct TypeParseTraits {\n" + INDENT + "using ClassName = \"" + className + "\";\n}"
+            content += " // End of DataStructure" + className + "\n\n\n"
         content += "}\n"
-        content.replace("namespace FSeam {\n}\n", "")
+        content = re.sub("namespace FSeam {[\n ]+}\n", "", content)
         return content + LOCKING_FOOTER
 
     # =====Privates methods =====
+
+    def _clearDataStructureData(self, content, className):
+        indexBegin = content.find("\nstruct " + className + "Data {\n")
+        indexEnd = content.find("} // End of DataStructure" + className) + len("\n// End of DataStructure" + className)
+        if indexBegin > 0 and indexEnd > len("\n// End of DataStructure" + className) + 1:
+            content = content[0: indexBegin] + content[indexEnd + 1:]
+        return content
 
     def _extractHeaders(self):
         _fseamerCodeHeaders = "// includes\n"
@@ -87,33 +95,33 @@ class FSeamerFile:
         return _fseamerCodeHeaders
 
     def _extractDataStructMethod(self, methodName):
-        _methodData = ""
+        _methodData = INDENT + "/**\n" + INDENT + " * method metadata : " + methodName + "\n" + INDENT + "**/\n"
         for param in self.functionSignatureMapping[methodName]["params"]:
             _paramType = param["type"]
             _paramName = param["name"]
-            if "*" in _returnType or "shared_ptr" in _returnType or "unique_ptr" in _returnType:
+            if "*" in _paramType or "shared_ptr" in _paramType or "unique_ptr" in _paramType:
                 _methodData += INDENT + _paramType + " " + _paramName + "ParamValue;\n"
             else:
-                _methodData += INDENT+ _paramType + " *" + _paramName + "ParamValue;\n"
+                _methodData += INDENT + _paramType + " *" + _paramName + "ParamValue;\n"
         _returnType = self.functionSignatureMapping[methodName]["rtnType"]
         if _returnType != "void":
             if "*" in _returnType or "shared_ptr" in _returnType or "unique_ptr" in _returnType:
-                _methodData += INDENT + _returnType + " " + methodName + "ReturnValue;\n"
+                _methodData += INDENT + _returnType + " " + methodName + "ReturnValue;\n\n"
             else:
-                _methodData += INDENT + _returnType + " *" + methodName + "ReturnValue;\n"
+                _methodData += INDENT + _returnType + " *" + methodName + "ReturnValue;\n\n"
         return _methodData
 
     def _registerMethodIntoMethodSignatureMap(self, name, retType, params):
         self.functionSignatureMapping[name] = {}
         self.functionSignatureMapping[name]["rtnType"] = retType
         self.functionSignatureMapping[name]["params"] = params
-        
+
     def _extractMethodsFromClass(self, className, methodsData):
         _methods = "\n// Methods Mocked Implementation for class " + className + "\n"
         _lstMethodName = list()
 
-        if className in self.map:
-            _lstMethodName = self.map[className]
+        if className in self.mapClassMethods:
+            _lstMethodName = self.mapClassMethods[className]
         for methodData in methodsData:
             if not methodData["defined"]:
                 _classFullName = methodData["path"]
@@ -131,10 +139,8 @@ class FSeamerFile:
                 _signature += ")"
                 methodContent = self._generateMethodContent(_returnType, className, _methodsName)
                 _methods += "\n" + _signature + " {\n" + methodContent + "\n}\n"
-                _methods += "// Methods Helper\nnamespace " +  className + " {\n" + INDENT +"using " + _methodsName.uppercase() + " = \"" + _methodsName + "\";\n}\n\n"
-        
-        #rename mapClassMethods
-        self.map[className] = _lstMethodName
+
+        self.mapClassMethods[className] = _lstMethodName
         return _methods
 
     def _generateMethodContent(self, returnType, className, methodName):
@@ -146,8 +152,8 @@ class FSeamerFile:
             _returnStatement = ""
             _additional = ""
             _content = ""
-        _content += INDENT + "auto *mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n" 
-        _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this) :\n" 
+        _content += INDENT + "auto *mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
+        _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this) :\n"
         _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock(" + className + ");\n\n"
         _content += INDENT + "mockVerifier->invokeDupedMethod(__func__" + _additional + ");\n"
         _content += INDENT + "mockVerifier->methodCall(__func__, std::any(data));\n"
