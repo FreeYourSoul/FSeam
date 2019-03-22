@@ -134,30 +134,37 @@ class FSeamerFile:
 
 
 # API function
-def generateFSeamFiles(filePath, destinationFolder):
+def generateFSeamFiles(filePath, destinationFolder, forceGeneration=False):
     if not str.endswith(filePath, ".hh") and not str.endswith(filePath, ".hpp"):
         raise NameError("Error file " + filePath + " is not a .hh file")
 
     _fSeamerFile = FSeamerFile(filePath)
-    _fileContent = _fSeamerFile.seamParse()
     _fileName = _fSeamerFile.getFSeamGeneratedFileName()
     _fileFSeamPath = os.path.normpath(destinationFolder + "/" + _fileName)
-    if _fSeamerFile.isSeamFileUpToDate(_fileFSeamPath):
-        print (fg.yellow + "FSeam file is already generated at path " + _fileFSeamPath + fg.rs)
+    if not forceGeneration and _fSeamerFile.isSeamFileUpToDate(_fileFSeamPath):
+        print(fg.yellow + "FSeam file is already generated at path " + _fileFSeamPath + fg.rs)
         return
 
-    _fileCreated = open(_fileFSeamPath, "w")
-    _fileCreated.write(_fileContent)
-    _fileCreated.close()
+    with open(_fileFSeamPath, "w") as _fileCreated:
+        _fileCreated.write(_fSeamerFile.seamParse())
     print(fg.cyan + "FSeam generated file " + _fileName + " at " + os.path.abspath(destinationFolder) + fg.rs)
 
     _fileCreatedMockDataPath = os.path.normpath(destinationFolder + "/MockData.hpp")
     _fileCreatedMockDataContent = ""
     if os.path.exists(_fileCreatedMockDataPath):
-        _fileCreatedMockData = open(_fileCreatedMockDataPath, "r")
-        _fileCreatedMockDataContent = _fileCreatedMockData.read().replace(LOCKING_FOOTER, "")
-        _fileCreatedMockData.close()
-    _fileCreatedMockData = open(_fileCreatedMockDataPath, "w")
-    _fileCreatedMockData.write(_fSeamerFile.getDataStructureContent(_fileCreatedMockDataContent))
-    _fileCreatedMockData.close()
+        with open(_fileCreatedMockDataPath, "r") as _fileCreatedMockData:
+            _fileCreatedMockDataContent = _fileCreatedMockData.read().replace(LOCKING_FOOTER, "")
+    with open(_fileCreatedMockDataPath, "w") as _fileCreatedMockData:
+        _fileCreatedMockData.write(_fSeamerFile.getDataStructureContent(_fileCreatedMockDataContent))
     print(fg.cyan + "FSeam generated file MockData.hpp at " + os.path.abspath(destinationFolder) + fg.rs)
+
+
+if __name__ == '__main__':
+    _args = sys.argv[1:]
+    if len(_args) < 2:
+        print(fg.red + "Error missing argument for generation" + fg.rs)
+        exit(1)
+    _forceGeneration = False
+    if len(_args) > 2:
+        _forceGeneration = _args[2]
+    generateFSeamFiles(_args[0], _args[1], _forceGeneration)
