@@ -15,7 +15,7 @@ HEADER_INFO = "/**\n" \
               " * Please do not modify\n" \
               " */\n\n"
 LOCKING_HEAD = "#ifndef FREESOULS___CLASSNAME___HPP \n" \
-               "#define FREESOULS___CLASSNAME___HPP\n\nusing std;\n\n"
+               "#define FREESOULS___CLASSNAME___HPP\n\n"
 LOCKING_FOOTER = "\n#endif\n"
 BASE_HEADER_CODE = "#include "
 
@@ -95,6 +95,9 @@ class FSeamerFile:
         if not content or len(content) < 10:
             content = HEADER_INFO.replace(FILENAME, "DataMock.hpp")
             content += LOCKING_HEAD.replace(CLASSNAME, "DATAMOCK")
+            for incl in self._cppHeader.includes:
+                content += BASE_HEADER_CODE + incl + "\n"
+            content += "\nusing std;\n\n"
         content += "namespace FSeam {\n"
         for className, methods in self.mapClassMethods.items():
             if methods or className in content:
@@ -105,7 +108,7 @@ class FSeamerFile:
                 _struct += self._extractDataStructMethod(methodName)
                 _helperMethod += INDENT + "static const std::string " + methodName.upper() + " = \"" + methodName + "\";\n"
             content += _struct + "};\n" + _helperMethod + "\n}\n"
-            content += "// NameTypeTraits\ntemplate <> struct TypeParseTraits {\n" + INDENT + "using ClassName = \"" + className + "\";\n}"
+            content += "// NameTypeTraits\ntemplate <> struct TypeParseTraits {\n" + INDENT + "static const std::string ClassName = \"" + className + "\";\n}"
             content += " // End of DataStructure" + className + "\n\n\n"
         content += "}\n"
         content = re.sub("namespace FSeam {[\n ]+}\n", "", content)
