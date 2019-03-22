@@ -148,7 +148,7 @@ class FSeamerFile:
             _content = ""
         _content += INDENT + "auto *mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n" 
         _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this) :\n" 
-        _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock<" + className + ">();\n\n"
+        _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock(" + className + ");\n\n"
         _content += INDENT + "mockVerifier->invokeDupedMethod(__func__" + _additional + ");\n"
         _content += INDENT + "mockVerifier->methodCall(__func__, std::any(data));\n"
         _content += _returnStatement
