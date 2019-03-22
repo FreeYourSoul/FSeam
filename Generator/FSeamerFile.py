@@ -28,6 +28,7 @@ class FSeamerFile:
         self.codeSeam = HEADER_INFO
         self.headerPath = os.path.normpath(pathFile)
         self.fileName = ntpath.basename(self.headerPath)
+        self.functionSignatureMapping = {}
         try:
             self._cppHeader = CppHeaderParser.CppHeader(self.headerPath)
         except CppHeaderParser.CppParseError as e:
@@ -38,13 +39,11 @@ class FSeamerFile:
         self.codeSeam = self.codeSeam.replace(FILENAME, self.fileName)
         self.codeSeam += self._extractHeaders()
         _classes = self._cppHeader.classes
-
         for c in _classes:
             _className = c
             for encapsulationLevel in _classes[c]["methods"]:
                 self.codeSeam += "\n// " + _className + " " + encapsulationLevel
-                self.codeSeam += self._extractMethodsFromClass(_className,
-                                                               _classes[c]["methods"][encapsulationLevel])
+                self.codeSeam += self._extractMethodsFromClass(_className, _classes[c]["methods"][encapsulationLevel])
             self.codeSeam = self.codeSeam.replace(CLASSNAME, _className)
         return self.codeSeam
 
@@ -69,8 +68,9 @@ class FSeamerFile:
             if methods and className not in content:
                 _struct = "struct " + className + "Data {\n"
                 for methodName in methods:
-                    _struct += methodName + "ReturnValue;\n"
-                content += _struct + "\n};\n\n"
+                    _struct += self._extractDataStructMethod(methodName)                    
+                content += _struct + "\n};\n"
+                content += "template <> struct TypeParseTraits { using ClassName = \"" + className + "\";}\n"
         content += "}\n"
         content.replace("namespace FSeam {\n}\n", "")
         return content + LOCKING_FOOTER
@@ -84,6 +84,28 @@ class FSeamerFile:
         _fseamerCodeHeaders += "#include <MockData.hpp>\n#include <MockVerifier.hpp>\n"
         return _fseamerCodeHeaders
 
+    def _extractDataStructMethod(self, methodName):
+        _methodData = ""
+        for param in self.functionSignatureMapping[methodName]["params"]:
+            _paramType = param["type"]
+            _paramName = param["name"]
+            if "*" in _returnType or "shared_ptr" in _returnType or "unique_ptr" in _returnType:
+                _methodData += "    " + _paramType + " " + _paramName + "ParamValue;\n"
+            else:
+                _methodData += "    " + _paramType + " *" + _paramName + "ParamValue;\n"
+        _returnType = self.functionSignatureMapping[methodName]["rtnType"]
+        if _returnType != "void":
+            if "*" in _returnType or "shared_ptr" in _returnType or "unique_ptr" in _returnType:
+                _methodData += "    " + _returnType + " " + methodName + "ReturnValue;\n"
+            else:
+                _methodData += "    " + _returnType + " *" + methodName + "ReturnValue;\n"
+        return _methodData
+
+    def _registerMethodIntoMethodSignatureMap(self, name, retType, params):
+        self.functionSignatureMapping[name] = {}
+        self.functionSignatureMapping[name]["rtnType"] = retType
+        self.functionSignatureMapping[name]["params"] = params
+        
     def _extractMethodsFromClass(self, className, methodsData):
         _methods = "\n// Methods Mocked Implementation for class " + className + "\n"
         _lstMethodName = list()
@@ -95,15 +117,11 @@ class FSeamerFile:
                 _classFullName = methodData["path"]
                 _returnType = methodData["rtnType"]
                 _methodsName = methodData["name"]
-                if _returnType != "void":
-                    if "*" in _returnType or "share_ptr" in _returnType or "unique_ptr" in _returnType:
-                        _lstMethodName.append(_returnType + " " + _methodsName)
-                    else:
-                        _lstMethodName.append(_returnType + " *" + _methodsName)
+                _lstMethodName.append(_methodsName)
                 _signature = _returnType + " " + _classFullName + "::" + _methodsName + "("
                 _parametersType = [t["type"] for t in methodData["parameters"]]
                 _parametersName = [t["name"] for t in methodData["parameters"]]
-
+                self._registerMethodIntoMethodSignatureMap(_methodsName, _returnType, methodData["parameters"])
                 for i in range(len(_parametersType)):
                     _signature += _parametersType[i] + " " + _parametersName[i]
                     if i == 0 and len(_parametersType) > 1:
@@ -111,30 +129,29 @@ class FSeamerFile:
                 _signature += ")"
 
                 methodContent = self._generateMethodContent(_returnType, className, _methodsName)
-                _methods += "\n" + _signature + "{\n" + methodContent + "\n}\n"
-
+                _methods += "\n" + _signature + " {\n" + methodContent + "\n}\n"
+        
+        #rename mapClassMethods
         self.map[className] = _lstMethodName
         return _methods
 
     def _generateMethodContent(self, returnType, className, methodName):
-        _additional = ", &data"
         _content = "    FSeam::" + className + "Data data;\n"
-        _returnStatement = "\n    return *data." + methodName + "ReturnValue;"
+        _additional = ", &data"
+        _returnStatement = "    return *data." + methodName + "ReturnValue;"
 
         if 'void' == returnType:
             _returnStatement = ""
             _additional = ""
-            _content = ""
-
-        _content += "    FSeam::MockVerifier::instance().getMock(this)->invokeDupedMethod(\"" + className + \
-                    "\", __func__" + _additional + ");\n"
-        _content += "    FSeam::MockVerifier::instance().getMock(this)->methodCall(\"" + className + "\", __func__);"
+            _content = ""            
+        _content += "    FSeam::MockVerifier::instance().getMock(this)->invokeDupedMethod(__func__" + _additional + ");\n"
+        _content += "    FSeam::MockVerifier::instance().getMock(this)->methodCall(__func__, std::any(data));\n"
         _content += _returnStatement
         return _content
 
 
 # API function
-def generateFSeamFiles(filePath, destinationFolder, forceGeneration=False):
+def generateFSeamFile(filePath, destinationFolder, forceGeneration=False):
     if not str.endswith(filePath, ".hh") and not str.endswith(filePath, ".hpp"):
         raise NameError("Error file " + filePath + " is not a .hh file")
 
@@ -167,4 +184,4 @@ if __name__ == '__main__':
     _forceGeneration = False
     if len(_args) > 2:
         _forceGeneration = _args[2]
-    generateFSeamFiles(_args[0], _args[1], _forceGeneration)
+    generateFSeamFile(_args[0], _args[1], _forceGeneration)
