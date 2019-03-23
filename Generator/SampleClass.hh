@@ -12,7 +12,7 @@ public:
     /*!
      * Method 1
      */
-    string meth1();
+    std::string meth1();
 
     ///
     /// Method 2 description
@@ -27,7 +27,7 @@ public:
      * \param v1 Variable 1
      * \param v2 Variable 2
      */
-    void meth3(const string & victory, vector<string> & v2);
+    void meth3(const std::string& victory, std::vector<std::string> & v2);
 
     void methodImpl() {}
 
@@ -41,7 +41,7 @@ private:
     void * meth5(){return NULL};
 
     /// prop1 description
-    string prop1;
+    std::string prop1;
     //! prop5 description
     int prop5;
 };
@@ -55,7 +55,7 @@ namespace Alpha
         void alphaMethod();
         int alphaMethod2()
 
-        string alphaString;
+        std::string alphaString;
     };
 
     namespace Omega
@@ -67,7 +67,7 @@ namespace Alpha
 
             const std::string &omegaString();
 
-            string omegaString;
+            std::string omegaString;
         };
     };
 }

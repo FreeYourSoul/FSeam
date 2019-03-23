@@ -129,15 +129,15 @@ class FSeamerFile:
             _paramType = param["type"]
             _paramName = param["name"]
             if "*" in _paramType or "shared_ptr" in _paramType or "unique_ptr" in _paramType:
-                _methodData += INDENT + _paramType + " " + _paramName + "ParamValue;\n"
+                _methodData += INDENT + _paramType + " " + methodName + "_" + _paramName + "_ParamValue;\n"
             else:
-                _methodData += INDENT + _paramType + " *" + _paramName + "ParamValue;\n"
+                _methodData += INDENT + _paramType + " *" + methodName + "_" + _paramName + "_ParamValue;\n"
         _returnType = self.functionSignatureMapping[methodName]["rtnType"]
         if _returnType != "void":
             if "*" in _returnType or "shared_ptr" in _returnType or "unique_ptr" in _returnType:
-                _methodData += INDENT + _returnType + " " + methodName + "ReturnValue;\n\n"
+                _methodData += INDENT + _returnType + " " + methodName + "_ReturnValue;\n\n"
             else:
-                _methodData += INDENT + _returnType + " *" + methodName + "ReturnValue;\n\n"
+                _methodData += INDENT + _returnType + " *" + methodName + "_ReturnValue;\n\n"
         return _methodData
 
     def _registerMethodIntoMethodSignatureMap(self, name, retType, params):
