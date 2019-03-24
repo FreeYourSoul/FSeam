@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(testing CXX)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
+set (CMAKE_CXX_STANDARD 17)
+
+#set(CMAKE_VERBOSE_MAKEFILE ON)
 find_package(Catch2 REQUIRED)
 
 include(../cmake/FSeamModule.cmake)

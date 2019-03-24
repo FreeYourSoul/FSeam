@@ -7,6 +7,8 @@
 
 #include <string>
 #include <functional>
+#include <memory>
+#include <iostream>
 #include <map>
 #include <any>
 
@@ -20,8 +22,8 @@ namespace FSeam {
      */
     template <typename T>
     struct TypeParseTraits {
-        using ClassName = "Undefined";
-    }
+        static const std::string ClassName;
+    };
 
     /**
      * @brief basic structure that contains description and utilisation of mocked method
@@ -41,9 +43,9 @@ namespace FSeam {
      */
     class MockClassVerifier {
     public:
-        MockClassVerifier(std::string className) : _className(_className) {}
+        MockClassVerifier(std::string className) : _className(className) {}
 
-        void invokeDupedMethod(std::string &&className, std::string &&methodName, void *arg = nullptr) {
+        void invokeDupedMethod(std::string &&methodName, void *arg = nullptr) {
             std::string key = _className + std::move(methodName);
 
             if (_verifiers.find(key) != _verifiers.end()) {
@@ -148,7 +150,7 @@ namespace FSeam {
             inst.reset();
         }
 
-        bool isMockRegistered(void *mockPtr) {
+        bool isMockRegistered(const void *mockPtr) {
             return inst->_mockedClass.find(mockPtr) != inst->_mockedClass.end();
         }
 
@@ -178,7 +180,7 @@ namespace FSeam {
          * @return the mock verifier instance class, if not referenced yet, create one by calling the ::addMock(T) method
          */
         std::shared_ptr<MockClassVerifier> &getDefaultMock(std::string classMockName) {
-            if (inst->_defaultMockedClass.find(mockPtr) == inst->_defaultMockedClass.end())
+            if (inst->_defaultMockedClass.find(classMockName) == inst->_defaultMockedClass.end())
                 return addDefaultMock(classMockName);
             return inst->_defaultMockedClass.at(std::move(classMockName));
         }
@@ -191,7 +193,7 @@ namespace FSeam {
         }
         std::shared_ptr<MockClassVerifier> &addDefaultMock(const std::string &className) {
             inst->_defaultMockedClass[className] = std::make_shared<MockClassVerifier>(className);
-            return inst->_mockedClass.at(className);
+            return inst->_defaultMockedClass.at(className);
         }
 
     private:
@@ -213,7 +215,7 @@ namespace FSeam {
      */
     template <typename T>
     std::shared_ptr<MockClassVerifier> &get(const T *mockPtr) {
-        return FSeam::MockVerifier::instance().getMock(serverSessionManagerMock);
+        return FSeam::MockVerifier::instance().getMock(mockPtr);
     }
 
     /**

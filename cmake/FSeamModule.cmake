@@ -6,6 +6,7 @@ set(FSEAM_GENERATOR_COMMMAND "${CMAKE_CURRENT_SOURCE_DIR}/../Generator/FSeamerFi
 option(FSEAM_FORCE_GENERATION "Force the generation of the file " ON)
 option(FSEAM_CLEANUP_DATA "Cleanup the data file  " OFF)
 
+find_package(FSeam REQUIRED)
 find_package(Catch2 REQUIRED)
 include(FindPythonInterp)
 include(CTest)
@@ -72,7 +73,7 @@ function(addFSeamTests)
                 ${FSEAM_TEST_INCLUDES}
                 ${FSEAM_GENERATOR_DESTINATION}
                 ${CMAKE_CURRENT_SOURCE_DIR}/../FSeam)
-    target_link_libraries(${ADDFSEAMTESTS_DESTINATION_TARGET} Catch2::Catch2)
+    target_link_libraries(${ADDFSEAMTESTS_DESTINATION_TARGET} FSeam Catch2::Catch2)
     catch_discover_tests(${ADDFSEAMTESTS_DESTINATION_TARGET})
 
 endfunction(addFSeamTests)

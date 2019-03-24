@@ -96,18 +96,19 @@ class FSeamerFile:
             content += LOCKING_HEAD.replace(CLASSNAME, "DATAMOCK")
             for incl in self._cppHeader.includes:
                 content += BASE_HEADER_CODE + incl + "\n"
-            content += "\nusing std;\n\n"
+            content += "#include <MockVerifier.hpp>\n\n"
         content += "namespace FSeam {\n"
         for className, methods in self.mapClassMethods.items():
             if methods or className in content:
                 content = self._clearDataStructureData(content, className)
-            _struct = "\nstruct " + className + "Data {\n"
-            _helperMethod = "// Methods Helper\nnamespace " + className + " {\n"
+            _struct = BASE_HEADER_CODE + "<" + self.fileName + ">\n"
+            _struct += "\nstruct " + className + "Data {\n"
+            _helperMethod = "// Methods Helper\nnamespace " + className + "_FunName {\n"
             for methodName in methods:
                 _struct += self._extractDataStructMethod(methodName)
                 _helperMethod += INDENT + "static const std::string " + methodName.upper() + " = \"" + methodName + "\";\n"
             content += _struct + "};\n" + _helperMethod + "\n}\n"
-            content += "// NameTypeTraits\ntemplate <> struct TypeParseTraits {\n" + INDENT + "static const std::string ClassName = \"" + className + "\";\n}"
+            content += "// NameTypeTraits\ntemplate <> struct TypeParseTraits<" + className + "> {\n" + INDENT + "static const std::string ClassName = \"" + className + "\";\n}"
             content += " // End of DataStructure" + className + "\n\n\n"
         content += "}\n"
         content = re.sub("namespace FSeam {[\n ]+}\n", "", content)
@@ -176,13 +177,12 @@ class FSeamerFile:
     def _generateMethodContent(returnType, className, methodName):
         _content = INDENT + "FSeam::" + className + "Data data;\n"
         _additional = ", &data"
-        _returnStatement = INDENT + "return *data." + methodName + "ReturnValue;"
+        _returnStatement = INDENT + "return *data." + methodName + "_ReturnValue;"
 
         if 'void' == returnType:
             _returnStatement = ""
             _additional = ""
-            _content = ""
-        _content += INDENT + "auto *mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
+        _content += INDENT + "auto mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
         _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this) :\n"
         _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n\n"
         _content += INDENT + "mockVerifier->invokeDupedMethod(__func__" + _additional + ");\n"
@@ -190,9 +190,8 @@ class FSeamerFile:
         _content += _returnStatement
         return _content
 
-    @staticmethod
-    def _clearDataStructureData(content, className):
-        indexBegin = content.find("\nstruct " + className + "Data {\n")
+    def _clearDataStructureData(self, content, className):
+        indexBegin = content.find(BASE_HEADER_CODE + "<" + self.fileName + ">\n")
         indexEnd = content.find("} // End of DataStructure" + className) + len("\n// End of DataStructure" + className)
         if indexBegin > 0 and indexEnd > len("\n// End of DataStructure" + className) + 1:
             content = content[0: indexBegin] + content[indexEnd + 1:]

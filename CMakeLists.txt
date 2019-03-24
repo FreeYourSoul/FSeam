@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.10.0)
 
 # The version number.
 set (VERSION_MAJOR 1)
 set (VERSION_MINOR 0)
 set (VERSION_PATCH 0)
-set (FSEAM_VERSION ${VERSION_MAJOR}${VERSION_MINOR}${VERSION_PATCH})
+set (FSEAM_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 project(FSeam VERSION ${FSEAM_VERSION})
 
@@ -29,7 +29,7 @@ set(FSEAM_GENERATOR_PYTH
         ${CMAKE_CURRENT_SOURCE_DIR}/Generator/CppHeaderParser.py)
         
 
-foreach (target fseam fseam-static)
+foreach (target FSeam FSeam-static)
   add_library(${target} INTERFACE)
   target_include_directories(${target} INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/FSeam/>
                                                  $<INSTALL_INTERFACE:include>)
@@ -38,11 +38,11 @@ endforeach()
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-install(TARGETS fseam fseam-static
+install(TARGETS FSeam FSeam-static
         EXPORT ${PROJECT_NAME}-targets)
 
-install(FILES ${FSEAM_HEADERS} TYPE INCLUDE)
-install(PROGRAMS ${FSEAM_GENERATOR_PYTH} TYPE BIN)
+install(FILES ${FSEAM_HEADERS} DESTINATION share/include)
+install(PROGRAMS ${FSEAM_GENERATOR_PYTH} DESTINATION share/bin)
 
 # GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
 set(FSEAM_CMAKECONFIG_INSTALL_DIR "share/cmake/${PROJECT_NAME}" CACHE STRING "install path for FSeamConfig.cmake")
