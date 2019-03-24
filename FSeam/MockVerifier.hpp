@@ -130,7 +130,7 @@ namespace FSeam {
      * @brief Mocking singleton, this is the main class of FSeam class contains all the mock
      */
     class MockVerifier {
-        static std::unique_ptr<MockVerifier> inst;
+        inline static std::unique_ptr<MockVerifier> inst = nullptr;
 
     public:
         MockVerifier() = default;
@@ -151,7 +151,7 @@ namespace FSeam {
         }
 
         bool isMockRegistered(const void *mockPtr) {
-            return inst->_mockedClass.find(mockPtr) != inst->_mockedClass.end();
+            return this->_mockedClass.find(mockPtr) != this->_mockedClass.end();
         }
 
         /**
@@ -167,7 +167,7 @@ namespace FSeam {
         std::shared_ptr<MockClassVerifier> &getMock(const T *mockPtr) {
             if (isMockRegistered(mockPtr))
                 return addMock(mockPtr);
-            return inst->_mockedClass.at(mockPtr);
+            return this->_mockedClass.at(mockPtr);
         }
 
         /**
@@ -180,20 +180,20 @@ namespace FSeam {
          * @return the mock verifier instance class, if not referenced yet, create one by calling the ::addMock(T) method
          */
         std::shared_ptr<MockClassVerifier> &getDefaultMock(std::string classMockName) {
-            if (inst->_defaultMockedClass.find(classMockName) == inst->_defaultMockedClass.end())
+            if (this->_defaultMockedClass.find(classMockName) == this->_defaultMockedClass.end())
                 return addDefaultMock(classMockName);
-            return inst->_defaultMockedClass.at(std::move(classMockName));
+            return this->_defaultMockedClass.at(std::move(classMockName));
         }
 
     private:
         template <typename T>
         std::shared_ptr<MockClassVerifier> &addMock(const T *mockPtr) {
-            inst->_mockedClass[mockPtr] = std::make_shared<MockClassVerifier>(TypeParseTraits<T>::ClassName);
-            return inst->_mockedClass.at(mockPtr);
+            this->_mockedClass[mockPtr] = std::make_shared<MockClassVerifier>(TypeParseTraits<T>::ClassName);
+            return this->_mockedClass.at(mockPtr);
         }
         std::shared_ptr<MockClassVerifier> &addDefaultMock(const std::string &className) {
-            inst->_defaultMockedClass[className] = std::make_shared<MockClassVerifier>(className);
-            return inst->_defaultMockedClass.at(className);
+            this->_defaultMockedClass[className] = std::make_shared<MockClassVerifier>(className);
+            return this->_defaultMockedClass.at(className);
         }
 
     private:

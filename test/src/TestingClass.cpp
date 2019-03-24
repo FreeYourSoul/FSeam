@@ -6,7 +6,7 @@
 #include <assert.h>
 #include "TestingClass.hh"
 
-namespace src {
+namespace source {
 
     void TestingClass::execute() {
         this->executeDependency(_depNonGettable);

@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace src {
+namespace source {
     class DependencyGettable {
     public:
         void checkCalled();
@@ -16,6 +16,7 @@ namespace src {
 
         int checkSimpleReturnValue();
     };
+
 }
 
 

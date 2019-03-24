@@ -8,7 +8,7 @@
 #include <DependencyGettable.hh>
 #include <DependencyNonGettable.hh>
 
-namespace src {
+namespace source {
 
     class TestingClass {
     public:

@@ -32,6 +32,7 @@ class FSeamerFile:
         self.headerPath = os.path.normpath(pathFile)
         self.fileName = ntpath.basename(self.headerPath)
         self.functionSignatureMapping = {}
+        self.fullClassNameMap = {}
         try:
             self._cppHeader = CppHeaderParser.CppHeader(self.headerPath)
         except CppHeaderParser.CppParseError as e:
@@ -49,6 +50,7 @@ class FSeamerFile:
         _classes = self._cppHeader.classes
         for c in _classes:
             _className = c
+            self.fullClassNameMap[c] = _classes[c]["namespace"] + "::" + _className
             for encapsulationLevel in _classes[c]["methods"]:
                 self.codeSeam += "\n// " + _className + " " + encapsulationLevel
                 self.codeSeam += self._extractMethodsFromClass(_className, _classes[c]["methods"][encapsulationLevel])
@@ -97,18 +99,20 @@ class FSeamerFile:
             for incl in self._cppHeader.includes:
                 content += BASE_HEADER_CODE + incl + "\n"
             content += "#include <MockVerifier.hpp>\n\n"
+        if BASE_HEADER_CODE + "<" + self.fileName + ">\n" not in content:
+            content += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         content += "namespace FSeam {\n"
         for className, methods in self.mapClassMethods.items():
             if methods or className in content:
                 content = self._clearDataStructureData(content, className)
-            _struct = BASE_HEADER_CODE + "<" + self.fileName + ">\n"
-            _struct += "\nstruct " + className + "Data {\n"
+            _struct = "\nstruct " + className + "Data {\n"
             _helperMethod = "// Methods Helper\nnamespace " + className + "_FunName {\n"
             for methodName in methods:
                 _struct += self._extractDataStructMethod(methodName)
                 _helperMethod += INDENT + "static const std::string " + methodName.upper() + " = \"" + methodName + "\";\n"
             content += _struct + "};\n" + _helperMethod + "\n}\n"
-            content += "// NameTypeTraits\ntemplate <> struct TypeParseTraits<" + className + "> {\n" + INDENT + "static const std::string ClassName = \"" + className + "\";\n}"
+            content += "// NameTypeTraits\ntemplate <> struct TypeParseTraits<" + self.fullClassNameMap[className] + \
+                       "> {\n" + INDENT + "inline static const std::string ClassName = \"" + className + "\";\n};"
             content += " // End of DataStructure" + className + "\n\n\n"
         content += "}\n"
         content = re.sub("namespace FSeam {[\n ]+}\n", "", content)
@@ -191,9 +195,9 @@ class FSeamerFile:
         return _content
 
     def _clearDataStructureData(self, content, className):
-        indexBegin = content.find(BASE_HEADER_CODE + "<" + self.fileName + ">\n")
-        indexEnd = content.find("} // End of DataStructure" + className) + len("\n// End of DataStructure" + className)
-        if indexBegin > 0 and indexEnd > len("\n// End of DataStructure" + className) + 1:
+        indexBegin = content.find("struct " + className + "Data")
+        indexEnd = content.find("// End of DataStructure" + className) + len("// End of DataStructure" + className)
+        if indexBegin > 0 and indexEnd > len("// End of DataStructure" + className) + 1:
             content = content[0: indexBegin] + content[indexEnd + 1:]
         return content
 

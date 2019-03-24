@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace src {
+namespace source {
     class DependencyNonGettable {
     public:
         void checkCalled();

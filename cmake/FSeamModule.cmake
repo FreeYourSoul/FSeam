@@ -19,9 +19,10 @@ include(Catch)
 ##
 function (setup_FSeam_test)
 
+#    message(WARNING "BEFORE Source compiled ${FSEAM_TEST_SRC}")
     foreach (fileToMockPath ${ADDFSEAMTESTS_TO_MOCK})
-        list(REMOVE_ITEM FSEAM_TEST_SRC ${fileToMockPath})
-        get_filename_component(FSEAM_GENERATED_FILENAME ${fileToMockPath} NAME_WE)
+        get_filename_component(FSEAM_GENERATED_BASENAME ${fileToMockPath} NAME_WE)
+        list(FILTER FSEAM_TEST_SRC EXCLUDE REGEX .*${FSEAM_GENERATED_BASENAME}.cpp)
         message(STATUS "add custom command for ${ADDFSEAMTESTS_DESTINATION_TARGET} with fileToMock ${fileToMockPath}
 with command : ${PYTHON_EXECUTABLE} ${FSEAM_GENERATOR_COMMMAND} ${fileToMockPath} ${FSEAM_GENERATOR_DESTINATION}")
         add_custom_command(
@@ -31,19 +32,20 @@ with command : ${PYTHON_EXECUTABLE} ${FSEAM_GENERATOR_COMMMAND} ${fileToMockPath
                     ${fileToMockPath}
                     ${FSEAM_GENERATOR_DESTINATION}
             OUTPUT
-                ${FSEAM_GENERATOR_DESTINATION}/${FSEAM_GENERATED_FILENAME}.fseam.cc
+                ${FSEAM_GENERATOR_DESTINATION}/${FSEAM_GENERATED_BASENAME}.fseam.cc
             DEPENDS
                 ${fileToMockPath}
             USES_TERMINAL
             COMMENT "Generating FSEAM code for ${fileToMockPath}")
 
-        add_custom_target(${FSEAM_GENERATED_FILENAME}Run ALL
-                DEPENDS ${FSEAM_GENERATOR_DESTINATION}/${FSEAM_GENERATED_FILENAME}.fseam.cc)
+        add_custom_target(${FSEAM_GENERATED_BASENAME}Run ALL
+                DEPENDS ${FSEAM_GENERATOR_DESTINATION}/${FSEAM_GENERATED_BASENAME}.fseam.cc)
 
         set(FSEAM_TEST_SRC ${FSEAM_TEST_SRC}
-                ${FSEAM_GENERATOR_DESTINATION}/${FSEAM_GENERATED_FILENAME}.fseam.cc)
+                ${FSEAM_GENERATOR_DESTINATION}/${FSEAM_GENERATED_BASENAME}.fseam.cc)
 
     endforeach()
+#    message(WARNING "AFTER Source compiled ${FSEAM_TEST_SRC}")
     set(FSEAM_TEST_SRC ${FSEAM_TEST_SRC} PARENT_SCOPE)
 endfunction (setup_FSeam_test)
 
@@ -64,7 +66,7 @@ function(addFSeamTests)
     # Get input arguments and generate sources
     get_target_property(FSEAM_TEST_SRC ${ADDFSEAMTESTS_SOURCE_TARGET} SOURCES)
     get_target_property(FSEAM_TEST_INCLUDES ${ADDFSEAMTESTS_SOURCE_TARGET} INCLUDE_DIRECTORIES)
-    setup_FSeam_test(${FSEAM_TEST_SRC})
+    setup_FSeam_test()
 
     # Create testing target
     add_executable(${ADDFSEAMTESTS_DESTINATION_TARGET} ${ADDFSEAMTESTS_TST_SRC} ${FSEAM_TEST_SRC})
