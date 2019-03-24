@@ -20,9 +20,10 @@ target_include_directories(testLib
         PUBLIC src)
 target_link_libraries(testLib Catch2::Catch2)
 
+message(WARNING "DEDEDE ${PROJECT_BINARY_DIR}")
+
 enable_testing()
 addFSeamTests(DESTINATION_TARGET testFSeam
-        SOURCE_TARGET testLib
+        TARGET_AS_SOURCE testLib
         TST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/testMain.cpp ${CMAKE_CURRENT_SOURCE_DIR}/FSeamBasicTestCase.cpp
         TO_MOCK ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.hh ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.hh)
-target_link_libraries(testFSeam testLib)

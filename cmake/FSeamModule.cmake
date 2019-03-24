@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 
 set(FSEAM_GENERATOR_DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-set(FSEAM_GENERATOR_COMMMAND "${CMAKE_CURRENT_SOURCE_DIR}/../Generator/FSeamerFile.py")
 
 option(FSEAM_FORCE_GENERATION "Force the generation of the file " ON)
 option(FSEAM_CLEANUP_DATA "Cleanup the data file  " OFF)
 
 find_package(FSeam REQUIRED)
+set(FSEAM_GENERATOR_COMMMAND "FSeamerFile.py")
+
 find_package(Catch2 REQUIRED)
-include(FindPythonInterp)
 include(CTest)
 include(Catch)
 
@@ -27,7 +27,7 @@ function (setup_FSeam_test)
 with command : ${PYTHON_EXECUTABLE} ${FSEAM_GENERATOR_COMMMAND} ${fileToMockPath} ${FSEAM_GENERATOR_DESTINATION}")
         add_custom_command(
             COMMAND
-                ${PYTHON_EXECUTABLE} ${FSEAM_GENERATOR_COMMMAND}
+                ${FSEAM_GENERATOR_COMMMAND}
                 ARGS
                     ${fileToMockPath}
                     ${FSEAM_GENERATOR_DESTINATION}
@@ -52,20 +52,26 @@ endfunction (setup_FSeam_test)
 ##
 ## Function to call in order to generate a test executable from the generated FSeam mock and the provided test source
 ##
+## Mandatory
 ## arg DESTINATION_TARGET  : target name of the test executable generated via this method
-## arg SOURCE_TARGET       : target of the library that contains the code to test
 ## arg TST_SRC             : catch2 test files containing the actual test to compile
 ## arg TO_MOCK             : files to mock for this specific given test
 ##
+## either
+## arg TARGET_AS_SOURCE    : target of the library that contains the code to test
+## arg FILES_AS_SOURCE       or source file containing the code to test
+##
 function(addFSeamTests)
 
-    set(oneValueArgs DESTINATION_TARGET SOURCE_TARGET)
+    set(oneValueArgs DESTINATION_TARGET TARGET_AS_SOURCE)
     set(multiValueArgs TO_MOCK TST_SRC)
     cmake_parse_arguments(ADDFSEAMTESTS "" "${oneValueArgs}" "${multiValueArgs}"  ${ARGN} )
 
+    # Check arguments
+
     # Get input arguments and generate sources
-    get_target_property(FSEAM_TEST_SRC ${ADDFSEAMTESTS_SOURCE_TARGET} SOURCES)
-    get_target_property(FSEAM_TEST_INCLUDES ${ADDFSEAMTESTS_SOURCE_TARGET} INCLUDE_DIRECTORIES)
+    get_target_property(FSEAM_TEST_SRC ${ADDFSEAMTESTS_TARGET_AS_SOURCE} SOURCES)
+    get_target_property(FSEAM_TEST_INCLUDES ${ADDFSEAMTESTS_TARGET_AS_SOURCE} INCLUDE_DIRECTORIES)
     setup_FSeam_test()
 
     # Create testing target

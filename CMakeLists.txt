@@ -43,6 +43,7 @@ install(TARGETS FSeam FSeam-static
 
 install(FILES ${FSEAM_HEADERS} DESTINATION share/include)
 install(PROGRAMS ${FSEAM_GENERATOR_PYTH} DESTINATION share/bin)
+install(PROGRAMS ${FSEAM_GENERATOR_PYTH} DESTINATION bin)
 
 # GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
 set(FSEAM_CMAKECONFIG_INSTALL_DIR "share/cmake/${PROJECT_NAME}" CACHE STRING "install path for FSeamConfig.cmake")
