@@ -4,7 +4,6 @@ import os
 import ntpath
 import re
 import sys
-from sty import fg
 
 INDENT = "    "
 INDENT2 = INDENT + INDENT
@@ -116,11 +115,12 @@ class FSeamerFile:
 
     # =====Privates methods =====
 
-    def _extractHeaders(self):
+    def _extractHeaders(self, ):
         _fseamerCodeHeaders = "// includes\n"
         for incl in self._cppHeader.includes:
             _fseamerCodeHeaders += BASE_HEADER_CODE + incl + "\n"
         _fseamerCodeHeaders += "#include <MockData.hpp>\n#include <MockVerifier.hpp>\n"
+        _fseamerCodeHeaders += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         return _fseamerCodeHeaders
 
     def _extractDataStructMethod(self, methodName):
@@ -184,7 +184,7 @@ class FSeamerFile:
             _content = ""
         _content += INDENT + "auto *mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
         _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this) :\n"
-        _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock(" + className + ");\n\n"
+        _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n\n"
         _content += INDENT + "mockVerifier->invokeDupedMethod(__func__" + _additional + ");\n"
         _content += INDENT + "mockVerifier->methodCall(__func__, std::any(data));\n"
         _content += _returnStatement
@@ -218,12 +218,12 @@ def generateFSeamFile(filePath, destinationFolder, forceGeneration=False):
     _fileName = _fSeamerFile.getFSeamGeneratedFileName()
     _fileFSeamPath = os.path.normpath(destinationFolder + "/" + _fileName)
     if not forceGeneration and _fSeamerFile.isSeamFileUpToDate(_fileFSeamPath):
-        print(fg.yellow + "FSeam file is already generated at path " + _fileFSeamPath + fg.rs)
+        print("FSeam file is already generated at path " + _fileFSeamPath)
         return
 
     with open(_fileFSeamPath, "w") as _fileCreated:
         _fileCreated.write(_fSeamerFile.seamParse())
-    print(fg.cyan + "FSeam generated file " + _fileName + " at " + os.path.abspath(destinationFolder) + fg.rs)
+    print("FSeam generated file " + _fileName + " at " + os.path.abspath(destinationFolder))
 
     _fileCreatedMockDataPath = os.path.normpath(destinationFolder + "/MockData.hpp")
     _fileCreatedMockDataContent = ""
@@ -232,14 +232,14 @@ def generateFSeamFile(filePath, destinationFolder, forceGeneration=False):
             _fileCreatedMockDataContent = _fileCreatedMockData.read().replace(LOCKING_FOOTER, "")
     with open(_fileCreatedMockDataPath, "w") as _fileCreatedMockData:
         _fileCreatedMockData.write(_fSeamerFile.generateDataStructureContent(_fileCreatedMockDataContent))
-    print(fg.cyan + "FSeam generated file MockData.hpp at " + os.path.abspath(destinationFolder) + fg.rs)
+    print("FSeam generated file MockData.hpp at " + os.path.abspath(destinationFolder))
 
 
 if __name__ == '__main__':
     _args = sys.argv[1:]
     if len(_args) < 2:
         raise NameError("Error missing argument for generation")
-    _forceGeneration = False
+    _forceGeneration = True
     if len(_args) > 2:
         _forceGeneration = _args[2]
     generateFSeamFile(_args[0], _args[1], _forceGeneration)

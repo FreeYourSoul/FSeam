@@ -7,12 +7,12 @@ find_package(Catch2 REQUIRED)
 include(../cmake/FSeamModule.cmake)
 
 add_library(testLib
-        src/DependencyNonGettable.cpp
-        src/DependencyNonGettable.hh
-        src/DependencyGettable.hh
-        src/DependencyGettable.cpp
-        src/TestingClass.cpp
-        src/TestingClass.hh
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.hh
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.hh
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/TestingClass.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/TestingClass.hh
         )
 target_include_directories(testLib
         PUBLIC src)
@@ -21,5 +21,6 @@ target_link_libraries(testLib Catch2::Catch2)
 enable_testing()
 addFSeamTests(DESTINATION_TARGET testFSeam
         SOURCE_TARGET testLib
-        TST_SRC testMain.cpp FSeamBasicTestCase.cpp
-        TO_MOCK src/DependencyNonGettable.cpp src/DependencyGettable.cpp)
+        TST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/testMain.cpp ${CMAKE_CURRENT_SOURCE_DIR}/FSeamBasicTestCase.cpp
+        TO_MOCK ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.hh ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.hh)
+target_link_libraries(testFSeam testLib)
