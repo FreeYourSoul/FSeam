@@ -12,7 +12,6 @@
 #include <map>
 #include <any>
 
-
 namespace FSeam {
 
     /**
@@ -45,7 +44,7 @@ namespace FSeam {
     public:
         MockClassVerifier(std::string className) : _className(className) {}
 
-        void invokeDupedMethod(std::string &&methodName, void *arg = nullptr) {
+        void invokeDupedMethod(std::string methodName, void *arg = nullptr) {
             std::string key = _className + std::move(methodName);
 
             if (_verifiers.find(key) != _verifiers.end()) {
@@ -61,7 +60,7 @@ namespace FSeam {
          * @param className name of the mocked class
          * @param methodName name of the method called
          */
-        void methodCall(std::string &&methodName, std::any &&callingInfo) {
+        void methodCall(std::string methodName, std::any &&callingInfo) {
             std::shared_ptr<MethodCallVerifier> methodCallVerifier;
             std::string key = _className + methodName;
 
@@ -82,8 +81,11 @@ namespace FSeam {
          * @param className name of the class to mock
          * @param methodName method name to dupe
          * @param handler dupped method
+         * @param isComposed if true, keep the current handler and add this new one as composition,
+         *                   if false, override the existing handler if any
+         *                   set at false by default
          */
-        void dupeMethod(std::string &&methodName, std::function<void(void*)> handler) {
+        void dupeMethod(std::string methodName, std::function<void(void*)> handler, bool isComposed = false) {
             auto methodCallVerifier = std::make_shared<MethodCallVerifier>();
             std::string key = _className + methodName;
 
@@ -92,7 +94,14 @@ namespace FSeam {
             methodCallVerifier->_methodName = std::move(methodName);
             methodCallVerifier->_calledData.clear();
             methodCallVerifier->_called = methodCallVerifier->_calledData.size();
-            methodCallVerifier->_handler = handler;
+            if (isComposed && methodCallVerifier->_handler) {
+                methodCallVerifier->_handler = [handler, methodCallVerifier](void *data){
+                    methodCallVerifier->_handler(data);
+                    handler(data);
+                };
+            }
+            else
+                methodCallVerifier->_handler = handler;
             _verifiers[key] = methodCallVerifier;
         }
 
@@ -105,7 +114,7 @@ namespace FSeam {
          *        verify you at least have the mocked method called once
          * @return true if the method encounter your conditions (number of times called), false otherwise
          */
-        bool verify(std::string &&methodName, const int times = -1) const {
+        bool verify(std::string methodName, const int times = -1) const {
             std::string key = _className + std::move(methodName);
 
             if (_verifiers.find(key) == _verifiers.end()) {
@@ -165,7 +174,7 @@ namespace FSeam {
          */
         template <typename T>
         std::shared_ptr<MockClassVerifier> &getMock(const T *mockPtr) {
-            if (isMockRegistered(mockPtr))
+            if (!isMockRegistered(mockPtr))
                 return addMock(mockPtr);
             return this->_mockedClass.at(mockPtr);
         }

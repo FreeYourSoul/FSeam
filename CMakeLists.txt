@@ -69,9 +69,9 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FSeamModule.cmake
         DESTINATION ${FSEAM_CMAKECONFIG_INSTALL_DIR})
 
-# option(FSEAM_BUILD_TESTS "Whether or not to build the tests" ON)
-# if (FSEAM_BUILD_TESTS)
-#     enable_testing()
-#     add_subdirectory(tests)
-# endif()
+ option(FSEAM_BUILD_TESTS "Whether or not to build the tests" ON)
+ if (FSEAM_BUILD_TESTS)
+     enable_testing()
+     add_subdirectory(test)
+ endif()
 

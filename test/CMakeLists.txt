@@ -14,8 +14,8 @@ add_library(testLib
         ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.hh
         ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/TestingClass.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/TestingClass.hh
-        )
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/TestingClass.hh)
+
 target_include_directories(testLib
         PUBLIC src)
 target_link_libraries(testLib Catch2::Catch2)

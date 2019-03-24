@@ -180,18 +180,13 @@ class FSeamerFile:
     @staticmethod
     def _generateMethodContent(returnType, className, methodName):
         _content = INDENT + "FSeam::" + className + "Data data;\n"
-        _additional = ", &data"
-        _returnStatement = INDENT + "return *data." + methodName + "_ReturnValue;"
-
-        if 'void' == returnType:
-            _returnStatement = ""
-            _additional = ""
         _content += INDENT + "auto mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
         _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this) :\n"
         _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n\n"
-        _content += INDENT + "mockVerifier->invokeDupedMethod(__func__" + _additional + ");\n"
+        _content += INDENT + "mockVerifier->invokeDupedMethod(__func__, &data);\n"
         _content += INDENT + "mockVerifier->methodCall(__func__, std::any(data));\n"
-        _content += _returnStatement
+        if 'void' != returnType:
+            _content += INDENT + "return *data." + methodName + "_ReturnValue;"
         return _content
 
     def _clearDataStructureData(self, content, className):

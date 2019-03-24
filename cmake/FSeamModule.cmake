@@ -5,8 +5,9 @@ set(FSEAM_GENERATOR_DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 option(FSEAM_FORCE_GENERATION "Force the generation of the file " ON)
 option(FSEAM_CLEANUP_DATA "Cleanup the data file  " OFF)
 
+message(WARNING ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(FSeam REQUIRED)
-set(FSEAM_GENERATOR_COMMMAND "FSeamerFile.py")
+set(FSEAM_GENERATOR_COMMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/../Generator/FSeamerFile.py)
 
 find_package(Catch2 REQUIRED)
 include(CTest)
@@ -75,7 +76,8 @@ function(addFSeamTests)
     setup_FSeam_test()
 
     # Create testing target
-    add_executable(${ADDFSEAMTESTS_DESTINATION_TARGET} ${ADDFSEAMTESTS_TST_SRC} ${FSEAM_TEST_SRC})
+    add_executable(${ADDFSEAMTESTS_DESTINATION_TARGET} ${ADDFSEAMTESTS_TST_SRC} ${FSEAM_TEST_SRC}
+            ${FSEAM_GENERATOR_DESTINATION}/MockData.hpp)
     target_include_directories(${ADDFSEAMTESTS_DESTINATION_TARGET}
             PUBLIC
                 ${FSEAM_TEST_INCLUDES}

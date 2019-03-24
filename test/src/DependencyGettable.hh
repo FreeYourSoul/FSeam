@@ -15,6 +15,11 @@ namespace source {
         void checkSimpleInputVariable(int simple, std::string easy);
 
         int checkSimpleReturnValue();
+
+        bool hasOriginalServiceBeenCalled() { return _hasOriginalBeenCalled; }
+
+    private:
+        bool _hasOriginalBeenCalled = false;
     };
 
 }
