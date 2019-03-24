@@ -20,8 +20,6 @@ target_include_directories(testLib
         PUBLIC src)
 target_link_libraries(testLib Catch2::Catch2)
 
-message(WARNING "DEDEDE ${PROJECT_BINARY_DIR}")
-
 enable_testing()
 addFSeamTests(DESTINATION_TARGET testFSeam
         TARGET_AS_SOURCE testLib
