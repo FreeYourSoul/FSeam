@@ -1,5 +1,5 @@
 # FSeamGenerator
-Python script to generate cpp mock for FSeam using [CppHeaderParser](https://pypi.python.org/pypi/CppHeaderParser/)
+Python script to generate cpp mock for FSeam using [CppHeaderParser](https://bitbucket.org/senex/cppheaderparser)
 
 ### Link Seam mock?
 Beside the separate preprocessing step that occurs before compilation, we also have a post-compilation step called linking in C and C++ that is used to combine the results the compiler has emitted. The
