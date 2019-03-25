@@ -25,7 +25,7 @@ namespace FSeam {
     };
 
     /**
-     * @brief basic structure that contains description and utilisation of mocked method
+     * @brief basic structure that contains description and usage metadata of a mocked method
      */
     struct MethodCallVerifier {
         std::string _methodName;
@@ -37,30 +37,34 @@ namespace FSeam {
     /**
      * @brief Comparators option used in verify in order to give more flexibility into the check possible via te verify option
      */
-    namespace VerifierComparator {
-        struct VerifyCompare {
-            explicit VerifyCompare(uint toCompare) : _toCompare(toCompare) {}
-            bool compare(uint number) { return _toCompare == number; } 
-            int _toCompare = 0;
-        }
-        struct AtLeast {
-            explicit AtLeast(uint toCompare) : _toCompare(toCompare) {}
-            bool compare(uint number) { return _toCompare >= number; } 
-            std::string expectStr(uint number) { return std::string("we expected at least ") + _toCompare + std::string(" and received ") + number; };
-            uint _toCompare = 0;
-        }
-        struct AtMost {
-            explicit AtLeast(uint toCompare) : _toCompare(toCompare) {}
-            bool compare(uint number) { return _toCompare <= number; } 
-            std::string expectStr(uint number) { return std::string("we expected at most ") + _toCompare + std::string(" and received ") + number; };
-            uint _toCompare = 0;
-        }
-        struct IsNot { // Todo: Improve is not to take a list of params to check agains instead of a single value
-            explicit AtLeast(uint toCompare) : _toCompare(toCompare) {}
-            bool compare(uint number) { return _toCompare != number; } 
-            std::string expectStr(uint number) { return std::string("we expected other value than ") + _toCompare + std::string(" and received ") + number; };
-            uint _toCompare = 0;
-        }
+    struct VerifyCompare {
+        explicit VerifyCompare(uint toCompare) : _toCompare(toCompare) {}
+        bool compare(uint number) { return _toCompare == number; } 
+        std::string expectStr(uint number) { return std::string("we expected exactly ") + _toCompare + std::string(" method call but received ") + number; };
+        int _toCompare = 0;
+    }
+    struct NeverCalled {
+        bool compare(uint number) { return !number; } 
+        std::string expectStr(uint number) { return std::string("we expected this method to never be called ") + _toCompare + std::string(" but received ") + number; };
+        int _toCompare = 0;
+    }
+    struct AtLeast {
+        explicit AtLeast(uint toCompare) : _toCompare(toCompare) {}
+        bool compare(uint number) { return _toCompare >= number; } 
+        std::string expectStr(uint number) { return std::string("we expected at least ") + _toCompare + std::string(" method call but received ") + number; };
+        uint _toCompare = 0;
+    }
+    struct AtMost {
+        explicit AtLeast(uint toCompare) : _toCompare(toCompare) {}
+        bool compare(uint number) { return _toCompare <= number; } 
+        std::string expectStr(uint number) { return std::string("we expected at most ") + _toCompare + std::string(" method call but received ") + number; };
+        uint _toCompare = 0;
+    }
+    struct IsNot { // Todo: Improve is not to take a list of params to check agains instead of a single value
+        explicit AtLeast(uint toCompare) : _toCompare(toCompare) {}
+        bool compare(uint number) { return _toCompare != number; } 
+        std::string expectStr(uint number) { return std::string("we expected other value than ") + _toCompare + std::string(" method call but received ") + number; };
+        uint _toCompare = 0;
     }
 
     /**
@@ -77,7 +81,7 @@ namespace FSeam {
             std::string key = _className + std::move(methodName);
 
             if (_verifiers.find(key) != _verifiers.end()) {
-                auto dupedMethod = _verifiers.at(key)->_handler;
+                auto dupedMethod = _verifiers.at(std::move(key))->_handler;
                 if (dupedMethod)
                     dupedMethod(arg);
             }
@@ -100,7 +104,7 @@ namespace FSeam {
             methodCallVerifier->_methodName = std::move(methodName);
             methodCallVerifier->_calledData.emplace_back(std::move(callingInfo));
             methodCallVerifier->_called = methodCallVerifier->_calledData.size();
-            _verifiers[key] = methodCallVerifier;
+            _verifiers[std::move(key)] = methodCallVerifier;
         }
 
         /**
@@ -124,14 +128,14 @@ namespace FSeam {
             methodCallVerifier->_calledData.clear();
             methodCallVerifier->_called = methodCallVerifier->_calledData.size();
             if (isComposed && methodCallVerifier->_handler) {
-                methodCallVerifier->_handler = [handler, methodCallVerifier](void *data){
+                methodCallVerifier->_handler = [&methodCallVerifier, composedHandler = std::move(handler)](void *data){
                     methodCallVerifier->_handler(data);
-                    handler(data);
+                    composedHandler(data);
                 };
             }
             else
                 methodCallVerifier->_handler = handler;
-            _verifiers[key] = methodCallVerifier;
+            _verifiers[std::move(key)] = methodCallVerifier;
         }
 
         /**
@@ -193,7 +197,7 @@ namespace FSeam {
             if (_verifiers.find(key) == _verifiers.end()) {
                 if (comp._toCompare > 0u) {
                     std::cout << "Verify error for method " << key << ", method never have been called while " 
-                              << comp.expectStr(0u) << std::endl;
+                              << comp.expectStr(0u) << " method call \n";
                 }
                 return comp._toCompare == 0u;
             }
@@ -201,7 +205,7 @@ namespace FSeam {
             bool result = comp.compare(mockMethodCalled);
             if (!result) {
                 std::cout << "Verify error for method " << key << ", method has been called but "
-                          << comp.expectStr(_verifiers.at(key)->_called) << std::endl;
+                          << comp.expectStr(mockMethodCalled) << " method call following the specified contentChecker\n";
             }
             return result;
         }
@@ -286,7 +290,7 @@ namespace FSeam {
         std::map<std::string, std::shared_ptr<MockClassVerifier> > _defaultMockedClass;
     };
 
-    // ------------------------ Helper free functions --------------------------
+    // ------------------------ Helper Client Free functions -------------------------- 
 
     /**
      * @brief This method get the mock verifier instance class
