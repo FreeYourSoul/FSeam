@@ -13,7 +13,10 @@
 #include <map>
 #include <any>
 
+#define mock_return_value(funcName, className, ret)  #funcName,[](void *data) { static_cast<className *>(data)->funcName##_ReturnValue = ret;},true
+
 namespace FSeam {
+
 
     /**
      * @brief TypeTraitsClass with a ClassName alias in order to get the name of the class to mock (used as key for the methods)
@@ -22,7 +25,9 @@ namespace FSeam {
      */
     template <typename T>
     struct TypeParseTraits {
-        static const std::string ClassName;
+        using DataClass = void;
+        inline static const std::string ClassName = "Undefined";
+
     };
 
     /**
@@ -89,14 +94,13 @@ namespace FSeam {
      */
     class MockClassVerifier {
     public:
-        MockClassVerifier(std::string className) : _className(className) {}
+        MockClassVerifier(std::string className) : _className(std::move(className)) {}
 
-        void invokeDupedMethod(std::string methodName, void *arg = nullptr) {
+        void invokeDupedMethod(const std::string &methodName, void *arg = nullptr) {
             std::string key = _className + std::move(methodName);
 
             if (_verifiers.find(key) != _verifiers.end()) {
-                auto dupedMethod = _verifiers.at(std::move(key))->_handler;
-                if (dupedMethod)
+                if (auto dupedMethod = _verifiers.at(key)->_handler; dupedMethod)
                     dupedMethod(arg);
             }
         }
@@ -132,7 +136,7 @@ namespace FSeam {
          *                   if false, override the existing handler if any
          *                   set at false by default
          */
-        void dupeMethod(std::string methodName, std::function<void(void*)> handler, bool isComposed = false) {
+        void dupeMethod(std::string methodName, const std::function<void(void*)> &handler, bool isComposed = false) {
             auto methodCallVerifier = std::make_shared<MethodCallVerifier>();
             std::string key = _className + methodName;
 
@@ -151,7 +155,6 @@ namespace FSeam {
                 methodCallVerifier->_handler = handler;
             _verifiers[std::move(key)] = methodCallVerifier;
         }
-
 
         /**
          * @brief verify if the given method has been at least called once

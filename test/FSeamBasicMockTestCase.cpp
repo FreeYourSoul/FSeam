@@ -97,11 +97,11 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
         } // End section : test FSeam::MockVerifier::cleanup
         
     } // End section : Test On source::TestingClass::checkCalled
-    
+
     SECTION("Test FSeam::Verify on Arguments") {
         CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, FSeam::NeverCalled{}));
         testingClass.execute(); // called once in total
-        
+
         CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE));
         CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
                 return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue == 42;
@@ -177,11 +177,33 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
 
     } // End section : Test FSeam::Verify on Arguments
 
-    SECTION ("Test FSeam::Verify on Return Values") {
-        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLERETURNVALUE, FSeam::NeverCalled{}));
-        testingClass.execute(); // called once in total
-        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLERETURNVALUE));
+    SECTION ("Test FSeam::Mock Return Values") {
 
+        SECTION("RAW USAGE : set mock return value") {
+            fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKSIMPLERETURNVALUE, [](void *methodCallData) {
+                static_cast<FSeam::DependencyGettableData *>(methodCallData)->checkSimpleReturnValue_ReturnValue = 42;
+            });
+            CHECK(42 == testingClass.getDepGettable().checkSimpleReturnValue());
+            fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKSIMPLERETURNVALUE, [](void *methodCallData) {
+                static_cast<FSeam::DependencyGettableData *>(methodCallData)->checkSimpleReturnValue_ReturnValue = 1337;
+            });
+            CHECK(1337 == testingClass.getDepGettable().checkSimpleReturnValue());
+            fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKSIMPLERETURNVALUE, [](void *methodCallData) {
+                static_cast<FSeam::DependencyGettableData *>(methodCallData)->checkSimpleReturnValue_ReturnValue = -1;
+            });
+            CHECK(-1 == testingClass.getDepGettable().checkSimpleReturnValue());
+
+        } // End section : RAW USAGE : set mock return value
+
+        SECTION("MACRO USAGE : set mock return value") {
+            fseamMock->dupeMethod(mock_return_value(checkSimpleReturnValue, FSeam::DependencyGettableData, 1));
+            CHECK(1 == testingClass.getDepGettable().checkSimpleReturnValue());
+            fseamMock->dupeMethod(mock_return_value(checkSimpleReturnValue, FSeam::DependencyGettableData, 42));
+            CHECK(42 == testingClass.getDepGettable().checkSimpleReturnValue());
+            fseamMock->dupeMethod(mock_return_value(checkSimpleReturnValue, FSeam::DependencyGettableData, 177));
+            CHECK(177 == testingClass.getDepGettable().checkSimpleReturnValue());
+
+        } // End section : MACRO USAGE : set mock return value
 
     } // End section : Test FSeam::Verify on Return Values
 
