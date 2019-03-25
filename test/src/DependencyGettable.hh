@@ -16,6 +16,12 @@ namespace source {
 
         int checkSimpleReturnValue();
 
+        /**
+         * @brief check if this class has been used into its original form or not
+         * @note each of the public testing method set to true the _hasOriginalBeenCalled boolean
+         * @return true if a public method has been implemented with its original behavior,
+         *         false othewise
+         */
         bool hasOriginalServiceBeenCalled() { return _hasOriginalBeenCalled; }
 
     private:
