@@ -13,13 +13,13 @@ TEST_CASE( "FSeamDefaultMockTest", "[default]" ) {
     source::TestingClass testingClass {};
    
     SECTION("Test behavior of default for NonGettable Mock") {
-        auto *fseamMock = FSeam::getDefault<source::DependencyNonGettable>();
+        auto fseamMock = FSeam::getDefault<source::DependencyNonGettable>();
 
 
     } // End section : Test behavior of default for NonGettable Mock
 
     SECTION("Test behavior of default for Gettable Mock") {
-        auto *fseamMock = FSeam::getDefault<source::DependencyGettable>();
+        auto fseamMock = FSeam::getDefault<source::DependencyGettable>();
 
     } // End section : Test behavior of default for Gettable Mock
 

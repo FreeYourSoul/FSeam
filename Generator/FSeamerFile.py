@@ -17,6 +17,8 @@ LOCKING_HEAD = "#ifndef FREESOULS___CLASSNAME___HPP \n" \
                "#define FREESOULS___CLASSNAME___HPP\n\n"
 LOCKING_FOOTER = "\n#endif\n"
 BASE_HEADER_CODE = "#include "
+PARAM_SUFFIX = "_ParamValue"
+RETURN_SUFFIX = "_ReturnValue"
 
 
 class FSeamerFile:
@@ -133,16 +135,10 @@ class FSeamerFile:
         for param in self.functionSignatureMapping[methodName]["params"]:
             _paramType = param["type"]
             _paramName = param["name"]
-            if "*" in _paramType or "shared_ptr" in _paramType or "unique_ptr" in _paramType:
-                _methodData += INDENT + _paramType + " " + methodName + "_" + _paramName + "_ParamValue;\n"
-            else:
-                _methodData += INDENT + _paramType + " *" + methodName + "_" + _paramName + "_ParamValue;\n"
+            _methodData += INDENT + _paramType + " " + methodName + "_" + _paramName + PARAM_SUFFIX + ";\n"
         _returnType = self.functionSignatureMapping[methodName]["rtnType"]
         if _returnType != "void":
-            if "*" in _returnType or "shared_ptr" in _returnType or "unique_ptr" in _returnType:
-                _methodData += INDENT + _returnType + " " + methodName + "_ReturnValue;\n\n"
-            else:
-                _methodData += INDENT + _returnType + " *" + methodName + "_ReturnValue;\n\n"
+            _methodData += INDENT + _returnType + " " + methodName + RETURN_SUFFIX + ";\n\n"
         return _methodData
 
     def _registerMethodIntoMethodSignatureMap(self, name, retType, params):
@@ -177,19 +173,21 @@ class FSeamerFile:
         self.mapClassMethods[className] = _lstMethodName
         return _methods
 
-    @staticmethod
-    def _generateMethodContent(returnType, className, methodName):
-        _content = INDENT + "FSeam::" + className + "Data data;\n"
-        _content += INDENT + "auto mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
+    def _generateMethodContent(self, returnType, className, methodName):
+        _content = INDENT + "auto mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
         _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this) :\n"
-        _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n\n"
+        _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n"
+        _content += INDENT + "FSeam::" + className + "Data data;\n\n"
+        for p in self.functionSignatureMapping[methodName]["params"]:
+            _content += INDENT + "data." + methodName + "_" + p["name"] + PARAM_SUFFIX + " = " + p["name"] + ";\n"
         _content += INDENT + "mockVerifier->invokeDupedMethod(__func__, &data);\n"
         _content += INDENT + "mockVerifier->methodCall(__func__, std::any(data));\n"
         if 'void' != returnType:
-            _content += INDENT + "return *data." + methodName + "_ReturnValue;"
+            _content += INDENT + "return data." + methodName + "_ReturnValue;"
         return _content
 
-    def _clearDataStructureData(self, content, className):
+    @staticmethod
+    def _clearDataStructureData(content, className):
         indexBegin = content.find("struct " + className + "Data")
         indexEnd = content.find("// End of DataStructure" + className) + len("// End of DataStructure" + className)
         if indexBegin > 0 and indexEnd > len("// End of DataStructure" + className) + 1:

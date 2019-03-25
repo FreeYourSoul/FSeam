@@ -11,7 +11,7 @@
 
 TEST_CASE( "FSeamBasicTest", "[basic]" ) {
     source::TestingClass testingClass {};
-    auto *fseamMock = FSeam::get(&testingClass.getDepGettable());
+    auto fseamMock = FSeam::get(&testingClass.getDepGettable());
 
     SECTION("Test hasOriginalServiceBeenCalled") { 
         testingClass.execute();
@@ -21,30 +21,30 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
     } // End section : Test hasOriginalServiceBeenCalled
 
     SECTION("FSeam_Verify") {
-        EXPECT_FALSE(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED));
-        EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::NeverCalled{}));
+        REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED));
+        REQUIRE(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::NeverCalled{}));
         testingClass.execute();
-        EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED));
-        EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 1));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 1));
         testingClass.execute();
         testingClass.execute();
         testingClass.execute();
         testingClass.execute();
         
         // check at least 1 call has been done
-        EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED));
         // check exactly 5 calls are done
-        EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 5));
-        EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::VerifyCompare{5});
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 5));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::VerifyCompare{5}));
 
-        EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::IsNot{1}));
-        EXPECT_FALSE(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::IsNot{5}));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::IsNot{1}));
+        CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::IsNot{5}));
 
-        EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::AtLeast{4}));
-        EXPECT_FALSE(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::AtLeast{6}));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::AtLeast{4}));
+        CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::AtLeast{6}));
 
-        EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::AtMost{6}));
-        EXPECT_FALSE(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::AtMost{4}));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::AtMost{6}));
+        CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::AtMost{4}));
 
     } // End section : FSeam_Verify
 
@@ -53,11 +53,11 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
         fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&isDupedImplCalled](void *dataStruct) {
             isDupedImplCalled = true;
         });
-        EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::NeverCalled{}));
-        EXPECT_FALSE(isDupedImplCalled);
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, FSeam::NeverCalled{}));
+        CHECK_FALSE(isDupedImplCalled);
         testingClass.execute();
-        EXPECT(isDupedImplCalled);
-        EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED));
+        CHECK(isDupedImplCalled);
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED));
 
     } // End section : FSeam_DupeMethod_simple
 
@@ -74,50 +74,50 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
             }, true); // third layer  : valueChanging = 111
         
         SECTION("Test Composition") {
-            EXPECT_FALSE(valueChanging);
+            REQUIRE(0 == valueChanging);
             testingClass.execute();
-            EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED), 1);
-            EXPECT(111 == valueChanging);
+            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 1));
+            CHECK(111 == valueChanging);
 
         } // End section : Test Composition
 
         SECTION("Test FSeam::MockVerifier::cleanup") {
             FSeam::MockVerifier::cleanUp(); // Cleanup, remove all alternation of mocks : valueChanging won't change
-
+            fseamMock = FSeam::get(&testingClass.getDepGettable()); // Need to reset the shared ptr as it has been cleaned up
             fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
                     valueChanging += 1;
                 }, true); // valueChanging = 1
 
-            EXPECT_FALSE(valueChanging);
+            REQUIRE(0 == valueChanging);
             testingClass.execute();
-            EXPECT(fseamMock.verify(FSeam::DependencyGettable_FunName::CHECKCALLED), 1);
-            EXPECT_FALSE(111 == valueChanging);
-            EXPECT(1 == valueChanging);
+            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 1));
+            CHECK_FALSE(111 == valueChanging);
+            CHECK(1 == valueChanging);
 
         } // End section : test FSeam::MockVerifier::cleanup
         
     } // End section : Test On source::TestingClass::checkCalled
     
     SECTION("Test FSeam::Verify on Arguments") {
-        EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, FSeam::NeverCalled{}));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, FSeam::NeverCalled{}));
         testingClass.execute(); // called once in total
         
-        EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE));
-        EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue == 42;
-            }), 1);
-        EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue != 42;
-            }), FSeam::NeverCalled{});
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue == 42;
+            }));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue != 42;
+            }, FSeam::NeverCalled{}));
 
-        EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).easy_ArgValue != "4242";
-            }), FSeam::NeverCalled{});
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_easy_ParamValue != "4242";
+            }, FSeam::NeverCalled{}));
 
-        EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).easy_ArgValue != "4242" ||
-                        std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue >= 16;
-            }), 1});
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_easy_ParamValue != "4242" ||
+                       std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue >= 16;
+            }));
 
         testingClass.execute();
         testingClass.execute();
@@ -125,45 +125,45 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
         testingClass.execute(); // called 5 times in total
 
         SECTION ("RAW USAGE : Check one argument") {
-            EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                    return std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue == 42;
-                }), FSeam::AtLeast{3});
-            EXPECT_FALSE(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                    return std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue == 42;
-                }), FSeam::AtLeast{6});
-            EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue == 42;
-            }), FSeam::AtLeast{8});
-            EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue == 42;
-            }), FSeam::AtMost{3});
-            EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue == 42;
-            }), FSeam::VerifyCompare{5});
+            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                    return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue == 42;
+                }, FSeam::AtLeast{3}));
+            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                    return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue == 42;
+                }, FSeam::AtMost{6}));
+            CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                    return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue == 42;
+                }, FSeam::AtLeast{8}));
+            CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                    return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue == 42;
+                }, FSeam::AtMost{3}));
+            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                    return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue == 42;
+                }, FSeam::VerifyCompare{5}));
 
         } // End section : Check one argument
 
         SECTION ("RAW USAGE : Check all arguments") {
-            EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue == 42 &&
-                        std::any_cast<FSeam::DependencyGettableData>(methodCallData).easy_ArgValue == "4242";   
-                }), FSeam::AtLeast{3});
-            EXPECT_FALSE(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue == 42 &&
-                        std::any_cast<FSeam::DependencyGettableData>(methodCallData).easy_ArgValue == "4242";   
-                }), FSeam::AtLeast{6});
-            EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue == 42 &&
-                        std::any_cast<FSeam::DependencyGettableData>(methodCallData).easy_ArgValue == "4242";   
-                }), FSeam::AtLeast{8});
-            EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue == 42 &&
-                        std::any_cast<FSeam::DependencyGettableData>(methodCallData).easy_ArgValue == "4242";   
-                }), FSeam::AtMost{3});
-            EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
-                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).simple_ArgValue == 42 &&
-                        std::any_cast<FSeam::DependencyGettableData>(methodCallData).easy_ArgValue == "4242";   
-                }), FSeam::VerifyCompare{5});
+            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue == 42 &&
+                       std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_easy_ParamValue == "4242";
+                }, FSeam::AtLeast{3}));
+            CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue == 42 &&
+                       std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_easy_ParamValue == "4242";
+                }, FSeam::AtLeast{6}));
+            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue == 42 &&
+                       std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_easy_ParamValue == "4242";
+                }, FSeam::AtMost{8}));
+            CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue == 42 &&
+                       std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_easy_ParamValue == "4242";
+                }, FSeam::AtMost{3}));
+            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, [](std::any &methodCallData) {
+                return std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_simple_ParamValue == 42 &&
+                       std::any_cast<FSeam::DependencyGettableData>(methodCallData).checkSimpleInputVariable_easy_ParamValue == "4242";
+                }, FSeam::VerifyCompare{5}));
 
         } // End section : Check all argument
 
@@ -178,14 +178,13 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
     } // End section : Test FSeam::Verify on Arguments
 
     SECTION ("Test FSeam::Verify on Return Values") {
-        EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLERETURNVALUE, FSeam::NeverCalled{}));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLERETURNVALUE, FSeam::NeverCalled{}));
         testingClass.execute(); // called once in total
-        EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLERETURNVALUE));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLERETURNVALUE));
 
 
     } // End section : Test FSeam::Verify on Return Values
 
     FSeam::MockVerifier::cleanUp();
+
 } // End Test_Case : FSeamBasicTest
-
-

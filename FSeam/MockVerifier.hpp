@@ -5,6 +5,7 @@
 #ifndef FREESOULS_MOCKVERIFIER_HH
 #define FREESOULS_MOCKVERIFIER_HH
 
+#include <utility>
 #include <string>
 #include <functional>
 #include <memory>
@@ -40,32 +41,45 @@ namespace FSeam {
     struct VerifyCompare {
         explicit VerifyCompare(uint toCompare) : _toCompare(toCompare) {}
         bool compare(uint number) { return _toCompare == number; } 
-        std::string expectStr(uint number) { return std::string("we expected exactly ") + _toCompare + std::string(" method call but received ") + number; };
+        std::string expectStr(uint number) { return std::string("we expected exactly ") +
+            std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
         int _toCompare = 0;
-    }
+    };
     struct NeverCalled {
         bool compare(uint number) { return !number; } 
-        std::string expectStr(uint number) { return std::string("we expected this method to never be called ") + _toCompare + std::string(" but received ") + number; };
+        std::string expectStr(uint number) { return std::string("we expected this method to never be called ") +
+            std::to_string(_toCompare) + std::string(" but received ") + std::to_string(number); };
         int _toCompare = 0;
-    }
+    };
     struct AtLeast {
         explicit AtLeast(uint toCompare) : _toCompare(toCompare) {}
-        bool compare(uint number) { return _toCompare >= number; } 
-        std::string expectStr(uint number) { return std::string("we expected at least ") + _toCompare + std::string(" method call but received ") + number; };
+        bool compare(uint number) { return _toCompare <= number; }
+        std::string expectStr(uint number) { return std::string("we expected at least ") +
+            std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
         uint _toCompare = 0;
-    }
+    };
     struct AtMost {
-        explicit AtLeast(uint toCompare) : _toCompare(toCompare) {}
-        bool compare(uint number) { return _toCompare <= number; } 
-        std::string expectStr(uint number) { return std::string("we expected at most ") + _toCompare + std::string(" method call but received ") + number; };
+        explicit AtMost(uint toCompare) : _toCompare(toCompare) {}
+        bool compare(uint number) { return _toCompare >= number; }
+        std::string expectStr(uint number) { return std::string("we expected at most ") +
+            std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
         uint _toCompare = 0;
-    }
+    };
     struct IsNot { // Todo: Improve is not to take a list of params to check agains instead of a single value
-        explicit AtLeast(uint toCompare) : _toCompare(toCompare) {}
+        explicit IsNot(uint toCompare) : _toCompare(toCompare) {}
         bool compare(uint number) { return _toCompare != number; } 
-        std::string expectStr(uint number) { return std::string("we expected other value than ") + _toCompare + std::string(" method call but received ") + number; };
+        std::string expectStr(uint number) { return std::string("we expected other value than ") +
+            std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
         uint _toCompare = 0;
-    }
+    };
+
+    template <typename TypeTraitClass>
+    struct isComparator { static const bool v = false;  };
+    template <> struct isComparator<IsNot> { static const bool v = true; };
+    template <> struct isComparator<AtMost> { static const bool v = true; };
+    template <> struct isComparator<AtLeast> { static const bool v = true; };
+    template <> struct isComparator<NeverCalled> { static const bool v = true; };
+    template <> struct isComparator<VerifyCompare> { static const bool v = true; };
 
     /**
      * @brief Mocking class, it contains all mocked method / save all calls to methods
@@ -128,9 +142,9 @@ namespace FSeam {
             methodCallVerifier->_calledData.clear();
             methodCallVerifier->_called = methodCallVerifier->_calledData.size();
             if (isComposed && methodCallVerifier->_handler) {
-                methodCallVerifier->_handler = [&methodCallVerifier, composedHandler = std::move(handler)](void *data){
-                    methodCallVerifier->_handler(data);
-                    composedHandler(data);
+                methodCallVerifier->_handler = [currentHandler = methodCallVerifier->_handler, handler](void *data){
+                    currentHandler(data);
+                    handler(data);
                 };
             }
             else
@@ -138,42 +152,45 @@ namespace FSeam {
             _verifiers[std::move(key)] = methodCallVerifier;
         }
 
+
         /**
-         * @brief Verify if a method has been called under certain conditions (number of times)
-         * @note This method is going to call its templated overload using a default contentChecker (no check) 
-         *       and either FSeam::VerifierComparator::VerifyComparator or FSeam::VerifierComparator::AtLeast as Comparator depending on the value of times
-         *
-         * @param className class name to verify
-         * @param methodName method to verify
-         * @param times 
-         *        if set with a positive value: number of times you verify that the mocked method has been called (use the FSeam::VerifierComparator::VerifyComparator(times)),
-         *        if not set or a negative value: this method verify you at least have the mocked method called once (use the FSeam::VerifierComparator::AtLeast(1))
-         * @return true if the method encounter your conditions (number of times called), false otherwise
+         * @brief verify if the given method has been at least called once
+         * @details will call verify with a passthrough predicate and a AtLeast(1) comparator
+         * @param methodName method to check
+         * @return true if the method has been called at least once, false otherwise
          */
-        bool verify(std::string methodName, const int times = -1) const {
-            return verify(std::move(methodName), [](std::auto &methodCallVerifier) { return true; }, times);
+        bool verify(std::string methodName) const {
+            return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, AtLeast(1));
         }
 
         /**
          * @brief Verify if a method has been called under certain conditions (number of times)
-         * @note This method is going to call its templated overload using either FSeam::VerifierComparator::VerifyComparator or
-         *       FSeam::VerifierComparator::AtLeast as Comparator depending on the value of times
-         * 
-         * @tparam ContentChecker Predicate type following this signature (bool (std::auto &methodCallVerifier))
-         * 
-         * @param methodName 
-         * @param contentChecker this predicate will be used in order to check if the method has been called following specific predicament (std::auto containing metadata of call)
-         * @param times 
-         *          if set with a positive value: number of times you verify that the mocked method has been called (use the FSeam::VerifierComparator::VerifyComparator(times)),
-         *          if not set or a negative value: this method verify you at least have the mocked method called once (use the FSeam::VerifierComparator::AtLeast(1))
+         * @note This method is going to call its templated overload using a default contentChecker (no check) and
+         *       either FSeam::VerifierComparator::VerifyComparator or FSeam::VerifierComparator::AtLeast as Comparator
+         *       depending on the value of times
+         *
+         * @tparam ComparatorOrContentChecker can be an integer/a comparator/a predicate see argument for additional info
+         * @param methodName method to verify
+         * @param compOrContentChecker can be an int or a predicate for the count
+         *
+         *        if set as a predicate it will be used in order to check if the method has been called following
+         *         specific predicament (std::auto containing metadata of call) and check if atLeast(1) is found
+         *        otherwhise a passthrough predicament is used (return true)
+         *        =================
+         *        if set with a positive integral value, check of times you verify that the mocked method has been called
+         *         exactly the number of time provided (use the FSeam::VerifyComparator(compOrContentChecker)),
+         *        if set as a classic comparator, it is used as comparator.
+         *
          * @return true if the method encounter your conditions (number of times called), false otherwise
          */
-        template <typename ContentChecker>
-        bool verify(std::string methodName, ContentChecker &&contentChecker, const int times = -1) const {
-            if (times < 0) {
-                return verify(std::move(methodName), std::forward(contentChecker), AtLeast(1));
-            }
-            return verify(std::move(methodName), std::forward(contentChecker), VerifyCompare(times));
+        template <typename ComparatorOrContentChecker>
+        bool verify(std::string methodName, ComparatorOrContentChecker &&compOrContentChecker) const {
+            if constexpr (FSeam::isComparator<ComparatorOrContentChecker>::v)
+                return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, compOrContentChecker);
+            else if constexpr (std::is_integral<ComparatorOrContentChecker>())
+                return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, VerifyCompare(compOrContentChecker));
+            else
+                return verify(std::move(methodName), std::forward<ComparatorOrContentChecker>(compOrContentChecker), AtLeast(1));
         }
 
         /**
@@ -185,9 +202,11 @@ namespace FSeam {
          *           AtMost  : Check if the method has been called at most the number provided
          *           IsNot   : Check if the method is not the number provided
          *          
-         * @param contentChecker this predicate will be used in order to check if the method has been called following specific predicament (std::auto containing metadata of call)
+         * @param contentChecker this predicate will be used in order to check if the method has been called following
+         *         specific predicament (std::auto containing metadata of call)
          * @param methodName Name of the method to check on the mock (Use the helpers constant to ensure no typo)
-         * @param comp comparator instance on which the number of times the mock method is called on a provided value is checked against
+         * @param comp comparator instance on which the number of times the mock method is called on a provided value
+         *          is checked against
          * @return true if the method encounter the provided comparator conditions, false otherwise
          */
         template <typename ContentChecker, typename Comparator>
@@ -201,7 +220,7 @@ namespace FSeam {
                 }
                 return comp._toCompare == 0u;
             }
-            uint mockMethodCalled = std::count_if(_verifiers.at(key)->_calledData.begin(), _verifiers.at(key)->_calledData.end(), contentChecker);
+            auto mockMethodCalled = std::count_if(_verifiers.at(key)->_calledData.begin(), _verifiers.at(key)->_calledData.end(), contentChecker);
             bool result = comp.compare(mockMethodCalled);
             if (!result) {
                 std::cout << "Verify error for method " << key << ", method has been called but "
@@ -236,7 +255,7 @@ namespace FSeam {
          * @brief Clean the FSeam context of all previously set mock behaviors
          */
         static void cleanUp() {
-            inst.reset();
+            inst.reset(nullptr);
         }
 
         bool isMockRegistered(const void *mockPtr) {
