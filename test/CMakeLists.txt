@@ -21,7 +21,14 @@ target_include_directories(testLib
 target_link_libraries(testLib Catch2::Catch2)
 
 enable_testing()
-addFSeamTests(DESTINATION_TARGET testFSeam
+
+addFSeamTests(
+        DESTINATION_TARGET testFSeam
         TARGET_AS_SOURCE testLib
-        TST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/testMain.cpp ${CMAKE_CURRENT_SOURCE_DIR}/FSeamBasicTestCase.cpp
-        TO_MOCK ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.hh ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.hh)
+        TST_SRC 
+                ${CMAKE_CURRENT_SOURCE_DIR}/testMain.cpp 
+                ${CMAKE_CURRENT_SOURCE_DIR}/FSeamBasicMockTestCase.cpp 
+                ${CMAKE_CURRENT_SOURCE_DIR}/FSeamDefaultMockTestCase.cpp
+        TO_MOCK 
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.hh 
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.hh)

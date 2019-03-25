@@ -3,10 +3,11 @@
 //
 
 #include <catch.hpp>
+#include <iostream>
+#include <any>
 #include <MockVerifier.hpp>
 #include <TestingClass.hh>
 #include <MockData.hpp>
-#include <iostream>
 
 TEST_CASE( "FSeamBasicTest", "[basic]" ) {
     source::TestingClass testingClass {};
@@ -98,7 +99,7 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
     } // End section : Test On source::TestingClass::checkCalled
     
     SECTION("Test FSeam::Verify on Arguments") {
-        EXPECT_FALSE(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, FSeam::NeverCalled{}));
+        EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE, FSeam::NeverCalled{}));
         testingClass.execute(); // called once in total
         
         EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLEINPUTVARIABLE));
@@ -175,6 +176,14 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
         } // End section : RECOMMENDED USAGE : Check arguments
 
     } // End section : Test FSeam::Verify on Arguments
+
+    SECTION ("Test FSeam::Verify on Return Values") {
+        EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLERETURNVALUE, FSeam::NeverCalled{}));
+        testingClass.execute(); // called once in total
+        EXPECT(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKSIMPLERETURNVALUE));
+
+
+    } // End section : Test FSeam::Verify on Return Values
 
     FSeam::MockVerifier::cleanUp();
 } // End Test_Case : FSeamBasicTest
