@@ -14,6 +14,7 @@
 #include <any>
 
 #define mock_return_value(funcName, className, ret)  #funcName,[](void *data) { static_cast<className *>(data)->funcName##_ReturnValue = ret;},true
+#define check_arg_value(funcName, className, argName, check)  #funcName,[](std::any &data) { return std::any_cast<className>(data).funcName##_##argName##_ParamValue == check;}
 
 namespace FSeam {
 

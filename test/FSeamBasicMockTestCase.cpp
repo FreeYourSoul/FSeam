@@ -167,13 +167,11 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
 
         } // End section : Check all argument
 
-        /**
-         * Use generated helper functions
-         */
-        SECTION ("RECOMMENDED USAGE : Check arguments") {
-            // TODO
+        SECTION ("MACRO USAGE : Check argument") {
+            CHECK(fseamMock->verify(check_arg_value(checkSimpleInputVariable, FSeam::DependencyGettableData, simple, 42), FSeam::AtLeast{3}));
+            CHECK(fseamMock->verify(check_arg_value(checkSimpleInputVariable, FSeam::DependencyGettableData, easy, "4242"), FSeam::AtLeast{3}));
 
-        } // End section : RECOMMENDED USAGE : Check arguments
+        } // End section : MACRO USAGE : Check arguments
 
     } // End section : Test FSeam::Verify on Arguments
 
