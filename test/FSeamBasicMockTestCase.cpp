@@ -11,7 +11,10 @@
 
 TEST_CASE( "FSeamBasicTest", "[basic]" ) {
     source::TestingClass testingClass {};
-    auto fseamMock = FSeam::get(&testingClass.getDepGettable());
+    /**
+     *  GENERATE is used in order to test gettable and non-gettable data
+     */
+    auto fseamMock = GENERATE(FSeam::get(&testingClass.getDepGettable()), FSeam::getDefault<source::DependencyNonGettable>());
 
     SECTION("Test hasOriginalServiceBeenCalled") { 
         testingClass.execute();
@@ -80,39 +83,6 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
             CHECK(111 == valueChanging);
 
         } // End section : Test Composition
-
-        SECTION("Test multiple get") {
-            testingClass.execute();
-            testingClass.execute();
-            fseamMock = FSeam::get(&testingClass.getDepGettable());
-            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 2));
-            fseamMock = FSeam::get(&testingClass.getDepGettable());
-            testingClass.execute();
-            testingClass.execute();
-            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 4));
-            fseamMock = FSeam::get(&testingClass.getDepGettable());
-            testingClass.execute();
-            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 5));
-            fseamMock = FSeam::get(&testingClass.getDepGettable());
-            fseamMock = FSeam::get(&testingClass.getDepGettable());
-            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 5));
-
-        } // End section : Test multiple get
-
-        SECTION("Test FSeam::MockVerifier::cleanup") {
-            FSeam::MockVerifier::cleanUp(); // Cleanup, remove all alternation of mocks : valueChanging won't change
-            fseamMock = FSeam::get(&testingClass.getDepGettable()); // Need to reset the shared ptr as it has been cleaned up
-            fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
-                    valueChanging += 1;
-                }, true); // valueChanging = 1
-
-            REQUIRE(0 == valueChanging);
-            testingClass.execute();
-            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 1));
-            CHECK_FALSE(111 == valueChanging);
-            CHECK(1 == valueChanging);
-
-        } // End section : test FSeam::MockVerifier::cleanup
         
     } // End section : Test On source::TestingClass::checkCalled
 

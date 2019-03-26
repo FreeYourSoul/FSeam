@@ -29,6 +29,7 @@ addFSeamTests(
                 ${CMAKE_CURRENT_SOURCE_DIR}/testMain.cpp 
                 ${CMAKE_CURRENT_SOURCE_DIR}/FSeamBasicMockTestCase.cpp 
                 ${CMAKE_CURRENT_SOURCE_DIR}/FSeamDefaultMockTestCase.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/FSeamSingletonTestCase.cpp
         TO_MOCK 
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.hh 
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.hh)
