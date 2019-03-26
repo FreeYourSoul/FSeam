@@ -211,13 +211,13 @@ namespace FSeam {
          * @return true if the method encounter your conditions (number of times called), false otherwise
          */
         template <typename ComparatorOrContentChecker>
-        bool verify(std::string methodName, ComparatorOrContentChecker &&compOrContentChecker) const {
+        bool verify(std::string methodName, ComparatorOrContentChecker &&coc) const {
             if constexpr (FSeam::isComparator<ComparatorOrContentChecker>::v)
-                return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, compOrContentChecker);
+                return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, std::forward<ComparatorOrContentChecker>(coc));
             else if constexpr (std::is_integral<ComparatorOrContentChecker>())
-                return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, VerifyCompare(compOrContentChecker));
+                return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, VerifyCompare(coc));
             else
-                return verify(std::move(methodName), std::forward<ComparatorOrContentChecker>(compOrContentChecker), AtLeast(1));
+                return verify(std::move(methodName), std::forward<ComparatorOrContentChecker>(coc), AtLeast(1));
         }
 
         /**
