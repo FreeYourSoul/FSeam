@@ -9,13 +9,9 @@
 #include <TestingClass.hh>
 #include <MockData.hpp>
 
-TEST_CASE( "FSeamBasicTest", "[basic]" ) {
+TEST_CASE( "FSeamBasicTest", "[basic_mock]" ) {
     source::TestingClass testingClass {};
-    /**
-     *  GENERATE is used in order to test gettable and non-gettable data
-     *  We can test both in the same test case as the methods name are identical
-     */
-    auto fseamMock = GENERATE(FSeam::get(&testingClass.getDepGettable()), FSeam::getDefault<source::DependencyNonGettable>());
+    auto fseamMock = FSeam::get(&testingClass.getDepGettable());
 
     SECTION("Test hasOriginalServiceBeenCalled") { 
         testingClass.execute();

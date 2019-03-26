@@ -290,13 +290,12 @@ namespace FSeam {
         }
 
         /**
-         * @brief This method get the mock verifier instance class
+         * @brief This method get the MockClassVerifier instance class
+         * @details Method that retrieve the FSeam MockClassVerifier instance class corresponding to the pointer given as parameter
          *
-         * @details Method that retrieve the mock verifier instance class corresponding to the pointer given as parameter
-         *
-         * @tparam T type to mock
-         * @param mockPtr
-         * @return the mock verifier instance class, if not referenced yet, create one by calling the ::addMock(T) method
+         * @tparam T type of the instance to mock
+         * @param mockPtr pointer on the instance to mock
+         * @return a MockClassVerifier shared_ptr class, if not referenced yet, create one by calling the ::addMock(T) method
          */
         template <typename T>
         std::shared_ptr<MockClassVerifier> &getMock(const T *mockPtr) {
@@ -306,18 +305,17 @@ namespace FSeam {
         }
 
         /**
-         * @brief This method get the default mock verifier for a class type
-         *
-         * @details Method that retrieve the mock default verifier instance class corresponding to type given as template parameter
+         * @brief This method get the default MockClassVerifier for a class type
+         * @details Method that retrieve the default MockClassVerifier instance class corresponding to type given as template parameter
          *
          * @tparam T type to mock
-         * @param mockPtr
-         * @return the mock verifier instance class, if not referenced yet, create one by calling the ::addMock(T) method
+         * @tparam T Class type that is going to be default mocked
+         * @return a MockClassVerifier shared_ptr class, if not referenced yet, create one by calling the ::addDefaultMock(T) method
          */
-        std::shared_ptr<MockClassVerifier> &getDefaultMock(std::string classMockName) {
+        std::shared_ptr<MockClassVerifier> &getDefaultMock(const std::string &classMockName) {
             if (this->_defaultMockedClass.find(classMockName) == this->_defaultMockedClass.end())
                 return addDefaultMock(classMockName);
-            return this->_defaultMockedClass.at(std::move(classMockName));
+            return this->_defaultMockedClass.at(classMockName);
         }
 
     private:
@@ -339,13 +337,11 @@ namespace FSeam {
     // ------------------------ Helper Client Free functions -------------------------- 
 
     /**
-     * @brief This method get the mock verifier instance class
-     *
+     * @brief This method get the MockClassVerifier instance class
      * @details Method that retrieve the mock verifier instance class corresponding to the pointer given as parameter
-
      *
-     * @tparam T type to mock
-     * @param mockPtr
+     * @tparam T type of the instance to mock
+     * @param mockPtr pointer on the instance to mock
      * @return the mock verifier instance class, if not referenced yet, create one by calling the ::addMock(T) method
      */
     template <typename T>
@@ -354,10 +350,12 @@ namespace FSeam {
     }
 
     /**
+     * @brief This method get the MockClassVerifier instance for the given class type
      * @details Get the Default MockClassVerifier correspond to the templated class
-     *          This method has to be used in order to 
-     * 
-     * @tparam T 
+     *          This method has to be used in order to set default behaviors on a class type without needing to access
+     *          the actual instance you want to mock
+     *
+     * @tparam T Class type that is going to be default mocked
      * @return std::shared_ptr<MockClassVerifier>& 
      */
     template <typename T>

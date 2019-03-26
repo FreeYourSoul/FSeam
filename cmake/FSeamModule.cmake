@@ -5,7 +5,6 @@ set(FSEAM_GENERATOR_DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 option(FSEAM_FORCE_GENERATION "Force the generation of the file " ON)
 option(FSEAM_CLEANUP_DATA "Cleanup the data file  " OFF)
 
-message(WARNING ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(FSeam REQUIRED)
 set(FSEAM_GENERATOR_COMMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/../Generator/FSeamerFile.py)
 

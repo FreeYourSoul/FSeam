@@ -9,7 +9,7 @@
 #include <TestingClass.hh>
 #include <MockData.hpp>
 
-TEST_CASE("Test Singleton", "[base]") {
+TEST_CASE("Test Singleton", "[base][singleton]") {
     source::TestingClass testingClass {};
     auto fseamMock = FSeam::get(&testingClass.getDepGettable());
     int valueChanging = 0;
@@ -44,7 +44,6 @@ TEST_CASE("Test Singleton", "[base]") {
     } // End section : Test multiple get
 
     SECTION("FSeam::MockVerifier::cleanup") {
-        testingClass.execute();
         FSeam::MockVerifier::cleanUp(); // Cleanup, remove all alternation of mocks : valueChanging won't change
         fseamMock = FSeam::get(&testingClass.getDepGettable()); // Need to reset the shared ptr as it has been cleaned up
         fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
@@ -57,6 +56,25 @@ TEST_CASE("Test Singleton", "[base]") {
         CHECK_FALSE(111 == valueChanging);
         CHECK(1 == valueChanging);
 
-    } // End section : FSeam::MockVerifier::cleanup 
+    } // End section : FSeam::MockVerifier::cleanup
 
+    SECTION("Test Override dupe") {
+        REQUIRE(0 == valueChanging);
+        testingClass.execute();
+        CHECK(111 == valueChanging);
+
+        fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
+            valueChanging = 1337;
+        }); // valueChanging = 1
+        fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
+            valueChanging = 42;
+        }); // valueChanging = 1
+
+        REQUIRE(111 == valueChanging);
+        testingClass.execute();
+        CHECK(42 == valueChanging);
+
+    } // End section : Test Override dupe
+
+    FSeam::MockVerifier::cleanUp();
 } // End TestCase : Test Singleton

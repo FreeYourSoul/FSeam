@@ -16,6 +16,10 @@ namespace source {
 
         void execute();
 
+        int checkSimpleReturnValueNonGettable() {
+            return _depNonGettable.checkSimpleReturnValue();
+        }
+
         DependencyGettable &getDepGettable() { return _depGettable; }
 
     private:

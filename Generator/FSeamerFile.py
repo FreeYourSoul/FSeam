@@ -22,12 +22,13 @@
 # SOFTWARE.
 
 
-#!/usr/bin/python
-import CppHeaderParser
-import os
 import ntpath
+import os
 import re
 import sys
+
+# !/usr/bin/python
+import CppHeaderParser
 
 INDENT = "    "
 INDENT2 = INDENT + INDENT
@@ -201,7 +202,7 @@ class FSeamerFile:
         _content = INDENT + "auto mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
         _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this) :\n"
         _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n"
-        _content += INDENT + "FSeam::" + className + "Data data;\n\n"
+        _content += INDENT + "FSeam::" + className + "Data data {};\n\n"
         for p in self.functionSignatureMapping[methodName]["params"]:
             _content += INDENT + "data." + methodName + "_" + p["name"] + PARAM_SUFFIX + " = " + p["name"] + ";\n"
         _content += INDENT + "mockVerifier->invokeDupedMethod(__func__, &data);\n"
