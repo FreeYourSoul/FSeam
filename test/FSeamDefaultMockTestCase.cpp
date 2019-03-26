@@ -81,6 +81,15 @@ TEST_CASE( "FSeamDefaultMockTest", "[default]" ) {
             REQUIRE(10 != testingFlag.checkSimpleReturnValue());
             REQUIRE(1337 == testingFlag.checkSimpleReturnValue());
 
+            SECTION("Test other instances still use default behaviors") {
+                source::TestingClass otherTestingClass {};
+                REQUIRE(0 == testingFlag);
+                REQUIRE(0 == otherTestingClass.checkSimpleReturnValue());
+                otherTestingClass.execute();
+                REQUIRE(1 == testingFlag);
+                REQUIRE(10 == otherTestingClass.checkSimpleReturnValue());
+            }
+
         } // End section : Test Overrided default behaviors
         
     } // End section : Test override

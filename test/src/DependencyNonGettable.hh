@@ -18,8 +18,6 @@ namespace source {
 
         bool hasOriginalServiceBeenCalled() { return _hasOriginalBeenCalled; }`
 
-        bool _testingFlag = false;
-
     private:
         bool _hasOriginalBeenCalled = false;
     };
