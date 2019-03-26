@@ -16,7 +16,9 @@ namespace source {
 
         int checkSimpleReturnValue();
 
-        bool hasOriginalServiceBeenCalled() { return _hasOriginalBeenCalled; }
+        bool hasOriginalServiceBeenCalled() { return _hasOriginalBeenCalled; }`
+
+        bool _testingFlag = false;
 
     private:
         bool _hasOriginalBeenCalled = false;

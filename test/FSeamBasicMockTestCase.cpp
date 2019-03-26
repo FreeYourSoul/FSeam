@@ -13,6 +13,7 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
     source::TestingClass testingClass {};
     /**
      *  GENERATE is used in order to test gettable and non-gettable data
+     *  We can test both in the same test case as the methods name are identical
      */
     auto fseamMock = GENERATE(FSeam::get(&testingClass.getDepGettable()), FSeam::getDefault<source::DependencyNonGettable>());
 
