@@ -30,7 +30,7 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
         testingClass.execute();
         testingClass.execute();
         testingClass.execute();
-        
+
         // check at least 1 call has been done
         CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED));
         // check exactly 5 calls are done
@@ -80,6 +80,24 @@ TEST_CASE( "FSeamBasicTest", "[basic]" ) {
             CHECK(111 == valueChanging);
 
         } // End section : Test Composition
+
+        SECTION("Test multiple get") {
+            testingClass.execute();
+            testingClass.execute();
+            fseamMock = FSeam::get(&testingClass.getDepGettable());
+            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 2));
+            fseamMock = FSeam::get(&testingClass.getDepGettable());
+            testingClass.execute();
+            testingClass.execute();
+            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 4));
+            fseamMock = FSeam::get(&testingClass.getDepGettable());
+            testingClass.execute();
+            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 5));
+            fseamMock = FSeam::get(&testingClass.getDepGettable());
+            fseamMock = FSeam::get(&testingClass.getDepGettable());
+            CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 5));
+
+        } // End section : Test multiple get
 
         SECTION("Test FSeam::MockVerifier::cleanup") {
             FSeam::MockVerifier::cleanUp(); // Cleanup, remove all alternation of mocks : valueChanging won't change
