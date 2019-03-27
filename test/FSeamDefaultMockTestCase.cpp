@@ -5,11 +5,10 @@
 #include <catch.hpp>
 #include <iostream>
 #include <any>
-#include <MockVerifier.hpp>
 #include <TestingClass.hh>
 #include <MockData.hpp>
 
-TEST_CASE( "FSeamDefaultMockTest", "[default_mock]" ) {
+TEST_CASE( "FSeamDefaultMockTest" ) {
     source::TestingClass testingClass {};
 
     SECTION("Test hasOriginalServiceBeenCalled") { 
@@ -223,7 +222,7 @@ TEST_CASE( "FSeamDefaultMockTest", "[default_mock]" ) {
             testingFlag = 1;
         });
         REQUIRE(0 == testingClass.getDepGettable().checkSimpleReturnValue());
-        EXPECT_FALSE(FSeam::MockVerifier::isMockRegistered(&testingClass.getDepGettable()));
+        REQUIRE_FALSE(FSeam::MockVerifier::instance().isMockRegistered(&testingClass.getDepGettable()));
         fseamDefaultMock->dupeMethod(mock_return_value(checkSimpleReturnValue, FSeam::DependencyNonGettableData, 10));
 
         SECTION("Test Normal default behaviors for GettableDependency") {
@@ -239,7 +238,7 @@ TEST_CASE( "FSeamDefaultMockTest", "[default_mock]" ) {
             fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&testingFlag](void *dataStruct){
                 testingFlag = 42;
             });
-            EXPECT(FSeam::MockVerifier::isMockRegistered(&testingClass.getDepGettable()));
+            REQUIRE(FSeam::MockVerifier::instance().isMockRegistered(&testingClass.getDepGettable()));
             REQUIRE(0 == testingClass.getDepGettable().checkSimpleReturnValue());
             fseamMock->dupeMethod(mock_return_value(checkSimpleReturnValue, FSeam::DependencyGettableData, 1337));
 

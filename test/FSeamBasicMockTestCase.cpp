@@ -9,7 +9,7 @@
 #include <TestingClass.hh>
 #include <MockData.hpp>
 
-TEST_CASE( "FSeamBasicTest", "[basic_mock]" ) {
+TEST_CASE( "FSeamBasicTest" ) {
     source::TestingClass testingClass {};
     auto fseamMock = FSeam::get(&testingClass.getDepGettable());
 

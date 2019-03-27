@@ -76,7 +76,8 @@ function(addFSeamTests)
 
     # Create testing target
     add_executable(${ADDFSEAMTESTS_DESTINATION_TARGET} ${ADDFSEAMTESTS_TST_SRC} ${FSEAM_TEST_SRC}
-            ${FSEAM_GENERATOR_DESTINATION}/MockData.hpp)
+            ${FSEAM_GENERATOR_DESTINATION}/MockData.hpp
+            ${FSEAM_GENERATOR_DESTINATION}/FSeamSpecialization.cpp)
     target_include_directories(${ADDFSEAMTESTS_DESTINATION_TARGET}
             PUBLIC
                 ${FSEAM_TEST_INCLUDES}

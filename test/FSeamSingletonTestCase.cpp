@@ -5,15 +5,14 @@
 #include <catch.hpp>
 #include <iostream>
 #include <any>
-#include <MockVerifier.hpp>
 #include <TestingClass.hh>
 #include <MockData.hpp>
 
-TEST_CASE("Test Singleton", "[base][singleton]") {
+TEST_CASE("Test Singleton") {
     source::TestingClass testingClass {};
-    EXPECT_FALSE(FSeam::MockVerifier::isMockRegistered(&testingClass.getDepGettable()));
+    REQUIRE_FALSE(FSeam::MockVerifier::instance().isMockRegistered(&testingClass.getDepGettable()));
     auto fseamMock = FSeam::get(&testingClass.getDepGettable());
-    EXPECT(FSeam::MockVerifier::isMockRegistered(&testingClass.getDepGettable()));
+    REQUIRE(FSeam::MockVerifier::instance().isMockRegistered(&testingClass.getDepGettable()));
     int valueChanging = 0;
 
     fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {

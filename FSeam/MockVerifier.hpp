@@ -122,14 +122,14 @@ namespace FSeam {
 
     template <typename TypeToCompare>
     struct NotEq {
-        explicit Eq(TypeToCompare && toCompare) : _toCompare(std::forward<TypeToCompare>(toCompare)) {}
+        explicit NotEq(TypeToCompare && toCompare) : _toCompare(std::forward<TypeToCompare>(toCompare)) {}
         bool compare(TypeToCompare && value) { return value != _toCompare; } 
         TypeToCompare _toCompare;
     };
 
     template <typename TypeToCompare, typename Predicate>
     struct CustomComparator {
-        explicit Eq(TypeToCompare && toCompare, Predicate && predicate) : 
+        explicit CustomComparator(TypeToCompare && toCompare, Predicate && predicate) :
             _toCompare(std::forward<TypeToCompare>(toCompare)), _comparePredicate(std::forward<Predicate>(predicate)) {}
         bool compare(TypeToCompare && value) { 
             return _comparePredicate(std::forward<TypeToCompare>(value), std::forward<TypeToCompare>(_toCompare));
@@ -137,11 +137,6 @@ namespace FSeam {
         TypeToCompare _toCompare;
         Predicate _comparePredicate;
     };
-    template <typename TypeTraitClass>
-    struct isArgComparator { static const bool v = false;  };
-    template <> struct isArgComparator<Eq> { static const bool v = true; };
-    template <> struct isArgComparator<NotEq> { static const bool v = true; };
-    template <> struct isArgComparator<CustomComparator> { static const bool v = true; };
 
     /**
      * @brief Mocking class, it contains all mocked method / save all calls to methods
@@ -211,7 +206,7 @@ namespace FSeam {
          *                   set at false by default
          */
         template <typename ClassMethodIdentifier, typename Handler>
-        void dupe(Handler handler, isComposed = false);
+        void dupe(Handler handler, bool isComposed = false);
 
         /**
          * @brief 
@@ -379,7 +374,7 @@ namespace FSeam {
          */
         std::shared_ptr<MockClassVerifier> &getMock(const void *mockPtr, const std::string &classMockName) {
             if (!isMockRegistered(mockPtr))
-                return addMock(mockPtr, std::move(classMockName));
+                return addMock(mockPtr, classMockName);
             return this->_mockedClass.at(mockPtr);
         }
 
@@ -397,7 +392,7 @@ namespace FSeam {
         }
 
     private:
-        std::shared_ptr<MockClassVerifier> &addMock(const std::string &className) {
+        std::shared_ptr<MockClassVerifier> &addMock(const void *mockPtr, const std::string &className) {
             this->_mockedClass[mockPtr] = std::make_shared<MockClassVerifier>(className);
             return this->_mockedClass.at(mockPtr);
         }
