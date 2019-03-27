@@ -1,4 +1,8 @@
 .idea
+**/*.fseam.cc
+**/MockData.hh
+**/FSeamSpecialization.cpp
+**/build
 **/venv
 **/*.pyc
 **/__pycache__
