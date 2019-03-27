@@ -1,18 +1,18 @@
 // MIT License
-
+//
 // Copyright (c) 2019 Quentin Balland
-// Project : https://github.com/FreeYourSoul/FSeam 
-
+// Project : https://github.com/FreeYourSoul/FSeam
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -206,7 +206,7 @@ namespace FSeam {
          *                   set at false by default
          */
         template <typename ClassMethodIdentifier, typename Handler>
-        void dupe(Handler handler, bool isComposed = false);
+        void dupe(Handler handler);
 
         /**
          * @brief 
@@ -369,7 +369,7 @@ namespace FSeam {
          * @details Method that retrieve the FSeam MockClassVerifier instance class corresponding to the pointer given as parameter
          *
          * @param mockPtr pointer on the instance to mock
-         * @param classMockName name of the class to mock (provided by TypeParseTraits<>)
+         * @param classMockName name of the class to mock (provided by TypeParseTraits)
          * @return a MockClassVerifier shared_ptr class, if not referenced yet, create one by calling the ::addMock(T) method
          */
         std::shared_ptr<MockClassVerifier> &getMock(const void *mockPtr, const std::string &classMockName) {
@@ -382,7 +382,7 @@ namespace FSeam {
          * @brief This method get the default MockClassVerifier for a class type
          * @details Method that retrieve the default MockClassVerifier instance class corresponding to type given as template parameter
          *
-         * @param classMockName name of the class to mock (provided by TypeParseTraits<>)
+         * @param classMockName name of the class to mock (provided by FSeam::TypeParseTraits)
          * @return a MockClassVerifier shared_ptr class, if not referenced yet, create one by calling the ::addDefaultMock(T) method
          */
         std::shared_ptr<MockClassVerifier> &getDefaultMock(const std::string &classMockName) {

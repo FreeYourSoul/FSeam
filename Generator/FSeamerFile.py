@@ -1,18 +1,18 @@
 # MIT License
-
+#
 # Copyright (c) 2019 Quentin Balland
 # Project : https://github.com/FreeYourSoul/FSeam
-
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -149,9 +149,12 @@ class FSeamerFile:
         content = re.sub("namespace FSeam {[\n ]+}\n", "", content)
         return content + LOCKING_FOOTER
 
-    def getSpecializationContent(self):
-        content = HEADER_INFO.replace(FILENAME, "FSeamSpecialization.hpp")
-        content += "#include <MockData.hpp>\n\n"
+    def getSpecializationContent(self, content):
+        if not content or len(content) < 10:
+            content = HEADER_INFO.replace(FILENAME, "FSeamSpecialization.hpp")
+            content += "#include <MockData.hpp>\n"
+        for className, methods in self.mapClassMethods.items():
+            content = self._clearSpecialization(content, className)
         return content + self.specContent
 
     # =====Privates methods =====
@@ -213,22 +216,22 @@ class FSeamerFile:
 
     def _generateDupeVerifyTemplateSpecialization(self, className):
         _genSpecial = "// ClassMethodIdentifiers\n"
-        _genSpecial += "namespace " + className + "Id {\n"
+        _genSpecial += "namespace " + className + " {\n"
         for methodName, methodsMapping in self.functionSignatureMapping[className].items():
             _genSpecial += INDENT + "struct " + methodName + " {};\n"
         _genSpecial += "}\n"
 
-        self.specContent += "\n// Duping/Verifying specializations\n"
+        self.specContent += "\n\n// Duping/Verifying specializations for " + className + "\n"
         for methodName, methodMapping in self.functionSignatureMapping[className].items():
             # Specialization for dupeReturn
             if methodMapping["rtnType"] != "void":
-                self.specContent += "template <> void FSeam::MockClassVerifier::dupeReturn<FSeam::" + className + "Id::" + methodName + ", " + methodMapping["rtnType"] + "> (" + methodMapping["rtnType"] + " returnValue) {\n"
+                self.specContent += "template <> void FSeam::MockClassVerifier::dupeReturn<FSeam::" + className + "::" + methodName + ", " + methodMapping["rtnType"] + "> (" + methodMapping["rtnType"] + " returnValue) {\n"
                 self.specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [&](void *methodCallData) { \n"
                 self.specContent += INDENT2 + "static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + RETURN_SUFFIX + " = returnValue;\n"
                 self.specContent += INDENT + "});\n};\n"
 
             # Specialization for dupe
-            self.specContent += "template <> void FSeam::MockClassVerifier::dupe<FSeam::" + className + "Id::" + methodName + ", std::function<" + methodMapping["rtnType"] + "("
+            self.specContent += "template <> void FSeam::MockClassVerifier::dupe<FSeam::" + className + "::" + methodName + ", std::function<" + methodMapping["rtnType"] + "("
             if len(methodMapping["params"]) == 0:
                 self.specContent += "void"
             else:
@@ -241,7 +244,7 @@ class FSeamerFile:
             else:
                 for param in methodMapping["params"]:
                     self.specContent += param["type"] + ", "
-            self.specContent += ")> handler, bool isComposed) {\n"
+            self.specContent += ")> handler) {\n"
             self.specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [&](void *methodCallData) { \n" + INDENT2
             if methodMapping["rtnType"] != "void":
                 self.specContent += "static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + RETURN_SUFFIX + " = "
@@ -249,19 +252,20 @@ class FSeamerFile:
             for param in methodMapping["params"]:
                 self.specContent += INDENT2 + "  static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + "_" + param["name"] + PARAM_SUFFIX + ", \n"
             self.specContent += ");\n"
-            self.specContent += INDENT + "}, isComposed);\n}\n"
+            self.specContent += INDENT + "});\n}\n"
 
             # Specialization for verifyArg
             if len(methodMapping["params"]) > 0:
-                self.specContent += "// Verifying specializations for " + className + "Id::" + methodName + "\n"
+                self.specContent += "// Verifying specializations for " + className + "::" + methodName + "\n"
                 for comparator in [None, "FSeam::IsNot", "FSeam::AtMost", "FSeam::AtLeast", "FSeam::NeverCalled", "FSeam::VerifyCompare"]:
                     self.specContent += self._generateSpecializationVerifyArg(className, methodName, methodMapping, comparator)
         #cleanup loops last separator tokens
         self.specContent = self.specContent.replace(", >", ">").replace(", )", ")").replace(", \n);", ");").replace("(\n)", "()")
+        self.specContent += "// End of Specialization for " + className + "\n\n"
         return _genSpecial
 
     def _generateSpecializationVerifyArg(self, className, methodName, methodMapping, comparator = None):
-        _gen = "template <> bool FSeam::MockClassVerifier::verifyArg<FSeam::" + className + "Id::" + methodName + ", "
+        _gen = "template <> bool FSeam::MockClassVerifier::verifyArg<FSeam::" + className + "::" + methodName + ", "
         for param in methodMapping["params"]:
             _gen += param["type"] + ", "
         if comparator is not None:
@@ -308,6 +312,14 @@ class FSeamerFile:
             content = content[0: indexBegin] + content[indexEnd + 1:]
         return content
 
+    @staticmethod
+    def _clearSpecialization(content, className):
+        indexBegin = content.find("\n\n// Duping/Verifying specializations for " + className + "\n")
+        indexEnd = content.find("// End of Specialization for " + className + "\n\n") + len("// End of Specialization for " + className + "\n\n")
+        if indexBegin > 0 and indexEnd > len("// End of Specialization for " + className + "\n\n"):
+            content = content[0: indexBegin] + content[indexEnd:]
+        return content
+
 
 def generateFSeamFile(filePath, destinationFolder, forceGeneration=False):
     """
@@ -345,8 +357,11 @@ def generateFSeamFile(filePath, destinationFolder, forceGeneration=False):
     print("FSeam generated file MockData.hpp at " + os.path.abspath(destinationFolder))
     _fileCreatedSpecializationPath = os.path.normpath(destinationFolder + "/FSeamSpecialization.cpp")
     _fileCreatedSpecializationContent = ""
+    if os.path.exists(_fileCreatedSpecializationPath):
+        with open(_fileCreatedSpecializationPath, "r") as _fileCreatedSpecData:
+            _fileCreatedSpecializationContent = _fileCreatedSpecData.read()
     with open(_fileCreatedSpecializationPath, "w") as _fileCreatedSpecData:
-        _fileCreatedSpecData.write(_fSeamerFile.getSpecializationContent())
+        _fileCreatedSpecData.write(_fSeamerFile.getSpecializationContent(_fileCreatedSpecializationContent))
     print("FSeam generated file FSeamSpecialization.cpp at " + os.path.abspath(destinationFolder))
 
 
