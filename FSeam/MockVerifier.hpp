@@ -49,9 +49,7 @@ namespace FSeam {
      */
     template <typename T>
     struct TypeParseTraits {
-        using DataClass = void;
         inline static const std::string ClassName = "Undefined";
-
     };
 
     /**
@@ -65,7 +63,8 @@ namespace FSeam {
     };
 
     /**
-     * @brief Comparators option used in verify in order to give more flexibility into the check possible via te verify option
+     * @brief Called Comparators option used in verify in order to give more flexibility into the check possible via te verify option
+     * @note To be used in order to check the number of time a method has been called 
      */
     struct VerifyCompare {
         explicit VerifyCompare(uint toCompare) : _toCompare(toCompare) {}
@@ -103,12 +102,41 @@ namespace FSeam {
     };
 
     template <typename TypeTraitClass>
-    struct isComparator { static const bool v = false;  };
-    template <> struct isComparator<IsNot> { static const bool v = true; };
-    template <> struct isComparator<AtMost> { static const bool v = true; };
-    template <> struct isComparator<AtLeast> { static const bool v = true; };
-    template <> struct isComparator<NeverCalled> { static const bool v = true; };
-    template <> struct isComparator<VerifyCompare> { static const bool v = true; };
+    struct isCalledComparator { static const bool v = false;  };
+    template <> struct isCalledComparator<IsNot> { static const bool v = true; };
+    template <> struct isCalledComparator<AtMost> { static const bool v = true; };
+    template <> struct isCalledComparator<AtLeast> { static const bool v = true; };
+    template <> struct isCalledComparator<NeverCalled> { static const bool v = true; };
+    template <> struct isCalledComparator<VerifyCompare> { static const bool v = true; };
+
+    /**
+     * @brief Comparators option used in verify in order to give more flexibility into the check possible via te verify option
+     * @note To be used in order to check the arguments of a method via the MockClassVerifier::verifyArg method
+     */
+    template <typename TypeToCompare>
+    struct Eq {
+        explicit Eq(TypeToCompare && toCompare) : _toCompare(std::forward<TypeToCompare>(toCompare)) {}
+        bool compare(TypeToCompare && value) { return value == _toCompare; } 
+        TypeToCompare _toCompare;
+    };
+
+    template <typename TypeToCompare>
+    struct NotEq {
+        explicit Eq(TypeToCompare && toCompare) : _toCompare(std::forward<TypeToCompare>(toCompare)) {}
+        bool compare(TypeToCompare && value) { return value != _toCompare; } 
+        TypeToCompare _toCompare;
+    };
+
+    template <typename TypeToCompare, typename Predicate>
+    struct CustomComparator {
+        explicit Eq(TypeToCompare && toCompare, Predicate && predicate) : 
+            _toCompare(std::forward<TypeToCompare>(toCompare)), _comparePredicate(std::forward<Predicate>(predicate)) {}
+        bool compare(TypeToCompare && value) { 
+            return _comparePredicate(std::forward<TypeToCompare>(value), std::forward<TypeToCompare>(_toCompare));
+        } 
+        TypeToCompare _toCompare;
+        Predicate _comparePredicate;
+    };
 
     /**
      * @brief Mocking class, it contains all mocked method / save all calls to methods
@@ -120,6 +148,9 @@ namespace FSeam {
     public:
         MockClassVerifier(std::string className) : _className(std::move(className)) {}
 
+        /**
+         * @note This method should never be used by the client directly, it is a "FSeam generated" method only
+         */
         void invokeDupedMethod(const std::string &methodName, void *arg = nullptr) {
             std::string key = _className + std::move(methodName);
 
@@ -130,10 +161,7 @@ namespace FSeam {
         }
 
         /**
-         * @brief This method has to be called each time a mocked class is calling a method (in order to register the call)
-         *
-         * @param className name of the mocked class
-         * @param methodName name of the method called
+         * @note This method should never be used by the client directly, it is a "FSeam generated" method only
          */
         void methodCall(std::string methodName, std::any &&callingInfo) {
             std::shared_ptr<MethodCallVerifier> methodCallVerifier;
@@ -149,16 +177,58 @@ namespace FSeam {
             _verifiers[std::move(key)] = methodCallVerifier;
         }
 
+
         /**
-         * @brief This method make it possible to dupe a method in order to have it do what you want.
-         *
-         * @param T handler type
-         * @param className name of the class to mock
-         * @param methodName method name to dupe
-         * @param handler dupped method
-         * @param isComposed if true, keep the current handler and add this new one as composition,
+         * @brief Verify arguments for a specified method (template specification on a FSeam generated structure representing
+         *        a specific method for a mocked class)
+         * @note The method is going to call the verify method, replacing the contentChecker with proper check, the purpose of
+         *       this method is to be more user friendly than the low level one
+         * 
+         * @tparam ClassMethodIdentifier identifier structure generated by FSeam which represent a specific method of a specific class
+         * @tparam Verifiers could be simple type (in this case the comparator FSeam::Eq is being called) or any Comparator,
+         * @param verifiers comparator used in order to check the arguments of the method identified by ClassMethodIdentifier
+         */
+        template <typename ClassMethodIdentifier, typename ...Verifiers>
+        void verifyArg(Verifiers ... verifiers);
+
+        /**
+         * @brief Dupe the specified method (template specification on a FSeam generated structure representing a specific
+         *        method fora mocked class)
+         * @note The method is going to call the dupeMethod method, replacing the handler managing the Data structure, 
+         *       the purpose of this method is to be more user friendly than the low level one
+         * 
+         * @tparam ClassMethodIdentifier identifier structure generated by FSeam which represent a specific method of a specific class
+         * @tparam Handler function type following the signature of the provided method pointed by ClassMethodIdentifier
+         * @param handler 
+         * @param isComposed if true, compose a new handler with the current one and the provided one,
          *                   if false, override the existing handler if any
          *                   set at false by default
+         */
+        template <typename ClassMethodIdentifier, typename Handler>
+        void dupe(Handler handler, isComposed = false);
+
+        /**
+         * @brief 
+         * 
+         * @tparam ClassMethodIdentifier 
+         * @tparam ReturnType 
+         * @param ret 
+         */
+        template <typename ClassMethodIdentifier, typename ReturnType>
+        void dupeReturn(ReturnType ret);
+
+        /**
+         * @brief This method make it possible to dupe a method in order to have it do what you want.
+         *        This is a low level function that require the user to understand how the generated data struct
+         *        containing the function call metadata works (as this is the argument given to the handler)
+         * @note It is recommended to use the dupe<> method instead (API which is more user friendly) 
+         *
+         * @param className name of the class to mock
+         * @param methodName method name to dupe
+         * @param handler dupped method that takes the data structure pointer. This data structure is a struct 
+         *         that contains all the data for the called method (arguments, return values)
+         * @param isComposed if true, compose a new handler with the current one and the provided one,
+         *         if false, override the existing handler if any. Set at false by default
          */
         void dupeMethod(std::string methodName, const std::function<void(void*)> &handler, bool isComposed = false) {
             auto methodCallVerifier = std::make_shared<MethodCallVerifier>();
@@ -183,6 +253,9 @@ namespace FSeam {
         /**
          * @brief verify if the given method has been at least called once
          * @details will call verify with a passthrough predicate and a AtLeast(1) comparator
+         * @note If a check on the arguments is needed, it is recommended to use the verifyArgs<> method instead
+         *       (API which is more user friendly)
+         * 
          * @param methodName method to check
          * @return true if the method has been called at least once, false otherwise
          */
@@ -199,20 +272,19 @@ namespace FSeam {
          * @tparam ComparatorOrContentChecker can be an integer/a comparator/a predicate see argument for additional info
          * @param methodName method to verify
          * @param compOrContentChecker can be an int or a predicate for the count
-         *
-         *        if set as a predicate it will be used in order to check if the method has been called following
-         *         specific predicament (std::auto containing metadata of call) and check if atLeast(1) is found
-         *        otherwhise a passthrough predicament is used (return true)
+         *         if set as a predicate it will be used in order to check if the method has been called following
+         *           specific predicament (std::auto containing metadata of call) and check if atLeast(1) is found
+         *         otherwhise a passthrough predicament is used (return true)
          *        =================
-         *        if set with a positive integral value, check of times you verify that the mocked method has been called
-         *         exactly the number of time provided (use the FSeam::VerifyComparator(compOrContentChecker)),
-         *        if set as a classic comparator, it is used as comparator.
+         *         if set with a positive integral value, check of times you verify that the mocked method has been called
+         *           exactly the number of time provided (use the FSeam::VerifyComparator(compOrContentChecker)),
+         *         if set as a classic comparator, it is used as comparator.
          *
          * @return true if the method encounter your conditions (number of times called), false otherwise
          */
         template <typename ComparatorOrContentChecker>
         bool verify(std::string methodName, ComparatorOrContentChecker &&coc) const {
-            if constexpr (FSeam::isComparator<ComparatorOrContentChecker>::v)
+            if constexpr (FSeam::isCalledComparator<ComparatorOrContentChecker>::v)
                 return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, std::forward<ComparatorOrContentChecker>(coc));
             else if constexpr (std::is_integral<ComparatorOrContentChecker>())
                 return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, VerifyCompare(coc));
@@ -225,15 +297,17 @@ namespace FSeam {
          * 
          * @tparam ContentChecker Predicate type following this signature (bool (std::auto &methodCallVerifier))         
          * @tparam Comparator  comparator class used, those comparator are defined under the namespace FSeam::VerifierComparator, 
-         *           AtLeast : Check if the method has been called at least the number provided
-         *           AtMost  : Check if the method has been called at most the number provided
-         *           IsNot   : Check if the method is not the number provided
+         *          VerifyCompare : Check if the method has been called exactly the number provided
+         *          NeverCalled : Check if the method has never been called
+         *          AtLeast : Check if the method has been called at least the number provided
+         *          AtMost  : Check if the method has been called at most the number provided
+         *          IsNot   : Check if the method is not the number provided
          *          
          * @param contentChecker this predicate will be used in order to check if the method has been called following
          *         specific predicament (std::auto containing metadata of call)
          * @param methodName Name of the method to check on the mock (Use the helpers constant to ensure no typo)
          * @param comp comparator instance on which the number of times the mock method is called on a provided value
-         *          is checked against
+         *         is checked against
          * @return true if the method encounter the provided comparator conditions, false otherwise
          */
         template <typename ContentChecker, typename Comparator>
@@ -293,14 +367,13 @@ namespace FSeam {
          * @brief This method get the MockClassVerifier instance class
          * @details Method that retrieve the FSeam MockClassVerifier instance class corresponding to the pointer given as parameter
          *
-         * @tparam T type of the instance to mock
          * @param mockPtr pointer on the instance to mock
+         * @param classMockName name of the class to mock (provided by TypeParseTraits<>)
          * @return a MockClassVerifier shared_ptr class, if not referenced yet, create one by calling the ::addMock(T) method
          */
-        template <typename T>
-        std::shared_ptr<MockClassVerifier> &getMock(const T *mockPtr) {
+        std::shared_ptr<MockClassVerifier> &getMock(const void *mockPtr, const std::string &classMockName) {
             if (!isMockRegistered(mockPtr))
-                return addMock(mockPtr);
+                return addMock(mockPtr, std::move(classMockName));
             return this->_mockedClass.at(mockPtr);
         }
 
@@ -308,8 +381,7 @@ namespace FSeam {
          * @brief This method get the default MockClassVerifier for a class type
          * @details Method that retrieve the default MockClassVerifier instance class corresponding to type given as template parameter
          *
-         * @tparam T type to mock
-         * @tparam T Class type that is going to be default mocked
+         * @param classMockName name of the class to mock (provided by TypeParseTraits<>)
          * @return a MockClassVerifier shared_ptr class, if not referenced yet, create one by calling the ::addDefaultMock(T) method
          */
         std::shared_ptr<MockClassVerifier> &getDefaultMock(const std::string &classMockName) {
@@ -319,9 +391,8 @@ namespace FSeam {
         }
 
     private:
-        template <typename T>
-        std::shared_ptr<MockClassVerifier> &addMock(const T *mockPtr) {
-            this->_mockedClass[mockPtr] = std::make_shared<MockClassVerifier>(TypeParseTraits<T>::ClassName);
+        std::shared_ptr<MockClassVerifier> &addMock(const std::string &className) {
+            this->_mockedClass[mockPtr] = std::make_shared<MockClassVerifier>(className);
             return this->_mockedClass.at(mockPtr);
         }
         std::shared_ptr<MockClassVerifier> &addDefaultMock(const std::string &className) {
@@ -346,7 +417,7 @@ namespace FSeam {
      */
     template <typename T>
     std::shared_ptr<MockClassVerifier> &get(const T *mockPtr) {
-        return FSeam::MockVerifier::instance().getMock(mockPtr);
+        return FSeam::MockVerifier::instance().getMock(mockPtr, TypeParseTraits<T>::ClassName);
     }
 
     /**

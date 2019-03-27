@@ -11,7 +11,9 @@
 
 TEST_CASE("Test Singleton", "[base][singleton]") {
     source::TestingClass testingClass {};
+    EXPECT_FALSE(FSeam::MockVerifier::isMockRegistered(&testingClass.getDepGettable()));
     auto fseamMock = FSeam::get(&testingClass.getDepGettable());
+    EXPECT(FSeam::MockVerifier::isMockRegistered(&testingClass.getDepGettable()));
     int valueChanging = 0;
 
     fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
@@ -65,10 +67,10 @@ TEST_CASE("Test Singleton", "[base][singleton]") {
 
         fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
             valueChanging = 1337;
-        }); // valueChanging = 1
+        });
         fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
             valueChanging = 42;
-        }); // valueChanging = 1
+        }); // dupe is not composed (no last argument on dupeMethod) so the 1337 dupe is override by this 42 one
 
         REQUIRE(111 == valueChanging);
         testingClass.execute();
