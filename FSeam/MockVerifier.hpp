@@ -134,8 +134,8 @@ namespace FSeam {
 
         template <typename TypeToCompare>
         bool compare(TypeToCompare && value) const {
-            return true;
-//            _comparePredicate(std::forward<TypeToCompare>(value), std::any_cast<TypeToCompare>(_toCompare));
+            return std::any_cast<std::function<bool (TypeToCompare, TypeToCompare)> >
+                    (_comparePredicate)(std::forward<TypeToCompare>(value), std::any_cast<TypeToCompare>(_toCompare));
         }
         std::any _toCompare;
         std::any _comparePredicate;
