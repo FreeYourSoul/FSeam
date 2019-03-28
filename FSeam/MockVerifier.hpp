@@ -54,16 +54,6 @@ namespace FSeam {
     };
 
     /**
-     * @brief basic structure that contains description and usage metadata of a mocked method
-     */
-    struct MethodCallVerifier {
-        std::string _methodName;
-        std::size_t _called = 0;
-        std::function<void(void*)> _handler;
-        std::vector<std::any> _calledData;
-    };
-
-    /**
      * @brief Called Comparators option used in verify in order to give more flexibility into the check possible via te verify option
      * @note To be used in order to check the number of time a method has been called 
      */
@@ -109,23 +99,40 @@ namespace FSeam {
     template <> struct isCalledComparator<AtLeast> { static const bool v = true; };
     template <> struct isCalledComparator<NeverCalled> { static const bool v = true; };
     template <> struct isCalledComparator<VerifyCompare> { static const bool v = true; };
+    namespace StaticComparatorCaller {
+        using CalledCompare = std::variant<IsNot, AtMost, AtLeast, NeverCalled, VerifyCompare>;
+        bool compare(CalledCompare &comparator) {
+            if (auto varNever = std::get_if<NeverCalled>(&comparator))
+                return varNever->compare(std::forward(value));
+            else if (auto varComp = std::get_if<VerifyCompare>(&comparator))
+                return varComp->compare(std::forward(value));
+            else if (auto varAl = std::get_if<AtLeast>(&comparator))
+                return varAl->compare(std::forward(value));
+            else if (auto varAm = std::get_if<AtMost>(&comparator))
+                return varAm->compare(std::forward(value));
+            else if (auto varIn = std::get_if<IsNot>(&comparator))
+                return varIn->compare(std::forward(value));                
+            return false;
+        }
+    }
 
     /**
      * @brief Comparators option used in verify in order to give more flexibility into the check possible via te verify option
      * @note To be used in order to check the arguments of a method via the MockClassVerifier::verifyArg method
      */
+    struct Any {};
     struct Eq {
         explicit Eq(std::any toCompare) : _toCompare(std::move(toCompare)) {}
 
         template <typename TypeToCompare>
-        bool compare(TypeToCompare && value) const  { return value == std::any_cast<TypeToCompare>(_toCompare); }
+        bool compare(TypeToCompare && value) const  { return std::forward(value) == std::any_cast<TypeToCompare>(_toCompare); }
         std::any _toCompare;
     };
     struct NotEq {
         explicit NotEq(std::any toCompare) : _toCompare(std::move(toCompare)) {}
 
         template <typename TypeToCompare>
-        bool compare(TypeToCompare && value) const  { return value != std::any_cast<TypeToCompare>(_toCompare); }
+        bool compare(TypeToCompare && value) const  { return std::forward(value) != std::any_cast<TypeToCompare>(_toCompare); }
         std::any _toCompare;
     };
     struct CustomComparator {
@@ -135,32 +142,52 @@ namespace FSeam {
         template <typename TypeToCompare>
         bool compare(TypeToCompare && value) const {
             return std::any_cast<std::function<bool (TypeToCompare, TypeToCompare)> >
-                    (_comparePredicate)(std::forward<TypeToCompare>(value), std::any_cast<TypeToCompare>(_toCompare));
+                    (_comparePredicate)(std::forward<TypeToCompare>(std::forward(value)), std::any_cast<TypeToCompare>(_toCompare));
         }
         std::any _toCompare;
         std::any _comparePredicate;
     };
-    using ArgComparatorType = std::variant<CustomComparator, NotEq, Eq>;
+    using ArgComparatorType = std::variant<CustomComparator, NotEq, Eq, Any>;
 
-    struct ArgComp{
-        ArgComp(ArgComparatorType && comp) : _comp(comp) {}
+    struct ArgComp {
+        ArgComp(ArgComparatorType && comp) : _comp(std::move(comp)) {}
 
         template <typename TypeToCompare>
         bool compare(TypeToCompare && value) {
-            if (auto varEq = std::get_if<Eq>(&_comp))
-                return varEq->compare(std::forward<TypeToCompare>(value));
+            if (std::get_if<Any>(&_comp))
+                return true;
+            else if (auto varEq = std::get_if<Eq>(&_comp))
+                return varEq->compare(std::forward(value));
             else if (auto varNotEq = std::get_if<NotEq>(&_comp))
-                return varNotEq->compare(std::forward<TypeToCompare>(value));
+                return varNotEq->compare(std::forward(value));
             else if (auto varCustom = std::get_if<CustomComparator>(&_comp))
-                return varCustom->compare<TypeToCompare>(std::forward<TypeToCompare>(value));
+                return varCustom->compare(std::forward(value));
             return false;
         }
-
-
-        bool isCustomComparator() const {
-            return std::holds_alternative<CustomComparator>(_comp);
-        }
+        
         ArgComparatorType _comp;
+    };
+
+    /**
+     * @brief basic structure that contains description and usage metadata of a mocked method
+     */
+    struct MethodCallVerifier {
+        struct Expectation  { 
+            bool operator()() { return _comparator.compare(); }
+            void check() {
+                if (_expectator())
+                    ++_numberTimeMatched;
+            }
+            std::function<bool(void*)> _expectator;
+            StaticComparatorCaller::CalledCompare _comparator;
+            uint _numberTimeMatched = 0;
+        };
+
+        std::string _methodName;
+        std::size_t _called = 0;
+        std::function<void(void*)> _handler;  
+        std::vector<Expectation> _expectations;      
+        std::vector<std::any> _calledData;
     };
 
     /**
@@ -196,18 +223,49 @@ namespace FSeam {
                 methodCallVerifier = _verifiers.at(key);
             else 
                 methodCallVerifier = std::make_shared<MethodCallVerifier>();
+            for (expectation : methodCallVerifier->_expectations)
+                expectation.check();
             methodCallVerifier->_methodName = std::move(methodName);
             methodCallVerifier->_calledData.emplace_back(std::move(callingInfo));
             methodCallVerifier->_called = methodCallVerifier->_calledData.size();
             _verifiers[std::move(key)] = methodCallVerifier;
         }
 
+        void registerExpectation(std::string methodName, MethodCallVerifier::Expectation expectation) {
+            std::shared_ptr<MethodCallVerifier> methodCallVerifier;
+            std::string key = _className + std::move(methodName);
+
+            if (_verifiers.find(key) != _verifiers.end())
+                methodCallVerifier = _verifiers.at(key);
+            else 
+                methodCallVerifier = std::make_shared<MethodCallVerifier>();
+            methodCallVerifier->_expectations.emplace_back(std::move(expectation));
+            _verifiers[std::move(key)] = methodCallVerifier;
+        }
 
         /**
-         * @brief Verify arguments for a specified method (template specification on a FSeam generated structure representing
-         *        a specific method for a mocked class)
-         * @note The method is going to call the verify method, replacing the contentChecker with proper check, the purpose of
-         *       this method is to be more user friendly than the low level one
+         * @brief Add an expectation on the specified method (template specification on a FSeam generated structure representing
+         *        a specific method for a mocked class), dupe method used with composition enabled.
+         *        It is important to note that a call to verify has to be done in order to check those expectations.
+         * 
+         * @code
+         * // code example
+         * class ClassName {
+         * public:
+         *      void functionName(int arg1, int arg2, int arg3);
+         * };
+         * 
+         * void test () {
+         *      ClassName instance {};
+         *      auto fseamMock = FSeam::get(&instance);
+         *      fseamMock->expectArg<FSeam::ClassName::functionName>(FSeam::Eq{24}, FSeam::NotEq{55}, FSeam::Any{});
+         *      //.... code that execute functionName at some point
+         *      // verify the method has been called at least once with first arg equal 21, second not equal 55, and third anything
+         *      assert(fseamMock->verify(FSeam::ClassName::functionName::NAME)); 
+         * }
+         * @endcode
+         * 
+         * @note The method is going to call the dupe method in composition mode, in order to fill the expectations to verify
          * 
          * @tparam ClassMethodIdentifier identifier structure generated by FSeam which represent a specific method of a specific class
          * @tparam Verifiers could be simple type (in this case the comparator FSeam::Eq is being called) or any Comparator,
@@ -215,23 +273,7 @@ namespace FSeam {
          * @return true if the method has been called at least once, false otherwise
          */
         template <typename ClassMethodIdentifier, typename ...Verifiers>
-        bool verifyArg(Verifiers ... verifiers);
-
-        /**
-         * @brief Dupe the specified method (template specification on a FSeam generated structure representing a specific
-         *        method fora mocked class)
-         * @note The method is going to call the dupeMethod method, replacing the handler managing the Data structure, 
-         *       the purpose of this method is to be more user friendly than the low level one
-         * 
-         * @tparam ClassMethodIdentifier identifier structure generated by FSeam which represent a specific method of a specific class
-         * @tparam Handler function type following the signature of the provided method pointed by ClassMethodIdentifier
-         * @param handler 
-         * @param isComposed if true, compose a new handler with the current one and the provided one,
-         *                   if false, override the existing handler if any
-         *                   set at false by default
-         */
-        template <typename ClassMethodIdentifier, typename Handler>
-        void dupe(Handler handler);
+        void expectArg(Verifiers ... verifiers);
 
         /**
          * @brief 
@@ -242,6 +284,24 @@ namespace FSeam {
          */
         template <typename ClassMethodIdentifier, typename ReturnType>
         void dupeReturn(ReturnType ret);
+
+        /**
+         * @brief Dupe the specified method (template specification on a FSeam generated structure representing a specific
+         *        method fora mocked class), it is important to note that the dupe is going to override any existing one.
+         *        For this reason, any usage of expectArg has to be done after this method call in order to not override it
+         * @note The method is going to call the dupeMethod method without composition (this dupe method has to be used first), 
+         *       replacing the handler managing the Data structure, the purpose of this method is to be more user friendly 
+         *       than the low level one
+         * 
+         * @tparam ClassMethodIdentifier identifier structure generated by FSeam which represent a specific method of a specific class
+         * @tparam Handler function type following the signature of the provided method pointed by ClassMethodIdentifier
+         * @param handler 
+         * @param isComposed if true, compose a new handler with the current one and the provided one,
+         *                   if false, override the existing handler if any
+         *                   set at false by default
+         */
+        template <typename ClassMethodIdentifier, typename Handler>
+        void dupe(Handler handler);
 
         /**
          * @brief This method make it possible to dupe a method in order to have it do what you want.
@@ -276,44 +336,18 @@ namespace FSeam {
             _verifiers[std::move(key)] = methodCallVerifier;
         }
 
-        /**
-         * @brief verify if the given method has been at least called once
-         * @details will call verify with a passthrough predicate and a AtLeast(1) comparator
-         * @note If a check on the arguments is needed, it is recommended to use the verifyArgs<> method instead
-         *       (API which is more user friendly)
-         * 
-         * @param methodName method to check
-         * @return true if the method has been called at least once, false otherwise
+        /** TODO : REMOVE
          */
         bool verify(std::string methodName) const {
             return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, AtLeast(1));
         }
 
-        /**
-         * @brief Verify if a method has been called under certain conditions (number of times)
-         * @note This method is going to call its templated overload using a default contentChecker (no check) and
-         *       either FSeam::VerifierComparator::VerifyComparator or FSeam::VerifierComparator::AtLeast as Comparator
-         *       depending on the value of times
-         *
-         * @tparam ComparatorOrContentChecker can be an integer/a comparator/a predicate see argument for additional info
-         * @param methodName method to verify
-         * @param compOrContentChecker can be an int or a predicate for the count
-         *         if set as a predicate it will be used in order to check if the method has been called following
-         *           specific predicament (std::auto containing metadata of call) and check if atLeast(1) is found
-         *         otherwhise a passthrough predicament is used (return true)
-         *        =================
-         *         if set with a positive integral value, check of times you verify that the mocked method has been called
-         *           exactly the number of time provided (use the FSeam::VerifyComparator(compOrContentChecker)),
-         *         if set as a classic comparator, it is used as comparator.
-         *
-         * @return true if the method encounter your conditions (number of times called), false otherwise
+        /** TODO : REMOVE
          */
         template <typename ComparatorOrContentChecker>
         bool verify(std::string methodName, ComparatorOrContentChecker &&coc) const {
             if constexpr (FSeam::isCalledComparator<ComparatorOrContentChecker>::v)
                 return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, std::forward<ComparatorOrContentChecker>(coc));
-            else if constexpr (std::is_integral<ComparatorOrContentChecker>())
-                return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, VerifyCompare(coc));
             else
                 return verify(std::move(methodName), std::forward<ComparatorOrContentChecker>(coc), AtLeast(1));
         }
@@ -321,25 +355,25 @@ namespace FSeam {
         /**
          * @brief Verify if a method has been called under certain conditions (number of times)
          * 
-         * @tparam ContentChecker Predicate type following this signature (bool (std::auto &methodCallVerifier))         
-         * @tparam Comparator  comparator class used, those comparator are defined under the namespace FSeam::VerifierComparator, 
-         *          VerifyCompare : Check if the method has been called exactly the number provided
+         * @tparam Comparator  comparator class used, can be also an Integer, those comparator are defined under the namespace FSeam::VerifierComparator, 
+         *          VerifyCompare/Integral value : Check if the method has been called exactly the number provided
          *          NeverCalled : Check if the method has never been called
          *          AtLeast : Check if the method has been called at least the number provided
          *          AtMost  : Check if the method has been called at most the number provided
          *          IsNot   : Check if the method is not the number provided
          *          
-         * @param contentChecker this predicate will be used in order to check if the method has been called following
-         *         specific predicament (std::auto containing metadata of call)
          * @param methodName Name of the method to check on the mock (Use the helpers constant to ensure no typo)
          * @param comp comparator instance on which the number of times the mock method is called on a provided value
          *         is checked against
          * @return true if the method encounter the provided comparator conditions, false otherwise
          */
-        template <typename ContentChecker, typename Comparator>
+        template <typename ContentChecker/*TODO : REMOVE ContentChecker*/, typename Comparator>
         bool verify(std::string methodName, ContentChecker &&contentChecker, Comparator &&comp) const {
-            std::string key = _className + std::move(methodName);
+            if constexpr (std::is_integral<Comparator>())
+                return verify(std::move(methodName), [](std::any &methodCallVerifier) { return true; }, VerifyCompare(coc));
 
+            std::string key = _className + std::move(methodName);
+            
             if (_verifiers.find(key) == _verifiers.end()) {
                 if (comp._toCompare > 0u) {
                     std::cout << "Verify error for method " << key << ", method never have been called while " 
@@ -347,6 +381,7 @@ namespace FSeam {
                 }
                 return comp._toCompare == 0u;
             }
+            // std::for_each(_verifiers.at(key)->_expectations.begin(), _verifiers.at(key)->_calledDa_expectationsta.end(), [](auto &expect) { expect();} );
             auto mockMethodCalled = std::count_if(_verifiers.at(key)->_calledData.begin(), _verifiers.at(key)->_calledData.end(), contentChecker);
             bool result = comp.compare(mockMethodCalled);
             if (!result) {
