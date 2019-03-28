@@ -15,13 +15,13 @@ TEST_CASE("Test Singleton") {
     REQUIRE(FSeam::MockVerifier::instance().isMockRegistered(&testingClass.getDepGettable()));
     int valueChanging = 0;
 
-    fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
+    fseamMock->dupeMethod(FSeam::DependencyGettable::checkCalled::NAME, [&valueChanging](void *dataStruct) {
             valueChanging += 1;
         }, true); // first layer  : valueChanging = 1
-    fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
+    fseamMock->dupeMethod(FSeam::DependencyGettable::checkCalled::NAME, [&valueChanging](void *dataStruct) {
             valueChanging += 10;
         }, true); // second layer : valueChanging = 11
-    fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
+    fseamMock->dupeMethod(FSeam::DependencyGettable::checkCalled::NAME, [&valueChanging](void *dataStruct) {
             valueChanging += 100;
         }, true); // third layer  : valueChanging = 111        
 
@@ -29,17 +29,17 @@ TEST_CASE("Test Singleton") {
         testingClass.execute();
         testingClass.execute();
         fseamMock = FSeam::get(&testingClass.getDepGettable());
-        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 2));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, 2));
         fseamMock = FSeam::get(&testingClass.getDepGettable());
         testingClass.execute();
         testingClass.execute();
-        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 4));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, 4));
         fseamMock = FSeam::get(&testingClass.getDepGettable());
         testingClass.execute();
-        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 5));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, 5));
         fseamMock = FSeam::get(&testingClass.getDepGettable());
         fseamMock = FSeam::get(&testingClass.getDepGettable());
-        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 5));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, 5));
         CHECK(555 == valueChanging);
 
     } // End section : Test multiple get
@@ -47,13 +47,13 @@ TEST_CASE("Test Singleton") {
     SECTION("FSeam::MockVerifier::cleanup") {
         FSeam::MockVerifier::cleanUp(); // Cleanup, remove all alternation of mocks : valueChanging won't change
         fseamMock = FSeam::get(&testingClass.getDepGettable()); // Need to reset the shared ptr as it has been cleaned up
-        fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
+        fseamMock->dupeMethod(FSeam::DependencyGettable::checkCalled::NAME, [&valueChanging](void *dataStruct) {
                 valueChanging += 1;
             }, true); // valueChanging = 1
 
         REQUIRE(0 == valueChanging);
         testingClass.execute();
-        CHECK(fseamMock->verify(FSeam::DependencyGettable_FunName::CHECKCALLED, 1));
+        CHECK(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, 1));
         CHECK_FALSE(111 == valueChanging);
         CHECK(1 == valueChanging);
 
@@ -64,10 +64,10 @@ TEST_CASE("Test Singleton") {
         testingClass.execute();
         CHECK(111 == valueChanging);
 
-        fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
+        fseamMock->dupeMethod(FSeam::DependencyGettable::checkCalled::NAME, [&valueChanging](void *dataStruct) {
             valueChanging = 1337;
         });
-        fseamMock->dupeMethod(FSeam::DependencyGettable_FunName::CHECKCALLED, [&valueChanging](void *dataStruct) {
+        fseamMock->dupeMethod(FSeam::DependencyGettable::checkCalled::NAME, [&valueChanging](void *dataStruct) {
             valueChanging = 42;
         }); // dupe is not composed (no last argument on dupeMethod) so the 1337 dupe is override by this 42 one
 

@@ -137,11 +137,9 @@ class FSeamerFile:
             if methods or className in content:
                 content = self._clearDataStructureData(content, className)
             _struct = "\nstruct " + className + "Data {\n"
-            _helperMethod = "// Methods Helper\nnamespace " + className + "_FunName {\n" #TODO : remove it
             for methodName in methods:
                 _struct += self._extractDataStructMethod(className, methodName)
-                _helperMethod += INDENT + "static const std::string " + methodName.upper() + " = \"" + methodName + "\";\n"
-            content += _struct + "};\n" + _helperMethod + "\n}\n"
+            content += _struct + "};\n\n"
             content += "// NameTypeTraits\ntemplate <> struct TypeParseTraits<" + self.fullClassNameMap[className] + \
                        "> {\n" + INDENT + "inline static const std::string ClassName = \"" + className + "\";\n};\n"
             content += self._generateDupeVerifyTemplateSpecialization(className)
@@ -219,7 +217,7 @@ class FSeamerFile:
         _genSpecial = "// ClassMethodIdentifiers\n"
         _genSpecial += "namespace " + className + " {\n"
         for methodName, methodsMapping in self.functionSignatureMapping[className].items():
-            _genSpecial += INDENT + "struct " + methodName + " { static const std::string NAME = \"" + methodName + "\"; };\n"
+            _genSpecial += INDENT + "struct " + methodName + " { inline static const std::string NAME = \"" + methodName + "\"; };\n"
         _genSpecial += "}\n"
 
         self.specContent += "\n\n// Duping/Expectations specializations for " + className + "\n"
@@ -227,7 +225,7 @@ class FSeamerFile:
             # Specialization for dupeReturn
             if methodMapping["rtnType"] != "void":
                 self.specContent += "template <> void FSeam::MockClassVerifier::dupeReturn<FSeam::" + className + "::" + methodName + ", " + methodMapping["rtnType"] + "> (" + methodMapping["rtnType"] + " returnValue) {\n"
-                self.specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [&](void *methodCallData) { \n"
+                self.specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [=](void *methodCallData) { \n"
                 self.specContent += INDENT2 + "static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + RETURN_SUFFIX + " = returnValue;\n"
                 self.specContent += INDENT + "});\n};\n"
 
@@ -246,7 +244,7 @@ class FSeamerFile:
                 for param in methodMapping["params"]:
                     self.specContent += param["type"] + ", "
             self.specContent += ")> handler) {\n"
-            self.specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [&](void *methodCallData) { \n" + INDENT2
+            self.specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [=](void *methodCallData) { \n" + INDENT2
             if methodMapping["rtnType"] != "void":
                 self.specContent += "static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + RETURN_SUFFIX + " = "
             self.specContent += "handler(\n"
@@ -278,13 +276,18 @@ class FSeamerFile:
         if comparator is not None:
             _gen += comparator + " comp"
         _gen += ") {\n"
-        _gen += INDENT + "auto expectationChecker = [&](void *methodCallData) { \n"
+        _gen += INDENT + "auto expectationChecker = [=](void *methodCallData) { \n"
         _gen += INDENT2 + "bool argCheck = true;\n"
         for param in methodMapping["params"]:
-            _gen += INDENT2 + "argCheck &= " + param["name"] + ".compare(static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + "_" + param["name"] + PARAM_SUFFIX + ");\n"
+            _gen += INDENT2 + "argCheck &= " + param["name"] + ".compare<" + param["type"] + ">(*static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + "_" + param["name"] + PARAM_SUFFIX + ");\n"
         _gen += INDENT2 + "return argCheck;\n"
         _gen += INDENT + "};\n"
-        _gen += INDENT + "this->registerExpectation(MethodCallVerifier::Expectation{ expectationChecker, comp });\n}\n"
+        _gen += INDENT + "this->registerExpectation(\"" + methodName + "\", MethodCallVerifier::Expectation{ expectationChecker"
+        if comparator is not None:
+            _gen += ", comp"
+        else:
+            _gen += ", FSeam::AtLeast{1}"
+        _gen += " });\n}\n"
         return _gen
 
     def _generateMethodContent(self, returnType, className, methodName):
@@ -296,7 +299,7 @@ class FSeamerFile:
             _content += INDENT + "if (std::is_copy_constructible<std::decay<" + p["type"] + ">>())\n"
             _content += INDENT2 + "data." + methodName + "_" + p["name"] + PARAM_SUFFIX + " = std::move(" + p["name"] + ");\n"
         _content += INDENT + "mockVerifier->invokeDupedMethod(__func__, &data);\n"
-        _content += INDENT + "mockVerifier->methodCall(__func__, std::any(data));\n"
+        _content += INDENT + "mockVerifier->methodCall(__func__, &data);\n"
         if 'void' != returnType:
             _content += INDENT + "return data." + methodName + "_ReturnValue;"
         return _content
