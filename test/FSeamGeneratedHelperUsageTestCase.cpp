@@ -15,72 +15,51 @@
 #include <TestingClass.hh>
 #include <MockData.hpp>
 
+using fs = FSeam::ArgComp;
+
 TEST_CASE("Test HelperMethods Simple UseCase") {
     source::TestingClass testClass{};
-    auto fseamMock = FSeam::get(&testingClass.getDepGettable());
-
-    SECTION("Test dupe") {
-        bool dupeCalled = false;
-
-        SECTION("Dupe simple") {
-            fseamMock->dupe<FSeam::TestingClass::checkCalled>([&dupeCalled]() {
-                dupeCalled = true;
-            });
-            REQUIRE_FALSE(dupeCalled);
-
-        } // End section : Dupe simple
-
-        SECTION ("Dupe with arguments") {
-            fseamMock->dupe<FSeam::TestingClass::checkSimpleInputVariable>([&dupeCalled](int simple, std::string easy) {
-                dupeCalled = true;
-                CHECK(42 == simple);
-                CHECK("4242" == easy);
-            });
-            REQUIRE_FALSE(dupeCalled);
-
-        } // End section : Dupe with arguments
-
-        SECTION("Dupe with return value") {
-            fseamMock->dupe<FSeam::TestingClass::checkSimpleReturnValue>([&dupeCalled]() {
-                dupeCalled = true;
-                return 1337;
-            });
-            REQUIRE_FALSE(dupeCalled);  
-            CHECK(1337 == testClass.checkSimpleReturnValue());
-
-        } // End section : Dupe simple
-
-        testClass.execute();
-        REQUIRE(dupeCalled);
-
-    } // End section : Test dupe
-
+    auto fseamMock = FSeam::get(&testClass.getDepGettable());
 
     SECTION("Test DupeReturn") {
-        fseamMock->dupeReturn<FSeam::TestingClass::checkSimpleReturnValue>(666);
-        REQUIRE_FALSE(dupeCalled);  
-        CHECK(666 == testClass.checkSimpleReturnValue());
-        REQUIRE_TRUE(dupeCalled);
-    }
+        fseamMock->dupeReturn<FSeam::DependencyGettable::checkSimpleReturnValue>(666);
+        CHECK(666 == testClass.getDepGettable().checkSimpleReturnValue());
+
+    } // End section : Test DupeReturn
 
     SECTION("Test ExpectArg") {
 
-    }
+        SECTION("Eq Comparator") {
+            fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(fs::Eq(42), fs::Eq(std::string("4242")));
+            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+            testClass.execute();
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+        } // End section : Integral Comparator
+
+        SECTION("NotEq Comparator") {
 
 
-    SECTION("Test Overrides") {
+        } // End section : Integral Comparator
 
-        SECTION("ExpectArg and DupeReturn composition") {
+        SECTION("Any Comparator") {
+
+
+        } // End section : Integral Comparator
+
+        SECTION("Custom Comparator") {
 
         }
 
-        SECTION("Dupe override") {
-
-        }
+        SECTION("Multiple expectation") {
 
 
-    }
+        } // End section : Multiple expectation
 
+    } // End section : Test ExpectArg
+
+    SECTION("Test Composition") {
+
+    } // End section : Test Composition
 
 
 } // End TestCase : Test HelperMethods Simple Function

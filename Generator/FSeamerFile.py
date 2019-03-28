@@ -55,7 +55,7 @@ class FSeamerFile:
         """
         :param pathFile: cpp header file that will be parsed at the "seamParse" call
         """
-        self.mapClassMethods = dict()
+        self.mapClassMethods = {}
         self.codeSeam = HEADER_INFO
         self.headerPath = os.path.normpath(pathFile)
         self.fileName = ntpath.basename(self.headerPath)
@@ -230,28 +230,28 @@ class FSeamerFile:
                 self.specContent += INDENT + "});\n};\n"
 
             # Specialization for dupe
-            self.specContent += "template <> void FSeam::MockClassVerifier::dupe<FSeam::" + className + "::" + methodName + ", std::function<" + methodMapping["rtnType"] + "("
-            if len(methodMapping["params"]) == 0:
-                self.specContent += "void"
-            else:
-                for param in methodMapping["params"]:
-                    self.specContent += param["type"] + ", "
-            self.specContent += ")> >"
-            self.specContent += "(std::function<" + methodMapping["rtnType"] + "("
-            if len(methodMapping["params"]) == 0:
-                self.specContent += "void"
-            else:
-                for param in methodMapping["params"]:
-                    self.specContent += param["type"] + ", "
-            self.specContent += ")> handler) {\n"
-            self.specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [=](void *methodCallData) { \n" + INDENT2
-            if methodMapping["rtnType"] != "void":
-                self.specContent += "static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + RETURN_SUFFIX + " = "
-            self.specContent += "handler(\n"
-            for param in methodMapping["params"]:
-                self.specContent += INDENT2 + "  *(static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + "_" + param["name"] + PARAM_SUFFIX + "), \n"
-            self.specContent += ");\n"
-            self.specContent += INDENT + "});\n}\n"
+            # self.specContent += "template <> void FSeam::MockClassVerifier::dupe<FSeam::" + className + "::" + methodName + ", std::function<" + methodMapping["rtnType"] + "("
+            # if len(methodMapping["params"]) == 0:
+            #     self.specContent += "void"
+            # else:
+            #     for param in methodMapping["params"]:
+            #         self.specContent += param["type"] + ", "
+            # self.specContent += ")> >"
+            # self.specContent += "(std::function<" + methodMapping["rtnType"] + "("
+            # if len(methodMapping["params"]) == 0:
+            #     self.specContent += "void"
+            # else:
+            #     for param in methodMapping["params"]:
+            #         self.specContent += param["type"] + ", "
+            # self.specContent += ")> handler) {\n"
+            # self.specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [=](void *methodCallData) { \n" + INDENT2
+            # if methodMapping["rtnType"] != "void":
+            #     self.specContent += "static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + RETURN_SUFFIX + " = "
+            # self.specContent += "handler(\n"
+            # for param in methodMapping["params"]:
+            #     self.specContent += INDENT2 + "  *(static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + "_" + param["name"] + PARAM_SUFFIX + "), \n"
+            # self.specContent += ");\n"
+            # self.specContent += INDENT + "});\n}\n"
 
             # Specialization for verifyArg
             if len(methodMapping["params"]) > 0:
