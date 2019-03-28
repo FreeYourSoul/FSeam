@@ -134,7 +134,8 @@ namespace FSeam {
 
         template <typename TypeToCompare>
         bool compare(TypeToCompare && value) const {
-            return _comparePredicate(std::forward<TypeToCompare>(value), std::any_cast<TypeToCompare>(_toCompare));
+            return true;
+//            _comparePredicate(std::forward<TypeToCompare>(value), std::any_cast<TypeToCompare>(_toCompare));
         }
         std::any _toCompare;
         std::any _comparePredicate;
@@ -150,14 +151,11 @@ namespace FSeam {
                 return varEq->compare(std::forward<TypeToCompare>(value));
             else if (auto varNotEq = std::get_if<NotEq>(&_comp))
                 return varNotEq->compare(std::forward<TypeToCompare>(value));
-        }
-
-        template <typename TypeToCompare, typename Predicate>
-        bool compare(TypeToCompare && value) {
-            if (auto varNotEq = std::get_if<CustomComparator>(&_comp))
-                return varNotEq->compare<TypeToCompare, Predicate>(std::forward<TypeToCompare>(value));
+            else if (auto varCustom = std::get_if<CustomComparator>(&_comp))
+                return varCustom->compare<TypeToCompare>(std::forward<TypeToCompare>(value));
             return false;
         }
+
 
         bool isCustomComparator() const {
             return std::holds_alternative<CustomComparator>(_comp);
