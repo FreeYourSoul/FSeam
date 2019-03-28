@@ -15,7 +15,7 @@
 #include <TestingClass.hh>
 #include <MockData.hpp>
 
-using fs = FSeam::ArgComp;
+using namespace FSeam;
 
 TEST_CASE("Test HelperMethods Simple UseCase") {
     source::TestingClass testClass{};
@@ -30,7 +30,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
     SECTION("Test ExpectArg") {
 
         SECTION("Eq Comparator") {
-            fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(fs::Eq(42), fs::Eq(std::string("4242")));
+            fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Eq(42), Eq(std::string("4242")));
             REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
             testClass.execute();
             REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));

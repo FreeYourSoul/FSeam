@@ -119,71 +119,81 @@ namespace FSeam {
      * @brief Comparators option used in verify in order to give more flexibility into the check possible via te verify option
      * @note To be used in order to check the arguments of a method via the MockClassVerifier::verifyArg method
      */
-    struct Any {};
-    struct Eq {
-        Eq(std::any toCompare) : _toCompare(std::move(toCompare)) {}
+    namespace comparator::internal {
 
-        template <typename TypeToCompare>
-        bool compare(TypeToCompare value) const  { return value == std::any_cast<TypeToCompare>(_toCompare); }
-        std::any _toCompare;
-    };
-    struct NotEq {
-        NotEq(std::any toCompare) : _toCompare(std::move(toCompare)) {}
+        struct Any {
+        };
 
-        template <typename TypeToCompare>
-        bool compare(TypeToCompare value) const  { return std::forward<TypeToCompare>(value) != std::any_cast<TypeToCompare>(_toCompare); }
-        std::any _toCompare;
-    };
-    struct CustomComparator {
-        CustomComparator(std::any toCompare, std::any predicate) :
-            _toCompare(std::move(toCompare)), _comparePredicate(std::move(predicate)) {}
+        struct Eq {
+            Eq(std::any toCompare) : _toCompare(std::move(toCompare)) {}
 
-        template <typename TypeToCompare>
-        bool compare(TypeToCompare value) const {
-            return std::any_cast<std::function<bool (TypeToCompare, TypeToCompare)> >
-                    (_comparePredicate)(std::forward<TypeToCompare>(std::forward<TypeToCompare>(value)), std::any_cast<TypeToCompare>(_toCompare));
-        }
-        std::any _toCompare;
-        std::any _comparePredicate;
-    };
-    using ArgComparatorType = std::variant<CustomComparator, NotEq, Eq, Any>;
+            template<typename TypeToCompare>
+            bool compare(TypeToCompare value) const { return value == std::any_cast<TypeToCompare>(_toCompare); }
+
+            std::any _toCompare;
+        };
+
+        struct NotEq {
+            NotEq(std::any toCompare) : _toCompare(std::move(toCompare)) {}
+
+            template<typename TypeToCompare>
+            bool compare(TypeToCompare value) const {
+                return std::forward<TypeToCompare>(value) != std::any_cast<TypeToCompare>(_toCompare);
+            }
+
+            std::any _toCompare;
+        };
+
+        struct CustomComparator {
+            CustomComparator(std::any toCompare, std::any predicate) :
+                    _toCompare(std::move(toCompare)), _comparePredicate(std::move(predicate)) {}
+
+            template<typename TypeToCompare>
+            bool compare(TypeToCompare value) const {
+                return std::any_cast<std::function<bool(TypeToCompare, TypeToCompare)> >
+                        (_comparePredicate)(std::forward<TypeToCompare>(std::forward<TypeToCompare>(value)),
+                                            std::any_cast<TypeToCompare>(_toCompare));
+            }
+
+            std::any _toCompare;
+            std::any _comparePredicate;
+        };
+
+        using ArgComparatorType = std::variant<CustomComparator, NotEq, Eq, Any>;
+    }
 
     struct ArgComp {
-        ArgComp(ArgComparatorType && comp) : _comp(std::move(comp)) {}
+        ArgComp(comparator::internal::ArgComparatorType && comp) : _comp(std::move(comp)) {}
 
         template <typename TypeToCompare>
         bool compare(TypeToCompare value) const {
-            if (std::get_if<FSeam::Any>(&_comp))
+            if (std::get_if<comparator::internal::Any>(&_comp))
                 return true;
-            else if (auto varEq = std::get_if<FSeam::Eq>(&_comp))
+            else if (auto varEq = std::get_if<comparator::internal::Eq>(&_comp))
                 return varEq->compare<TypeToCompare>(value);
-            else if (auto varNotEq = std::get_if<FSeam::NotEq>(&_comp))
+            else if (auto varNotEq = std::get_if<comparator::internal::NotEq>(&_comp))
                 return varNotEq->compare<TypeToCompare>(value);
-            else if (auto varCustom = std::get_if<FSeam::CustomComparator>(&_comp))
+            else if (auto varCustom = std::get_if<comparator::internal::CustomComparator>(&_comp))
                 return varCustom->compare<TypeToCompare>(value);
             return false;
         }
-
-        static ArgComp Any() {
-            return ArgComp(FSeam::Any());
-        }
-        template <typename T>
-        static ArgComp Eq(T && t) {
-            return ArgComp(FSeam::Eq(std::forward<T>(t)));
-        }
-        template <typename T>
-        static ArgComp NotEq(T && t) {
-            return ArgComp(FSeam::NotEq(std::forward<T>(t)));
-        }
-        template <typename T>
-        static ArgComp CustomComparator(T  && t) {
-            return ArgComp(FSeam::CustomComparator(std::forward<T>(t)));
-        }
-
-        ArgComparatorType _comp;
+        comparator::internal::ArgComparatorType _comp;
     };
-    using _ = ArgComp;
-
+    static ArgComp Any() {
+        return ArgComp(comparator::internal::Any());
+    }
+    template <typename T>
+    static ArgComp Eq(T && t) {
+        return ArgComp(comparator::internal::Eq(std::forward<T>(t)));
+    }
+    template <typename T>
+    static ArgComp NotEq(T && t) {
+        return ArgComp(comparator::internal::NotEq(std::forward<T>(t)));
+    }
+    template <typename T>
+    static ArgComp CustomComparator(T  && t) {
+        return ArgComp(comparator::internal::CustomComparator(std::forward<T>(t)));
+    }
 
     /**
      * @brief basic structure that contains description and usage metadata of a mocked method
