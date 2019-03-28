@@ -266,24 +266,30 @@ class FSeamerFile:
 
     def _generateSpecializationVerifyArg(self, className, methodName, methodMapping, comparator = None):
         _gen = "template <> bool FSeam::MockClassVerifier::verifyArg<FSeam::" + className + "::" + methodName + ", "
+        _sig = methodMapping["rtnType"] + "("
+        if len(methodMapping["params"]):
+            _sig += "void"
         for param in methodMapping["params"]:
-            _gen += param["type"] + ", "
+            _sig += param["type"] + ", "
+            _gen += "FSeam::ArgComp, "
+        _sig += ")"
+        _sig = _sig.replace(", )", ")")
         if comparator is not None:
             _gen += comparator
         _gen += "> "
         _gen += "("
         for param in methodMapping["params"]:
-            _gen += param["type"] + " " + param["name"] + ", "
+            _gen += "FSeam::ArgComp " + param["name"] + ", "
         if comparator is not None:
             _gen += comparator + " comp"
         _gen += ") {\n"
         _gen += INDENT + "return this->verify(\"" + methodName + "\", [&](std::any methodCallData) { \n"
         _gen += INDENT2 + "bool argCheck = false;\n"
         for param in methodMapping["params"]:
-            if comparator is not None:
-                _gen += INDENT2 + "argCheck |= " + param["name"] + " == std::any_cast<FSeam::" + className + "Data>(methodCallData)." + methodName + "_" + param["name"] + PARAM_SUFFIX + ";\n"
-            else:
-                _gen += INDENT2 + "argCheck |= " + param["name"] + " == std::any_cast<FSeam::" + className + "Data>(methodCallData)." + methodName + "_" + param["name"] + PARAM_SUFFIX + ";\n"
+            _gen += INDENT2 + "if (" + param["name"] + ".isCustomComparator())\n"
+            _gen += INDENT3 + "argCheck |= " + param["name"] + ".compare<decltype(std::any_cast<FSeam::" + className + "Data>(methodCallData)." + methodName + "_" + param["name"] + PARAM_SUFFIX + "), std::function<" + _sig + ">)>(std::any_cast<FSeam::" + className + "Data>(methodCallData)." + methodName + "_" + param["name"] + PARAM_SUFFIX + ");\n"
+            _gen += INDENT2 + "else\n"
+            _gen += INDENT3 + "argCheck |= " + param["name"] + ".compare(std::any_cast<FSeam::" + className + "Data>(methodCallData)." + methodName + "_" + param["name"] + PARAM_SUFFIX + ");\n"
         _gen += INDENT2 + "return argCheck;\n"
         _gen += INDENT + "}"
         if comparator is not None:

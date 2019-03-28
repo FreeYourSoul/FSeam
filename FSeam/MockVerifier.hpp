@@ -33,6 +33,7 @@
 #include <functional>
 #include <memory>
 #include <iostream>
+#include <variant>
 #include <map>
 #include <any>
 
@@ -69,33 +70,33 @@ namespace FSeam {
     struct VerifyCompare {
         explicit VerifyCompare(uint toCompare) : _toCompare(toCompare) {}
         bool compare(uint number) { return _toCompare == number; } 
-        std::string expectStr(uint number) { return std::string("we expected exactly ") +
+        std::string expectStr(uint number) const { return std::string("we expected exactly ") +
             std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
         int _toCompare = 0;
     };
     struct NeverCalled {
         bool compare(uint number) { return !number; } 
-        std::string expectStr(uint number) { return std::string("we expected this method to never be called ") +
+        std::string expectStr(uint number) const { return std::string("we expected this method to never be called ") +
             std::to_string(_toCompare) + std::string(" but received ") + std::to_string(number); };
         int _toCompare = 0;
     };
     struct AtLeast {
         explicit AtLeast(uint toCompare) : _toCompare(toCompare) {}
-        bool compare(uint number) { return _toCompare <= number; }
+        bool compare(uint number) const { return _toCompare <= number; }
         std::string expectStr(uint number) { return std::string("we expected at least ") +
             std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
         uint _toCompare = 0;
     };
     struct AtMost {
         explicit AtMost(uint toCompare) : _toCompare(toCompare) {}
-        bool compare(uint number) { return _toCompare >= number; }
+        bool compare(uint number) const { return _toCompare >= number; }
         std::string expectStr(uint number) { return std::string("we expected at most ") +
             std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
         uint _toCompare = 0;
     };
     struct IsNot { // Todo: Improve is not to take a list of params to check agains instead of a single value
         explicit IsNot(uint toCompare) : _toCompare(toCompare) {}
-        bool compare(uint number) { return _toCompare != number; } 
+        bool compare(uint number) const { return _toCompare != number; }
         std::string expectStr(uint number) { return std::string("we expected other value than ") +
             std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
         uint _toCompare = 0;
@@ -113,29 +114,55 @@ namespace FSeam {
      * @brief Comparators option used in verify in order to give more flexibility into the check possible via te verify option
      * @note To be used in order to check the arguments of a method via the MockClassVerifier::verifyArg method
      */
-    template <typename TypeToCompare>
     struct Eq {
-        explicit Eq(TypeToCompare && toCompare) : _toCompare(std::forward<TypeToCompare>(toCompare)) {}
-        bool compare(TypeToCompare && value) { return value == _toCompare; } 
-        TypeToCompare _toCompare;
-    };
+        explicit Eq(std::any toCompare) : _toCompare(std::move(toCompare)) {}
 
-    template <typename TypeToCompare>
+        template <typename TypeToCompare>
+        bool compare(TypeToCompare && value) const  { return value == std::any_cast<TypeToCompare>(_toCompare); }
+        std::any _toCompare;
+    };
     struct NotEq {
-        explicit NotEq(TypeToCompare && toCompare) : _toCompare(std::forward<TypeToCompare>(toCompare)) {}
-        bool compare(TypeToCompare && value) { return value != _toCompare; } 
-        TypeToCompare _toCompare;
-    };
+        explicit NotEq(std::any toCompare) : _toCompare(std::move(toCompare)) {}
 
-    template <typename TypeToCompare, typename Predicate>
+        template <typename TypeToCompare>
+        bool compare(TypeToCompare && value) const  { return value != std::any_cast<TypeToCompare>(_toCompare); }
+        std::any _toCompare;
+    };
     struct CustomComparator {
-        explicit CustomComparator(TypeToCompare && toCompare, Predicate && predicate) :
-            _toCompare(std::forward<TypeToCompare>(toCompare)), _comparePredicate(std::forward<Predicate>(predicate)) {}
-        bool compare(TypeToCompare && value) { 
-            return _comparePredicate(std::forward<TypeToCompare>(value), std::forward<TypeToCompare>(_toCompare));
-        } 
-        TypeToCompare _toCompare;
-        Predicate _comparePredicate;
+        explicit CustomComparator(std::any toCompare, std::any predicate) :
+            _toCompare(std::move(toCompare)), _comparePredicate(std::move(predicate)) {}
+
+        template <typename TypeToCompare>
+        bool compare(TypeToCompare && value) const {
+            return _comparePredicate(std::forward<TypeToCompare>(value), std::any_cast<TypeToCompare>(_toCompare));
+        }
+        std::any _toCompare;
+        std::any _comparePredicate;
+    };
+    using ArgComparatorType = std::variant<CustomComparator, NotEq, Eq>;
+
+    struct ArgComp{
+        ArgComp(ArgComparatorType && comp) : _comp(comp) {}
+
+        template <typename TypeToCompare>
+        bool compare(TypeToCompare && value) {
+            if (auto varEq = std::get_if<Eq>(&_comp))
+                return varEq->compare(std::forward<TypeToCompare>(value));
+            else if (auto varNotEq = std::get_if<NotEq>(&_comp))
+                return varNotEq->compare(std::forward<TypeToCompare>(value));
+        }
+
+        template <typename TypeToCompare, typename Predicate>
+        bool compare(TypeToCompare && value) {
+            if (auto varNotEq = std::get_if<CustomComparator>(&_comp))
+                return varNotEq->compare<TypeToCompare, Predicate>(std::forward<TypeToCompare>(value));
+            return false;
+        }
+
+        bool isCustomComparator() const {
+            return std::holds_alternative<CustomComparator>(_comp);
+        }
+        ArgComparatorType _comp;
     };
 
     /**
