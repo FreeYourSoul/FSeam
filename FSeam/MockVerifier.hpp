@@ -257,6 +257,25 @@ namespace FSeam {
         }
 
         /**
+         * Clear the expectations of the given method, if none provided, all expectation are removed
+         * @param methodName
+         */
+        void clearExpectations(std::optional<std::string> methodName = std::nullopt) {
+            if (methodName) {
+                std::string key = _className + std::move(*methodName);
+
+                if (_verifiers.find(key) != _verifiers.end()) {
+                    std::shared_ptr<MethodCallVerifier> &methodCallVerifier = _verifiers.at(key);
+                    methodCallVerifier->_expectations.clear();
+                }
+            }
+            else {
+                for( auto const& [key, val] : _verifiers)
+                    val->_expectations.clear();
+            }
+        }
+
+        /**
          * @note This method should never be used by the client directly, it is a "FSeam generated" method only
          */
         void registerExpectation(std::string methodName, MethodCallVerifier::Expectation expectation) {
@@ -273,9 +292,11 @@ namespace FSeam {
 
         /**
          * @details Add an expectation on the specified method (template specification on a FSeam generated structure representing
-         *        a specific method for a mocked class), dupe method used with composition enabled.
+         *        a specific method for a mocked class).
          *        It is important to note that a call to verify has to be done in order to check those expectations.
-         * @note The method is going to call the dupe method in composition mode, in order to fill the expectations to verify
+         * @note Working in a similar way to dupeMethod, it is required that the expectation are set before launching your executions
+         *       as the library is going to check registered expectations at runtime. The verify check at the end is used in order
+         *       to check if the number of occurence.
          *
          * @example
          * @code
@@ -287,6 +308,7 @@ namespace FSeam {
          * void test () {
          *      ClassName instance {};
          *      auto fseamMock = FSeam::get(&instance);
+         *      // !! No execution here, otherwise it won't be checked by the following expectArg
          *      fseamMock->expectArg<FSeam::ClassName::functionName>(FSeam::Eq{24}, FSeam::NotEq{55}, FSeam::Any{});
          *      //.... code that execute functionName at some point
          *      // verify the method has been called at least once with first arg equal 21, second not equal 55, and third anything
@@ -379,8 +401,10 @@ namespace FSeam {
                     }
                     return comp._toCompare == 0u;
                 }
-                std::for_each(_verifiers.at(key)->_expectations.begin(), _verifiers.at(key)->_expectations.end(), [](auto &expect) { expect();} );
-                bool result = comp.compare(_verifiers.at(key)->_called);
+                bool result = true;
+                for (auto &expect : _verifiers.at(key)->_expectations)
+                    result &= expect();
+                result &= comp.compare(_verifiers.at(key)->_called);
                 if (!result) {
                     std::cout << "Verify error for method " << key << ", method has been called but "
                               << comp.expectStr(_verifiers.at(key)->_called) << " method call following the specified contentChecker\n";
