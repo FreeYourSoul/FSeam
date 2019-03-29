@@ -368,6 +368,12 @@ namespace FSeam {
             _verifiers[std::move(key)] = methodCallVerifier;
         }
 
+        /**
+         * @brief Verify if the given method has been called at least one time
+         * 
+         * @param methodName Name of the method to check on the mock (Use the helpers constant to ensure no typo)
+         * @return true if the method encounter the provided comparator conditions, false otherwise
+         */
         bool verify(const std::string &methodName) const {
             return verify(methodName, AtLeast(1));
         }

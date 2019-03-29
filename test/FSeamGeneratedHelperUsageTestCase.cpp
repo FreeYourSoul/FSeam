@@ -23,7 +23,27 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
 
     SECTION("Test DupeReturn") {
         fseamMock->dupeReturn<FSeam::DependencyGettable::checkSimpleReturnValue>(666);
-        CHECK(666 == testClass.getDepGettable().checkSimpleReturnValue());
+
+        SECTION("Simple value") {
+           REQUIRE(666 == testClass.getDepGettable().checkSimpleReturnValue());
+        } // End section : Simple value
+
+        SECTION("Test Composition override") {
+            fseamMock->dupeReturn<FSeam::DependencyGettable::checkSimpleReturnValue>(668);
+            fseamMock->dupeReturn<FSeam::DependencyGettable::checkSimpleReturnValue>(42);
+            fseamMock->dupeReturn<FSeam::DependencyGettable::checkSimpleReturnValue>(1337);
+            REQUIRE(1337 == testClass.getDepGettable().checkSimpleReturnValue());
+
+        } // End section : Test Composition override
+
+        SECTION("Custom struct/class") {
+            DependencyGettable::StructTest testingStruct {42, 1337, "FyS"};
+            fseamMock->dupeReturn<FSeam::DependencyGettable::checkCustomStructReturnValue>(testingStruct);
+            REQUIRE(testingStruct.testInt == testClass.checkCustomStructReturnValue().testInt);
+            REQUIRE(testingStruct.testShort == testClass.checkCustomStructReturnValue().testShort);
+            REQUIRE(testingStruct.testStr == testClass.checkCustomStructReturnValue().testStr);
+
+        } // End section : Custom struct/class
 
     } // End section : Test DupeReturn
 
@@ -34,7 +54,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
         REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
         fseamMock->clearExpectations();
         REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
-    }
+    } // End section : Clear expectations
 
     SECTION("Test ExpectArg") {
 
@@ -78,7 +98,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
                 testClass.getDepGettable().checkSimpleInputVariable(33, "FyS");
                 testClass.getDepGettable().checkSimpleInputVariable(41, "FyS");
                 REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
-            }
+            } // End section : Success Equal
 
             SECTION("Failing Equal one arg false") {
                 fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Eq(42), Eq(std::string("FALSE")));
@@ -113,24 +133,77 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
         } // End section : Integral Comparator
 
         SECTION("NotEq Comparator") {
-
+            fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(NotEq(42), NotEq(std::string("FyS")));
+            testClass.getDepGettable().checkSimpleInputVariable(42, "dede"); // true , false    = false
+            testClass.getDepGettable().checkSimpleInputVariable(42, "dodo"); // true, false     = false
+            testClass.getDepGettable().checkSimpleInputVariable(46, "FyS");  // false, false    = false
+            testClass.getDepGettable().checkSimpleInputVariable(33, "FyS");  // true, false     = false
+            testClass.getDepGettable().checkSimpleInputVariable(41, "FyS");  // true, false     = false
+            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 5));
+            testClass.getDepGettable().checkSimpleInputVariable(456, "adad"); // true, true = true
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 6));
 
         } // End section : Integral Comparator
 
         SECTION("Custom Comparator") {
+            fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructReturnValue>(
+                CustomComparator([](DependencyGettable::StructTest test){
+                    return test.testInt == 1 &&
+                        test.testShort == 11 &&
+                        test.testStr == "111";
+                }));
+            testClass.getDepGettable().checkCustomStructReturnValue({1, 11, "111"});
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 1));
 
-        }
+            SECTION("Failure on Custom Comparator") {
+                fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructReturnValue>(
+                    CustomComparator([](DependencyGettable::StructTest test){
+                        return test.testInt == 1 &&
+                            test.testShort == 42 && // short is not 42
+                            test.testStr == "111";
+                    }));
+                testClass.getDepGettable().checkCustomStructReturnValue({1, 11, "111"});
+                REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+
+            } // End section : Failure on Custom Comparator
+
+            SECTION("Multiple Custom Comparator") {
+                fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructReturnValue>(
+                    CustomComparator([](DependencyGettable::StructTest test){
+                        return test.testInt == 1;
+                    }));
+                fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructReturnValue>(
+                    CustomComparator([](DependencyGettable::StructTest test){
+                        return test.testShort == 11;
+                    }));
+                fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructReturnValue>(
+                    CustomComparator([](DependencyGettable::StructTest test){
+                        return test.testStr == "111";
+                    }));
+                    
+                testClass.getDepGettable().checkCustomStructReturnValue({1, 11, "111"});
+                REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+
+            } // End section : Multiple Custom Comparator+
+
+        } // End section : Custom Comparator
 
         SECTION("Multiple expectations") {
-
-
+            fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Eq(29), Any(), VerifyCompare{2});
+            fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Eq(29), Any(), VerifyCompare{2});
+            fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Eq(29), Eq(std::string("dede")) AtMost{1});
+            fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Any(),  Eq(std::string("FyS")), AtLeast{1};
+            testClass.getDepGettable().checkSimpleInputVariable(29, "dede");
+            testClass.getDepGettable().checkSimpleInputVariable(29, "dode");
+            testClass.getDepGettable().checkSimpleInputVariable(33, "FyS");
+            testClass.getDepGettable().checkSimpleInputVariable(41, "FyS");
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 4));
+            testClass.getDepGettable().checkSimpleInputVariable(29, "dede"); // AtMost(1) not respected
+            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+            
         } // End section : Multiple expectation
 
     } // End section : Test ExpectArg
-
-    SECTION("Test Composition") {
-
-    } // End section : Test Composition
 
     FSeam::MockVerifier::cleanUp();
 } // End TestCase : Test HelperMethods Simple Function

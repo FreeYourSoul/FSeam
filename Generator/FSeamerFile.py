@@ -217,7 +217,7 @@ class FSeamerFile:
         _genSpecial = "// ClassMethodIdentifiers\n"
         _genSpecial += "namespace " + className + " {\n"
         for methodName, methodsMapping in self.functionSignatureMapping[className].items():
-            _genSpecial += INDENT + "struct " + methodName + " { inline static const std::string NAME = \"" + methodName + "\"; };\n"
+            _genSpecial += INDENT + "struct " + methodName + " { inline static const std::string NAME = \"" + methodName + "\"; constexpr std::string &operator ()() const { return \"" + methodName + "\"; } };\n"
         _genSpecial += "}\n"
 
         self.specContent += "\n\n// Duping/Expectations specializations for " + className + "\n"
@@ -228,30 +228,6 @@ class FSeamerFile:
                 self.specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [=](void *methodCallData) { \n"
                 self.specContent += INDENT2 + "static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + RETURN_SUFFIX + " = returnValue;\n"
                 self.specContent += INDENT + "});\n};\n"
-
-            # Specialization for dupe
-            # self.specContent += "template <> void FSeam::MockClassVerifier::dupe<FSeam::" + className + "::" + methodName + ", std::function<" + methodMapping["rtnType"] + "("
-            # if len(methodMapping["params"]) == 0:
-            #     self.specContent += "void"
-            # else:
-            #     for param in methodMapping["params"]:
-            #         self.specContent += param["type"] + ", "
-            # self.specContent += ")> >"
-            # self.specContent += "(std::function<" + methodMapping["rtnType"] + "("
-            # if len(methodMapping["params"]) == 0:
-            #     self.specContent += "void"
-            # else:
-            #     for param in methodMapping["params"]:
-            #         self.specContent += param["type"] + ", "
-            # self.specContent += ")> handler) {\n"
-            # self.specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [=](void *methodCallData) { \n" + INDENT2
-            # if methodMapping["rtnType"] != "void":
-            #     self.specContent += "static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + RETURN_SUFFIX + " = "
-            # self.specContent += "handler(\n"
-            # for param in methodMapping["params"]:
-            #     self.specContent += INDENT2 + "  *(static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + "_" + param["name"] + PARAM_SUFFIX + "), \n"
-            # self.specContent += ");\n"
-            # self.specContent += INDENT + "});\n}\n"
 
             # Specialization for verifyArg
             if len(methodMapping["params"]) > 0:
