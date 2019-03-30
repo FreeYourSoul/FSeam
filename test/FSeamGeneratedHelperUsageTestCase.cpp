@@ -172,20 +172,29 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
             } // End section : Failure on Custom Comparator
 
             SECTION("Multiple Custom Comparator") {
+                bool checkFirstLayer = false;
+                bool checkSecondLayer = false;
+                bool checkThirdLayer = false;
                 fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructInputVariable>(
-                    CustomComparator<source::StructTest>([](auto test){
+                    CustomComparator<source::StructTest>([&checkFirstLayer](auto test){
+                        checkFirstLayer = true;
                         return test.testInt == 1;
                     }));
                 fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructInputVariable>(
-                    CustomComparator<source::StructTest>([](auto test){
+                    CustomComparator<source::StructTest>([&checkSecondLayer](auto test){
+                        checkSecondLayer = true;
                         return test.testShort == 11;
                     }));
                 fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructInputVariable>(
-                    CustomComparator<source::StructTest>([](auto test){
+                    CustomComparator<source::StructTest>([&checkThirdLayer](auto test){
+                        checkThirdLayer = true;
                         return test.testStr == "111";
                     }));
 
                 testClass.getDepGettable().checkCustomStructInputVariable(source::StructTest{1, 11, "111"});
+                REQUIRE(checkFirstLayer);
+                REQUIRE(checkSecondLayer);
+                REQUIRE(checkThirdLayer);
                 REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariable::NAME, 1));
 
             } // End section : Multiple Custom Comparator+
