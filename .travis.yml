@@ -51,7 +51,7 @@ before_script:
 
   #catch2 dependency
   - cd test/src
-  - curl -O https://github.com/catchorg/Catch2/releases/download/v2.7.0/catch.hpp
+  - curl -O https://raw.githubusercontent.com/catchorg/Catch2/v2.7.0/single_include/catch2/catch.hpp
   - cd ../..
 
   #FSeam Python generator dependencies
