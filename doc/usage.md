@@ -3,7 +3,7 @@
 
 The following references shows how to use FSeam
 
-### Install
+## Install
 
 Use the following commands in order to install FSeam
 ```Bash
@@ -16,4 +16,4 @@ Use the following commands in order to install FSeam
 ```
 This will install the **cmake helper** file, the **header only library**, and the **generator python script** on your machine.
 
-### Compile with FSeam
+## Compile with FSeam
