@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/FreeYourSoul/FSeam.svg?branch=master)](https://travis-ci.org/FreeYourSoul/FSeam)
 # FSeam
 Python script to generate cpp mock for FSeam,  
 

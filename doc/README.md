@@ -1,6 +1,4 @@
 <a id="top"></a>
-[![Build Status](https://travis-ci.org/simkimsia/UtilityBehaviors.png)](https://travis-ci.org/FreeYourSoul/FSeam)
-
 # Reference
  
 Reference materials.   
