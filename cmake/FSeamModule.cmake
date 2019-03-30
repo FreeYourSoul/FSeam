@@ -39,7 +39,8 @@ with command : ${PYTHON_EXECUTABLE} ${FSEAM_GENERATOR_COMMMAND} ${fileToMockPath
             COMMENT "Generating FSEAM code for ${fileToMockPath}")
 
         add_custom_target(${FSEAM_GENERATED_BASENAME}Run ALL
-                DEPENDS ${FSEAM_GENERATOR_DESTINATION}/${FSEAM_GENERATED_BASENAME}.fseam.cc)
+                DEPENDS
+                    ${FSEAM_GENERATOR_DESTINATION}/${FSEAM_GENERATED_BASENAME}.fseam.cc)
 
         set(FSEAM_TEST_SRC ${FSEAM_TEST_SRC}
                 ${FSEAM_GENERATOR_DESTINATION}/${FSEAM_GENERATED_BASENAME}.fseam.cc)
@@ -75,6 +76,7 @@ function(addFSeamTests)
     setup_FSeam_test()
 
     # Create testing target
+    execute_process(COMMAND touch ${FSEAM_GENERATOR_DESTINATION}/MockData.hpp ${FSEAM_GENERATOR_DESTINATION}/FSeamSpecialization.cpp)
     add_executable(${ADDFSEAMTESTS_DESTINATION_TARGET} ${ADDFSEAMTESTS_TST_SRC} ${FSEAM_TEST_SRC}
             ${FSEAM_GENERATOR_DESTINATION}/MockData.hpp
             ${FSEAM_GENERATOR_DESTINATION}/FSeamSpecialization.cpp)

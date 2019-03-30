@@ -1,19 +1,29 @@
-# FSeamGenerator
-Python script to generate cpp mock for FSeam using [CppHeaderParser](https://bitbucket.org/senex/cppheaderparser)
+# FSeam
+Python script to generate cpp mock for FSeam,  
 
-### Link Seam mock?
-Beside the separate preprocessing step that occurs before compilation, we also have a post-compilation step called linking in C and C++ that is used to combine the results the compiler has emitted. The
-linker gives us another kind of seam called link seam. We show three kinds of link seams here:
+### What is a Link Seam mock?
+A seam is a term introduced by Michael Feathers in his book [Working effectively with legacy code](https://www.abebooks.fr/Working-Effectively-Legacy-Code-Michael-Feathers/18824529190/bd?cm_mmc=gmc-_-new-_-PLA-_-v01&gclid=CjwKCAjwp_zkBRBBEiwAndwD9Ts6XzzhpZnVafPtxti_UMnsxTM8g4EMqE7aqr-IyJDlPRvFdlmCXxoCHbMQAvD_BwE).
 
-Shadowing functions through linking order (override functions in libraries with new definitions in object files)
-Wrapping functions with GNU's linker option -wrap (GNU Linux only)
-Run-time function interception with the preload functionality of the dynamic linker for shared libraries (GNU Linux and Mac OS X only)  
+A lot of different seams exist and are described in [this accu article](https://accu.org/index.php/journals/1927) that is a must read.  
+When talking about seam, for FSeam, it is assumed we are talking about link seam.  
   
-Source : http://www.mockator.com/projects/mockator/wiki/Link_Seams
+The goal of such seam is to change the behavior of a class by tweaking the ordering, number of the files compiled.  FSeam is a combination of **a code generator** (creating a mocking implementation of the given C++ class/functions) and **a header only library** that makes you able to change the behaviors of those mock at runtime. And **a CMake helper** in order to easily implements the generation of code and linking time tricks.
+ 
 
 #### In Other words
-This python script is used to generate cpp files that contains implementation of class, this is a seam mocked implementation. This implementation is going to replace the actual implementation at Linking time (thanks to CMake, see example in this repository)
+This python script is used to generate cpp files that contains implementation of class, this is a what we will call a seam mocked implementation. This implementation is going to replace the actual implementation at Linking time (thanks to CMake helpers functions)
 
-### CMake use
-A Cmake module is present can be used in order to do an automatization of the generation of seam mocked files.  
-It is going to list all headers (has to be .hh extension) files into your includes folders, and will generate the different seam mocked implementation files at the desired location.
+### How to install
+```Bash
+  git clone https://github.com/FreeYourSoul/FSeam.git  
+  cd FSeam  
+  mkdir build  
+  cd build  
+  cmake ..  
+  make && make test && sudo make install
+```
+
+###Dependencies
+Using extensively CppHeaderParser, originally developed by https://bitbucket.org/senex/cppheaderparser Jashua Cloutier([original repo](https://bitbucket.org/senex/cppheaderparser))  
+The project is currently handled by robotpy [current repo](https://github.com/robotpy/robotpy-cppheaderparser)
+
