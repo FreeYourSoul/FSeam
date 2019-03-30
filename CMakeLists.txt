@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10.0)
+cmake_minimum_required(VERSION 3.5)
 
 # The version number.
 set (FSEAM_VERSION_MAJOR 1)

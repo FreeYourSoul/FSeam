@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/FreeYourSoul/FSeam.svg?branch=master)](https://travis-ci.org/FreeYourSoul/FSeam)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/FreeYourSoul/FSeam/master/LICENSE)
 # FSeam
 Python script to generate cpp mock for FSeam,  
 
