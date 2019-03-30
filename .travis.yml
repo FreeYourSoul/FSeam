@@ -49,12 +49,13 @@ before_script:
   - sudo make install
   - cd ../..
 
-  #dependencies
+  #FSeam Python generator dependencies
   - sudo apt-get install python3-pip
-  - pip install ply
+  - sudo pip install --upgrade pip
+  - sudo pip install ply
 
   # Use Debug builds for running Valgrind and building examples
-#  - cmake -H. -BBuild-Debug -DCMAKE_BUILD_TYPE=Debug
+  #  - cmake -H. -BBuild-Debug -DCMAKE_BUILD_TYPE=Debug
   # Don't bother with release build for coverage build
   - cmake -H. -BBuild-Release -DCMAKE_BUILD_TYPE=Release
 
