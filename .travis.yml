@@ -46,7 +46,7 @@ before_script:
   - cd Catch2
   - cmake -Bbuild -H. -DBUILD_TESTING=OFF
   - cd build && cmake
-  - sudo cmake install
+  - cmake install
   - cd ..
 
   # Use Debug builds for running Valgrind and building examples
