@@ -19,6 +19,8 @@ add_library(testLib
 
 target_include_directories(testLib
         PUBLIC src)
+set_target_properties(testLib PROPERTIES CXX_STANDARD 17)
+
 target_link_libraries(testLib Catch2::Catch2)
 
 enable_testing()

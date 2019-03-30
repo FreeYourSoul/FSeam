@@ -80,6 +80,7 @@ function(addFSeamTests)
     add_executable(${ADDFSEAMTESTS_DESTINATION_TARGET} ${ADDFSEAMTESTS_TST_SRC} ${FSEAM_TEST_SRC}
             ${FSEAM_GENERATOR_DESTINATION}/MockData.hpp
             ${FSEAM_GENERATOR_DESTINATION}/FSeamSpecialization.cpp)
+    set_target_properties(${ADDFSEAMTESTS_DESTINATION_TARGET} PROPERTIES CXX_STANDARD 17)
     target_include_directories(${ADDFSEAMTESTS_DESTINATION_TARGET}
             PUBLIC
                 ${FSEAM_TEST_INCLUDES}
