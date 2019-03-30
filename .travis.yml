@@ -50,10 +50,10 @@ before_script:
   - cd ../..
 
   # Use Debug builds for running Valgrind and building examples
-  - cmake -H. -BBuild-Debug -DCMAKE_BUILD_TYPE=Debug
+#  - cmake -H. -BBuild-Debug -DCMAKE_BUILD_TYPE=Debug
   # Don't bother with release build for coverage build
   - cmake -H. -BBuild-Release -DCMAKE_BUILD_TYPE=Release
 
 script:
-  - cd ../Build-Release
+  - cd Build-Release
   - make -j 2
