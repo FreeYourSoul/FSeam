@@ -24,12 +24,15 @@ addons:
       - cmake-data
       - cmake
 
+before_install: sudo apt-get update -qq
+
 install:
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
   - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
 
 before_script:
-  - export CXX=${COMPILER}
+  - export CXX=g++-7
+  - g++-7 --version
   - cd ${TRAVIS_BUILD_DIR}
 
   - |
