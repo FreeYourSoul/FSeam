@@ -6,21 +6,9 @@
 #define PROJECT_DEPEDENCYGETTABLE_HH
 
 #include <string>
+#include <ArgsStruct.hh>
 
 namespace source {
-    struct StructTest {
-        int testInt;
-        short testShort;
-        std::string testStr;
-    };
-
-    struct NonCopiableTest {
-        NonCopiableTest(const source::NonCopiableTest &other) = delete;
-
-        int testInt;
-        short testShort;
-        std::string testStr;
-    };
 
     class DependencyGettable {
 
