@@ -9,7 +9,7 @@ find_package(Catch2 REQUIRED)
 # Travis required compile flag...
 option(TRAVIS_BUILD "Travis only option for cmake" OFF)
 if (TRAVIS_BUILD)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 endif ()
 
 include(../cmake/FSeamModule.cmake)
