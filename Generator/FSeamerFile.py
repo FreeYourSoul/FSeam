@@ -142,7 +142,8 @@ class FSeamerFile:
             content += _struct + "};\n\n"
             content += "// NameTypeTraits\ntemplate <> struct TypeParseTraits<" + self.fullClassNameMap[className] + \
                        "> {\n" + INDENT + "inline static const std::string ClassName = \"" + className + "\";\n};\n"
-            content += self._generateDupeVerifyTemplateSpecialization(className)
+            if className in self.functionSignatureMapping:
+                content += self._generateDupeVerifyTemplateSpecialization(className)
             content += " // End of DataStructure" + className + "\n\n\n"
         content += "}\n"
         content = re.sub("namespace FSeam {[\n ]+}\n", "", content)
@@ -162,6 +163,7 @@ class FSeamerFile:
         _fseamerCodeHeaders = "// includes\n"
         for incl in self._cppHeader.includes:
             _fseamerCodeHeaders += BASE_HEADER_CODE + incl + "\n"
+        _fseamerCodeHeaders += "#include <functional>\n"
         _fseamerCodeHeaders += "#include <MockData.hpp>\n#include <MockVerifier.hpp>\n"
         _fseamerCodeHeaders += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         return _fseamerCodeHeaders
@@ -173,7 +175,11 @@ class FSeamerFile:
             for param in self.functionSignatureMapping[className][methodName]["params"]:
                 _paramType = param["type"]
                 _paramName = param["name"]
-                _methodData += INDENT + "std::optional<" + _paramType + "> " + methodName + "_" + _paramName + PARAM_SUFFIX + ";\n"
+                if _paramName not in ["&", "", None, "*", "&&"]:
+                    type = _paramType
+                    if "&" in type:
+                        type = "std::reference_wrapper<" + type.replace("&", "") + "> "
+                    _methodData += INDENT + "std::optional<" + type + "> " + methodName + "_" + _paramName + PARAM_SUFFIX + ";\n"
             _returnType = self.functionSignatureMapping[className][methodName]["rtnType"]
             if _returnType != "void":
                 _methodData += INDENT + _returnType + " " + methodName + RETURN_SUFFIX + ";\n\n"
@@ -217,7 +223,7 @@ class FSeamerFile:
         _genSpecial = "// ClassMethodIdentifiers\n"
         _genSpecial += "namespace " + className + " {\n"
         for methodName, methodsMapping in self.functionSignatureMapping[className].items():
-            _genSpecial += INDENT + "struct " + methodName + " { inline static const std::string NAME = \"" + methodName + "\"; constexpr std::string &operator ()() const { return \"" + methodName + "\"; } };\n"
+            _genSpecial += INDENT + "struct " + methodName + " { inline static const std::string NAME = \"" + methodName + "\";};\n"
         _genSpecial += "}\n"
 
         self.specContent += "\n\n// Duping/Expectations specializations for " + className + "\n"
@@ -273,7 +279,7 @@ class FSeamerFile:
         _content += INDENT + "FSeam::" + className + "Data data {};\n\n"
         for p in self.functionSignatureMapping[className][methodName]["params"]:
             _content += INDENT + "if (std::is_copy_constructible<std::decay<" + p["type"] + ">>())\n"
-            _content += INDENT2 + "data." + methodName + "_" + p["name"] + PARAM_SUFFIX + " = std::move(" + p["name"] + ");\n"
+            _content += INDENT2 + "data." + methodName + "_" + p["name"] + PARAM_SUFFIX + " = " + p["name"] + ";\n"
         _content += INDENT + "mockVerifier->invokeDupedMethod(__func__, &data);\n"
         _content += INDENT + "mockVerifier->methodCall(__func__, &data);\n"
         if 'void' != returnType:

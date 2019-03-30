@@ -8,34 +8,33 @@
 #include <string>
 
 namespace source {
-    class DependencyGettable {
-
     struct StructTest {
         int testInt;
-        short testShort; 
+        short testShort;
         std::string testStr;
-    }
+    };
 
     struct NonCopiableTest {
-        NonCopiableTest(const StructTest &) = delete;
+        NonCopiableTest(const source::NonCopiableTest &other) = delete;
 
         int testInt;
-        short testShort; 
+        short testShort;
         std::string testStr;
-    }
+    };
+
+    class DependencyGettable {
 
     public:
-        void checkCalled() const;
+        void checkCalled();
 
-        void checkSimpleInputVariable(int simple, std::string easy) const;
+        void checkSimpleInputVariable(int simple, std::string easy);
 
         int checkSimpleReturnValue();
 
-        StructTest checkCustomStructReturnValue() const;
+        source::StructTest checkCustomStructReturnValue();
 
-        void checkCustomStructInputVariableRef(const StructTest &testStr);
-        void checkCustomStructInputVariableRValueRef(StructTest &&testStr);
-        void checkCustomStructInputVariable(StructTest testStr);
+        void checkCustomStructInputVariableRef(const source::StructTest &testStr);
+        void checkCustomStructInputVariable(source::StructTest testStr);
 
         /**
          * @brief check if this class has been used into its original form or not

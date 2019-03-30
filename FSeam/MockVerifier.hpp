@@ -120,6 +120,23 @@ namespace FSeam {
      * @note To be used in order to check the arguments of a method via the MockClassVerifier::verifyArg method
      */
     namespace comparator::internal {
+        template<class X, class Y, class Op>
+        struct op_valid_impl
+        {
+            template<class U, class L, class R>
+            static auto test(int) -> decltype(std::declval<U>()(std::declval<L>(), std::declval<R>()),
+                    void(), std::true_type());
+
+            template<class U, class L, class R>
+            static auto test(...) -> std::false_type;
+
+            using type = decltype(test<Op, X, Y>(0));
+
+        };
+        template<class X, class Op> using op_valid = typename op_valid_impl<X, X, Op>::type;
+
+        template<class X> using has_equality = op_valid<X, std::equal_to<>>;
+        template<class X> using has_inequality = op_valid<X, std::not_equal_to<>>;
 
         struct Any {
         };
@@ -137,25 +154,21 @@ namespace FSeam {
             NotEq(std::any toCompare) : _toCompare(std::move(toCompare)) {}
 
             template<typename TypeToCompare>
-            bool compare(TypeToCompare value) const {
-                return std::forward<TypeToCompare>(value) != std::any_cast<TypeToCompare>(_toCompare);
-            }
+            bool compare(TypeToCompare value) const { return value != std::any_cast<TypeToCompare>(_toCompare); }
 
             std::any _toCompare;
         };
 
+#include <iostream>
         struct CustomComparator {
-            CustomComparator(std::any toCompare, std::any predicate) :
-                    _toCompare(std::move(toCompare)), _comparePredicate(std::move(predicate)) {}
+            CustomComparator(std::any predicate) : _comparePredicate(predicate) {}
 
             template<typename TypeToCompare>
             bool compare(TypeToCompare value) const {
-                return std::any_cast<std::function<bool(TypeToCompare, TypeToCompare)> >
-                        (_comparePredicate)(std::forward<TypeToCompare>(std::forward<TypeToCompare>(value)),
-                                            std::any_cast<TypeToCompare>(_toCompare));
+                bool ok = std::invoke(std::any_cast<std::function<bool(TypeToCompare)> >(_comparePredicate), (std::forward<TypeToCompare>(value)));
+                return ok;
             }
 
-            std::any _toCompare;
             std::any _comparePredicate;
         };
 
@@ -169,13 +182,19 @@ namespace FSeam {
         bool compare(TypeToCompare value) const {
             if (std::get_if<comparator::internal::Any>(&_comp))
                 return true;
-            else if (auto varEq = std::get_if<comparator::internal::Eq>(&_comp))
-                return varEq->compare<TypeToCompare>(value);
-            else if (auto varNotEq = std::get_if<comparator::internal::NotEq>(&_comp))
-                return varNotEq->compare<TypeToCompare>(value);
             else if (auto varCustom = std::get_if<comparator::internal::CustomComparator>(&_comp))
                 return varCustom->compare<TypeToCompare>(value);
-            return false;
+
+            if constexpr (comparator::internal::has_equality<TypeToCompare>()) {
+                if (auto varEq = std::get_if<comparator::internal::Eq>(&_comp))
+                    return varEq->compare<TypeToCompare>(value);
+            }
+            if constexpr (comparator::internal::has_inequality<TypeToCompare>()) {
+                if (auto varNotEq = std::get_if<comparator::internal::NotEq>(&_comp))
+                    return varNotEq->compare<TypeToCompare>(value);
+            }
+            else
+                return false;
         }
         comparator::internal::ArgComparatorType _comp;
     };
@@ -191,8 +210,8 @@ namespace FSeam {
         return ArgComp(comparator::internal::NotEq(std::forward<T>(t)));
     }
     template <typename T>
-    static ArgComp CustomComparator(T  && t) {
-        return ArgComp(comparator::internal::CustomComparator(std::forward<T>(t)));
+    static ArgComp CustomComparator(std::function<bool (T)> && t) {
+        return ArgComp(comparator::internal::CustomComparator(std::forward<std::function<bool (T)>>(t)));
     }
 
     /**
