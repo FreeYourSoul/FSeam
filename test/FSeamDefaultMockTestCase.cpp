@@ -42,7 +42,7 @@ TEST_CASE( "FSeamDefaultMockTest" ) {
 
 
         SECTION("FSeam_Verify") {
-            REQUIRE_FALSE(fseamDefaultMock->verify(FSeam::DependencyNonGettable::checkCalled::NAME));
+            REQUIRE_FALSE(fseamDefaultMock->verify(FSeam::DependencyNonGettable::checkCalled::NAME, false));
             REQUIRE(fseamDefaultMock->verify(FSeam::DependencyNonGettable::checkCalled::NAME, FSeam::NeverCalled{}));
             testingClass.execute();
             CHECK(fseamDefaultMock->verify(FSeam::DependencyNonGettable::checkCalled::NAME));

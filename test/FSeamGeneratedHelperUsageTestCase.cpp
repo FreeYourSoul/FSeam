@@ -51,7 +51,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
         fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Any(), Any(), NeverCalled{});
         testClass.getDepGettable().checkSimpleInputVariable(41, "FyS");
 
-        REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+        REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, false));
         fseamMock->clearExpectations();
         REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
     } // End section : Clear expectations
@@ -66,7 +66,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
             testClass.getDepGettable().checkSimpleInputVariable(41, "FyS");
 
             // overall check is only on 1 but 4 hapenned
-            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 1));
+            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 1, false));
             REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
             fseamMock->clearExpectations();
 
@@ -77,17 +77,17 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
             testClass.getDepGettable().checkSimpleInputVariable(29, "dede");
             testClass.getDepGettable().checkSimpleInputVariable(33, "FyS");
             testClass.getDepGettable().checkSimpleInputVariable(409, "FWdw");
-            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, false));
             testClass.getDepGettable().checkSimpleInputVariable(11, "FWdwwa");
             REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 9)); // works as now 5 call are done
             testClass.getDepGettable().checkSimpleInputVariable(14, "psodw"); // fail as now more than 5
-            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, false));
 
         } // End section : Integral Comparator
 
         SECTION("Eq Comparator") {
             fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Eq(42), Eq(std::string("4242")));
-            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, false));
             testClass.execute();
             REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
 
@@ -106,7 +106,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
                 testClass.getDepGettable().checkSimpleInputVariable(29, "dodo");
                 testClass.getDepGettable().checkSimpleInputVariable(33, "FyS");
                 testClass.getDepGettable().checkSimpleInputVariable(41, "FyS");
-                REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+                REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, false));
 
             } // End section : Failing Equal
 
@@ -116,7 +116,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
                 testClass.getDepGettable().checkSimpleInputVariable(29, "dodo");
                 testClass.getDepGettable().checkSimpleInputVariable(33, "FyS");
                 testClass.getDepGettable().checkSimpleInputVariable(41, "FyS");
-                REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+                REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, false));
 
             } // End section : Failing Equal
 
@@ -126,7 +126,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
                 testClass.getDepGettable().checkSimpleInputVariable(29, "dodo");
                 testClass.getDepGettable().checkSimpleInputVariable(33, "FyS");
                 testClass.getDepGettable().checkSimpleInputVariable(41, "FyS");
-                REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+                REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, false));
 
             } // End section : Failing Equal
 
@@ -139,7 +139,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
             testClass.getDepGettable().checkSimpleInputVariable(46, "FyS");  // false, false    = false
             testClass.getDepGettable().checkSimpleInputVariable(33, "FyS");  // true, false     = false
             testClass.getDepGettable().checkSimpleInputVariable(41, "FyS");  // true, false     = false
-            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 5));
+            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 5, false));
             testClass.getDepGettable().checkSimpleInputVariable(456, "adad"); // true, true = true
             REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 6));
 
@@ -167,7 +167,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
                             test.testStr == "111";
                     }));
                 testClass.getDepGettable().checkCustomStructInputVariable(source::StructTest{1, 11, "111"});
-                REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariable::NAME, 1));
+                REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariable::NAME, 1, false));
 
             } // End section : Failure on Custom Comparator
 
@@ -212,7 +212,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
             testClass.getDepGettable().checkSimpleInputVariable(41, "FyS");
             REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 4));
             testClass.getDepGettable().checkSimpleInputVariable(29, "dede"); // AtMost(1) not respected
-            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
+            REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 5, false));
             
         } // End section : Multiple expectation
 

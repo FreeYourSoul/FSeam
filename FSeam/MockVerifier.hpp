@@ -192,8 +192,7 @@ namespace FSeam {
                 if (auto varNotEq = std::get_if<comparator::internal::NotEq>(&_comp))
                     return varNotEq->compare<TypeToCompare>(value);
             }
-            else
-                return false;
+            return false;
         }
         comparator::internal::ArgComparatorType _comp;
     };
@@ -390,10 +389,11 @@ namespace FSeam {
          * @brief Verify if the given method has been called at least one time
          * 
          * @param methodName Name of the method to check on the mock (Use the helpers constant to ensure no typo)
+         * @param verbose flag if a debug string is required in case of false response (set to true by default)
          * @return true if the method encounter the provided comparator conditions, false otherwise
          */
-        bool verify(const std::string &methodName) const {
-            return verify(methodName, AtLeast(1));
+        bool verify(const std::string &methodName, bool verbose = true) const {
+            return verify(methodName, AtLeast(1), verbose);
         }
 
         /**
@@ -409,17 +409,18 @@ namespace FSeam {
          * @param methodName Name of the method to check on the mock (Use the helpers constant to ensure no typo)
          * @param comp comparator instance on which the number of times the mock method is called on a provided value
          *         is checked against
+         * @param verbose flag if a debug string is required in case of false response (set to true by default)
          * @return true if the method encounter the provided comparator conditions, false otherwise
          */
         template <typename Comparator>
-        bool verify(std::string methodName, Comparator &&comp) const {
+        bool verify(std::string methodName, Comparator &&comp, bool verbose = true) const {
             if constexpr (std::is_integral<Comparator>())
                 return verify(std::move(methodName), VerifyCompare{ static_cast<uint>(comp) });
             else {
                 std::string key = _className + std::move(methodName);
 
                 if (_verifiers.find(key) == _verifiers.end()) {
-                    if (comp._toCompare > 0u) {
+                    if (verbose && comp._toCompare > 0u) {
                         std::cout << "Verify error for method " << key << ", method never have been called while "
                                   << comp.expectStr(0u) << " method call \n";
                     }
@@ -429,10 +430,10 @@ namespace FSeam {
                 for (auto &expect : _verifiers.at(key)->_expectations)
                     result &= expect();
                 result &= comp.compare(_verifiers.at(key)->_called);
-                if (!result) {
-                    std::cout << "Verify error for method " << key << ", method has been called but "
-                              << comp.expectStr(_verifiers.at(key)->_called) << " method call following the specified contentChecker\n";
-                }
+//                if (verbose && !result) {
+//                    std::cout << "Verify error for method " << key << ", method has been called but "
+//                              << comp.expectStr(_verifiers.at(key)->_called) << " method call\n";
+//                }
                 return result;
             }
         }

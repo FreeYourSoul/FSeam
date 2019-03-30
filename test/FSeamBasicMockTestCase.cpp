@@ -21,7 +21,7 @@ TEST_CASE( "FSeamBasicTest" ) {
     } // End section : Test hasOriginalServiceBeenCalled
 
     SECTION("FSeam_Verify") {
-        REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME));
+        REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, false));
         REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::NeverCalled{}));
         testingClass.execute();
         CHECK(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME));
