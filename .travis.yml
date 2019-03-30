@@ -49,6 +49,10 @@ before_script:
   - sudo make install
   - cd ../..
 
+  #dependencies
+  - sudo apt-get install python3-pip
+  - pip install ply
+
   # Use Debug builds for running Valgrind and building examples
 #  - cmake -H. -BBuild-Debug -DCMAKE_BUILD_TYPE=Debug
   # Don't bother with release build for coverage build
