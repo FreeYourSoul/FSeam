@@ -3,31 +3,55 @@
 
 ## The others mocking framework
 
-< Testing framework following jUnit principles which requires you to inject the dependencies into the tested class/functions>
+Before talking about FSeam, it is needed to talk about the other frameworks that exist ([GMock](https://github.com/google/googletest/blob/master/googlemock/README.md) being the most famous one by far).  
+The base of those frameworks are kind of following the same principle as Mockito does in Java([ps:what is mockito](https://site.mockito.org/)).  
+Basically depending on [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) where the dependency implementation injected is different in a testing binary than in production one.
 
 ### Dependency injection : Inheritance
 
-< Inheritance is required which mean virtual methods, most of the time impact performance just for testing purpose >  
+The easiest way to manage a dependency injection, is to send an interface to a function/class. And changing the class that implement the interface at runtime (testing implementation when in a test, and normal implementation when in the production code).  
+This implicitly implies that the code is going to use inheritance. In Java, it is a normal thing to do and it doesn't change anything in everyday Java code (as the usage of interface is recommended and very regular in Java).  
   
-< Force you to inject the dependency in the constructor, in big project, could be a lot of them >
+  But in C++, working inheritance implies virtual functions. And [virtual functions has a cost](), which means that most of the time, you are going to pay for the price of a virtual just in order to enable testing into your code.  
+  This is one of the problematic that **FSeam can resolve**.
+
+  
+Another thing important to note is that this kind of dependency injection force you to add arguments (and in case of class constructor, you will often also need to store those arguments) for each dependency you could have. Which can be quite a few in some cases.
 
 ### Dependency injection : Template
 
-< Make your code mockable/testable in classical ways (google mock make it possible to create standalone mock without inheritance) but in some case, force a blutter of template in the code (may be mitigated by having a class regrouping all the mockable class. But imply that sometimes) >
+Another solution in C++, is to have the type dependencies of your class/function into templates.  
+With this method you have more possibilities to inject your dependency, you can do like with inheritance and send them as parameters (template parameters resolved at compile time).  
 
-This is the best choice in general and
+Google Mock make it possible to create a standalone mocked object without using inheritance or virtuals methods. The google mock type can be passed as type [into a template](https://github.com/google/googlemock/blob/master/googlemock/docs/v1_6/CookBook.md#mocking-class-templates).  
+ Or just instantiate the mock inside of the class/function, but it will force you to add a getter on this instantiated dependency if you want to change it's behavior through GMock via ON_CALL macro for example (we will see that **FSeam can answer to that problem**).
+
+Another problem that can occur with this solution is that in some cases, a big load of template can be necessary in the code to cover all the dependencies (to be honest, this issue may be mitigated by having a class regrouping all/a part of the dependencies class, but it implies additional types to be created and may produce confusing and hard to read code)  
+This is nonetheless the way to go in general, as it is easy to setup and using the commonly known mocking frameworks.
 
 ### The untestable code : legacy
 
-< Here explain about the code blutter (big functions) and that is not re-factorable easily. And thus cannot be tested>
+But unfortunately, some dark code exist in this world. Everyone had to see the 1000 lines of code that contains several dependencies that you need to get rid of in order to unit test the feature. And I think everyone just dropped this function and said "Meh, it works since ages, no need to bother testing it".  
+And I can't blame you as this thought is literally the one I had in front of such code. 
+
+But what if you need to test it? Or let's just assume that you are masochist and want to unit test the feature anyway ?  
+It would be hard/impossible with the above explained principles to make it works without impacting too much of the legacy code. And doing a refactoring of such code are often not recommended as you could/will have un-predicted impact on your business.  
+
+**FSeam could answer this legacy code problem**.
 
 ## FSeam answer
 
+In summary, FSeam will try to resolve multiple issues classic testing has : 
+* Testing code without having to use virtuals
+* Testing code without having to use a code bloating template code
+* Testing legacy code without impacting the current code
+
 ### Untouched code
-< Here explain that FSeam doesn't bother with code refactoring issues and so you don't need to have the entirety of your code thought in a testing way which could imply performance impact (virtual) >
+FSeam doesn't bother with code refactoring issues and so you don't need to have the entirety of your code thought in a testing way which could imply performance impact (virtual)
 
 ### Legacy testing
-< Here explain that thanks to link seam, it is possible to test legacy features with little to no re-factoring by just seam mocking database access class for instance >
+With link seam, it is possible to test legacy features with little to no re-factoring by just seam mocking database access class for instance.  
+It is possible to give a default behavior and monitor the default behaviors of FSeam mock. Which means (in opposition with the template dependency injection) you don't need to get the actual instance of the mock to alter it's behavior and verify its usage.
 
 ### The Trap
 A code thought to be tested is going to be more readeable and provide more [pure functions/methods](https://en.wikipedia.org/wiki/Pure_function).
