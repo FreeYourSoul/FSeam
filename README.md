@@ -27,8 +27,8 @@ This python script is used to generate cpp files that contains implementation of
 [documentation link](https://github.com/FreeYourSoul/FSeam/tree/master/build)  
 
 
-###Dependencies  
+### Dependencies  
 
-Using extensively CppHeaderParser, originally developed by https://bitbucket.org/senex/cppheaderparser Jashua Cloutier([original repo](https://bitbucket.org/senex/cppheaderparser))  
-The project is currently handled by robotpy [current repo](https://github.com/robotpy/robotpy-cppheaderparser)
+Using extensively CppHeaderParser, originally developed by https://bitbucket.org/senex/cppheaderparser Jashua Cloutier([original repo](https://bitbucket.org/senex/cppheaderparser))   
+The project is currently handled by robotpy [current repo](https://github.com/robotpy/robotpy-cppheaderparser)  
 
