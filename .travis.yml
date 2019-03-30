@@ -49,6 +49,11 @@ before_script:
   - sudo make install
   - cd ../..
 
+  #catch2 dependency
+  - cd test/src
+  - curl -O https://github.com/catchorg/Catch2/releases/download/v2.7.0/catch.hpp
+  - cd ../..
+
   #FSeam Python generator dependencies
   - sudo apt-get install python3-pip
   - sudo pip install --upgrade pip
