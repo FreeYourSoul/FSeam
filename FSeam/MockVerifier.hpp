@@ -159,7 +159,6 @@ namespace FSeam {
             std::any _toCompare;
         };
 
-#include <iostream>
         struct CustomComparator {
             CustomComparator(std::any predicate) : _comparePredicate(predicate) {}
 

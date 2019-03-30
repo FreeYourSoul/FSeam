@@ -146,6 +146,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
         } // End section : Integral Comparator
 
         SECTION("Custom Comparator") {
+
             SECTION("Basic usage") {
                 fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructInputVariable>(
                     CustomComparator<source::StructTest>([](auto test){
@@ -154,8 +155,10 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
                             test.testStr == "111";
                     }));
                 testClass.getDepGettable().checkCustomStructInputVariable(source::StructTest{1, 11, "111"});
-                REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariable::NAME));
-            }
+                REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariable::NAME, 1));
+
+            } // End section : Basic usage
+
             SECTION("Failure on Custom Comparator") {
                 fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructInputVariable>(
                     CustomComparator<source::StructTest>([](auto test){
@@ -164,7 +167,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
                             test.testStr == "111";
                     }));
                 testClass.getDepGettable().checkCustomStructInputVariable(source::StructTest{1, 11, "111"});
-                REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariable::NAME));
+                REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariable::NAME, 1));
 
             } // End section : Failure on Custom Comparator
 
@@ -183,7 +186,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
                     }));
 
                 testClass.getDepGettable().checkCustomStructInputVariable(source::StructTest{1, 11, "111"});
-                REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariable::NAME));
+                REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariable::NAME, 1));
 
             } // End section : Multiple Custom Comparator+
 
@@ -206,7 +209,6 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
 
     } // End section : Test ExpectArg
 
-    fseamMock->clearExpectations();
     FSeam::MockVerifier::cleanUp();
 } // End TestCase : Test HelperMethods Simple Function
 
