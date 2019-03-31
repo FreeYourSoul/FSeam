@@ -230,7 +230,7 @@ TEST_CASE("Test HelperMethods Specific UseCase") {
 
         SECTION("Check args") {
             fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructInputVariableRef>(
-                    FSeam::CustomComparator<const source::StructTest &>([](auto param) {
+                    FSeam::CustomComparator<source::StructTest>([](auto param) {
                         return param.testInt == 1 &&
                             param.testShort == 11 &&
                             param.testStr == "111";
@@ -278,6 +278,31 @@ TEST_CASE("Test HelperMethods Specific UseCase") {
     } // End section : Reference manipulation
 
     SECTION("Pointer manipulation") {
+        source::StructTest structTest {1, 11, "111"};
+
+        SECTION("Check args") {
+            fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructInputVariablePtr>(
+                    FSeam::CustomComparator<source::StructTest *>([](auto param) {
+                        return param->testInt == 1 &&
+                               param->testShort == 11 &&
+                               param->testStr == "111";
+                    }));
+            testClass.getDepGettable().checkCustomStructInputVariablePtr(&structTest);
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariablePtr::NAME));
+
+            SECTION("Not Matching Arg check") {
+                fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructInputVariablePtr>(
+                        FSeam::CustomComparator<source::StructTest *>([](auto param) {
+                            return param->testInt == 1 &&
+                                   param->testShort == 11 &&
+                                   param->testStr == "42";
+                        }), FSeam::NeverCalled{});
+                testClass.getDepGettable().checkCustomStructInputVariablePtr(&structTest);
+                REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariablePtr::NAME));
+
+            } // End section : Not Matching Arg check
+
+        } // End section : Check args
 
     } // End section : Test HelperMethods CustomObject UseCase
 

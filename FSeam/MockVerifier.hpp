@@ -164,7 +164,7 @@ namespace FSeam {
 
             template<typename TypeToCompare>
             bool compare(TypeToCompare value) const {
-                bool ok = std::invoke(std::any_cast<std::function<bool(TypeToCompare)> >(_comparePredicate), (std::forward<TypeToCompare>(value)));
+                bool ok = std::invoke(std::any_cast<std::function<bool(std::decay_t<TypeToCompare>)> >(_comparePredicate), (std::forward<TypeToCompare>(value)));
                 return ok;
             }
 
@@ -208,8 +208,8 @@ namespace FSeam {
         return ArgComp(comparator::internal::NotEq(std::forward<T>(t)));
     }
     template <typename T>
-    static ArgComp CustomComparator(std::function<bool (T)> && t) {
-        return ArgComp(comparator::internal::CustomComparator(std::forward<std::function<bool (T)>>(t)));
+    static ArgComp CustomComparator(std::function<bool (std::decay_t<T>)> && t) {
+        return ArgComp(comparator::internal::CustomComparator(std::forward<std::function<bool (std::decay_t<T>)>>(t)));
     }
 
     /**
