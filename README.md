@@ -10,7 +10,7 @@ A lot of different seams exist and are described in [this accu article](https://
 When talking about seam, for FSeam, it is assumed we are talking about link seam.  
   
 The goal of such seam is to change the behavior of a class by tweaking the ordering, number of the files compiled.  FSeam is a combination of **a code generator** (creating a mocking implementation of the given C++ class/functions) and **a header only library** that makes you able to change the behaviors of those mock at runtime. And **a CMake helper** in order to easily implements the generation of code and linking time tricks.  
-[Why do we need yet another mocking framework?](doc/why-fseam.md#why-fseam)
+[Why do we need yet another mocking framework?](docs/why-fseam.md#why-fseam)
  
 
 ### In Other words
