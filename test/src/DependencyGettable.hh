@@ -19,10 +19,18 @@ namespace source {
 
         int checkSimpleReturnValue();
 
+        // custom struct by value
         source::StructTest checkCustomStructReturnValue();
-
-        void checkCustomStructInputVariableRef(const source::StructTest &testStr);
         void checkCustomStructInputVariable(source::StructTest testStr);
+
+        // custom struct by pointer
+        source::StructTest *checkCustomStructReturnValuePtr();
+        void checkCustomStructInputVariablePtr(source::StructTest *testStr);
+
+        // custom struct by reference
+        source::StructTest &checkCustomStructReturnValueRef();
+        void checkCustomStructInputVariableRef(const source::StructTest &testStr);
+
 
         /**
          * @brief check if this class has been used into its original form or not

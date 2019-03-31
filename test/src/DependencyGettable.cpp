@@ -16,23 +16,34 @@ void source::DependencyGettable::checkSimpleInputVariable(int simple, std::strin
 }
 
 int source::DependencyGettable::checkSimpleReturnValue() {
-    std::cout << "Original " << __func__ << " called returning 42\n";
+    std::cout << "Original " << __func__ << " called returning 888\n";
     _hasOriginalBeenCalled = true;
     return 888;
 }
 
+void source::DependencyGettable::checkCustomStructInputVariablePtr(source::StructTest *testStr) {
+    std::cout << "Original " << __func__ << " called\n";
+    _hasOriginalBeenCalled = true;
+}
+
+source::StructTest *source::DependencyGettable::checkCustomStructReturnValuePtr() {
+    std::cout << "Original " << __func__ << " called returning nullptr\n";
+    _hasOriginalBeenCalled = true;
+    return nullptr;
+}
+
 source::StructTest source::DependencyGettable::checkCustomStructReturnValue()  {
-    std::cout << "Original " << __func__ << " called returning 42\n";
+    std::cout << "Original " << __func__ << " called returning {888,000,'ttt'}\n";
     _hasOriginalBeenCalled = true;
     return source::StructTest {888, 999, "tttt"};
 }
 
 void source::DependencyGettable::checkCustomStructInputVariableRef(const source::StructTest &testStr) {
-    std::cout << "Original " << __func__ << " called returning 42\n";
+    std::cout << "Original " << __func__ << " called\n";
     _hasOriginalBeenCalled = true;
 }
 
 void source::DependencyGettable::checkCustomStructInputVariable(source::StructTest testStr) {
-    std::cout << "Original " << __func__ << " called returning 42\n";
+    std::cout << "Original " << __func__ << " called\n";
     _hasOriginalBeenCalled = true;
 }

@@ -221,7 +221,61 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
     FSeam::MockVerifier::cleanUp();
 } // End TestCase : Test HelperMethods Simple Function
 
-TEST_CASE("Test HelperMethods CustomObject UseCase") {
+TEST_CASE("Test HelperMethods Specific UseCase") {
+    source::TestingClass testClass{};
+    auto fseamMock = FSeam::get(&testClass.getDepGettable());
+
+    SECTION("Reference manipulation") {
+        source::StructTest structTest {1, 11, "111"};
+
+        SECTION("Check args") {
+            fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructInputVariableRef>(
+                    FSeam::CustomComparator<const source::StructTest &>([](auto param) {
+                        return param.testInt == 1 &&
+                            param.testShort == 11 &&
+                            param.testStr == "111";
+                    }));
+            testClass.getDepGettable().checkCustomStructInputVariableRef(structTest);
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariableRef::NAME));
+
+            SECTION("Not Matching Arg check") {
+                fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructInputVariableRef>(
+                        FSeam::CustomComparator<const source::StructTest &>([](auto param) {
+                            return param.testInt == 1 &&
+                                   param.testShort == 11 &&
+                                   param.testStr == "42";
+                        }), FSeam::NeverCalled{});
+                testClass.getDepGettable().checkCustomStructInputVariableRef(structTest);
+                REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariableRef::NAME));
+
+            } // End section : Not Matching Arg check
+
+        } // End section : Check args
+
+        SECTION("Check return") {
+            fseamMock->dupeReturn<FSeam::DependencyGettable::checkCustomStructReturnValueRef>(structTest);
+            REQUIRE(1 == testClass.getDepGettable().checkCustomStructReturnValueRef().testInt);
+            REQUIRE(11 == testClass.getDepGettable().checkCustomStructReturnValueRef().testShort);
+            REQUIRE("111" == testClass.getDepGettable().checkCustomStructReturnValueRef().testStr);
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructReturnValueRef::NAME, 3));
+
+            source::StructTest structTest2 = {2, 22, "222"};
+            fseamMock->dupeReturn<FSeam::DependencyGettable::checkCustomStructReturnValueRef>(structTest2);
+            REQUIRE(2 == testClass.getDepGettable().checkCustomStructReturnValueRef().testInt);
+            REQUIRE(22 == testClass.getDepGettable().checkCustomStructReturnValueRef().testShort);
+            REQUIRE("222" == testClass.getDepGettable().checkCustomStructReturnValueRef().testStr);
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructReturnValueRef::NAME, 6));
+
+            source::StructTest structTest3 = {3, 33, "333"};
+            fseamMock->dupeReturn<FSeam::DependencyGettable::checkCustomStructReturnValueRef>(structTest3);
+            REQUIRE(3 == testClass.getDepGettable().checkCustomStructReturnValueRef().testInt);
+            REQUIRE(33 == testClass.getDepGettable().checkCustomStructReturnValueRef().testShort);
+            REQUIRE("333" == testClass.getDepGettable().checkCustomStructReturnValueRef().testStr);
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructReturnValueRef::NAME, 9));
+
+        } // End section : Check return
+
+    } // End section : Reference manipulation
 
     SECTION("Pointer manipulation") {
 
@@ -236,5 +290,5 @@ TEST_CASE("Test HelperMethods CustomObject UseCase") {
     } // End section : Non copiable Object manipulation
 
     FSeam::MockVerifier::cleanUp();
-} // End TestCase : Test HelperMethods CustomObject UseCase
+} // End TestCase : Test HelperMethods Specific UseCase
 

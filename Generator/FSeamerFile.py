@@ -180,7 +180,7 @@ class FSeamerFile:
                     if "&" in type:
                         type = "std::reference_wrapper<" + type.replace("&", "") + "> "
                     _methodData += INDENT + "std::optional<" + type + "> " + methodName + "_" + _paramName + PARAM_SUFFIX + ";\n"
-            _returnType = self.functionSignatureMapping[className][methodName]["rtnType"]
+            _returnType = self.functionSignatureMapping[className][methodName]["rtnType"].replace("&", "")
             if _returnType != "void":
                 _methodData += INDENT + _returnType + " " + methodName + RETURN_SUFFIX + ";\n\n"
         return _methodData
@@ -230,10 +230,11 @@ class FSeamerFile:
         for methodName, methodMapping in self.functionSignatureMapping[className].items():
             # Specialization for dupeReturn
             if methodMapping["rtnType"] != "void":
-                self.specContent += "template <> void FSeam::MockClassVerifier::dupeReturn<FSeam::" + className + "::" + methodName + ", " + methodMapping["rtnType"] + "> (" + methodMapping["rtnType"] + " returnValue) {\n"
+                _rtnType = "std::decay_t<" + methodMapping["rtnType"] + ">"
+                self.specContent += "template <> void FSeam::MockClassVerifier::dupeReturn<FSeam::" + className + "::" + methodName + ", " + _rtnType + "> (" + _rtnType + " returnValue) {\n"
                 self.specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [=](void *methodCallData) { \n"
                 self.specContent += INDENT2 + "static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + RETURN_SUFFIX + " = returnValue;\n"
-                self.specContent += INDENT + "});\n};\n"
+                self.specContent += INDENT + "}, true);\n}\n"
 
             # Specialization for verifyArg
             if len(methodMapping["params"]) > 0:
@@ -276,7 +277,12 @@ class FSeamerFile:
         _content = INDENT + "auto mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
         _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this, \"" + className + "\") :\n"
         _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n"
-        _content += INDENT + "FSeam::" + className + "Data data {};\n\n"
+        if "&" in returnType:
+            _content += INDENT + "static std::vector<FSeam::" + className + "Data> datas;\n"
+            _content += INDENT + "datas.emplace_back();\n"
+            _content += INDENT + "FSeam::" + className + "Data &data = datas.back();\n\n"
+        else:
+            _content += INDENT + "FSeam::" + className + "Data data {};\n\n"
         for p in self.functionSignatureMapping[className][methodName]["params"]:
             _content += INDENT + "if (std::is_copy_constructible<std::decay<" + p["type"] + ">>())\n"
             _content += INDENT2 + "data." + methodName + "_" + p["name"] + PARAM_SUFFIX + " = " + p["name"] + ";\n"
