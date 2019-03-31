@@ -3,18 +3,18 @@
 dist: trusty
 #sudo: false
 language: cpp
-
-matrix:
-  include:
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
-      env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+#
+#matrix:
+#  include:
+#    - os: linux
+#      addons:
+#        apt:
+#          sources:
+#            - ubuntu-toolchain-r-test
+#          packages:
+#            - g++-7
+#      env:
+#        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
 addons:
   apt:
@@ -31,9 +31,12 @@ install:
   - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
 
 before_script:
-  - export CXX=g++-7
-  - g++-7 --version
   - cd ${TRAVIS_BUILD_DIR}
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update
+  - sudo apt-get install gcc-8 g++-8
+  - gcc-8 --version
+  - export CXX=g++-8
 
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
