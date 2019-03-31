@@ -25,6 +25,7 @@ This python script is used to generate cpp files that contains implementation of
   cmake ..  
   make && make test && sudo make install
 ```
+In case of dependencies issue : [follow this link](docs/usage.md#dependencies)
 
 ## Documentation
 [documentation link](docs/README.md#reference)  
