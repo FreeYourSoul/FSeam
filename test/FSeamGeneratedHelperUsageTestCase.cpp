@@ -304,6 +304,29 @@ TEST_CASE("Test HelperMethods Specific UseCase") {
 
         } // End section : Check args
 
+        SECTION("Check return") {
+            fseamMock->dupeReturn<FSeam::DependencyGettable::checkCustomStructReturnValuePtr>(&structTest);
+            REQUIRE(1 == testClass.getDepGettable().checkCustomStructReturnValuePtr()->testInt);
+            REQUIRE(11 == testClass.getDepGettable().checkCustomStructReturnValuePtr()->testShort);
+            REQUIRE("111" == testClass.getDepGettable().checkCustomStructReturnValuePtr()->testStr);
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructReturnValuePtr::NAME, 3));
+
+            source::StructTest structTest2 = {2, 22, "222"};
+            fseamMock->dupeReturn<FSeam::DependencyGettable::checkCustomStructReturnValuePtr>(&structTest2);
+            REQUIRE(2 == testClass.getDepGettable().checkCustomStructReturnValuePtr()->testInt);
+            REQUIRE(22 == testClass.getDepGettable().checkCustomStructReturnValuePtr()->testShort);
+            REQUIRE("222" == testClass.getDepGettable().checkCustomStructReturnValuePtr()->testStr);
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructReturnValuePtr::NAME, 6));
+
+            source::StructTest structTest3 = {3, 33, "333"};
+            fseamMock->dupeReturn<FSeam::DependencyGettable::checkCustomStructReturnValuePtr>(&structTest3);
+            REQUIRE(3 == testClass.getDepGettable().checkCustomStructReturnValuePtr()->testInt);
+            REQUIRE(33 == testClass.getDepGettable().checkCustomStructReturnValuePtr()->testShort);
+            REQUIRE("333" == testClass.getDepGettable().checkCustomStructReturnValuePtr()->testStr);
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructReturnValuePtr::NAME, 9));
+
+        } // End section : Check return
+
     } // End section : Test HelperMethods CustomObject UseCase
 
     SECTION("Non movable Object manipulation") {
