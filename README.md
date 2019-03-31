@@ -27,7 +27,7 @@ This python script is used to generate cpp files that contains implementation of
 ```
 
 ## Documentation
-[documentation link](https://github.com/FreeYourSoul/FSeam/tree/master/doc)  
+[documentation link](docs/README.md#reference)  
 
 
 ## Dependencies  
