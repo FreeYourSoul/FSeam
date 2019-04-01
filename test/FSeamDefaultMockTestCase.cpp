@@ -186,5 +186,3 @@ TEST_CASE( "FSeamDefaultMockTest" ) {
 
     FSeam::MockVerifier::cleanUp();
 } // End Test_Case : FSeamDefaultMockTest
-
-

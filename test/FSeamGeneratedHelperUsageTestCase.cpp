@@ -2,14 +2,6 @@
 // Created by FyS on 3/27/19.
 //
 
-//FSeam::DupeReturnMethod::DependencyGettable::checkSimpleReturn(42);
-// fseam->dupeReturn<DependencyGettable::checkSimpleReturn>(42);
-
-//FSeam::DupeMethod::DependencyGettable::checkInputVariable([](int i, std::string str){
-//
-//});
-//FSeam::Verify::DependencyGettable::checkSimpleInputVariable(1, "dede");
-
 #include <catch.hpp>
 #include <any>
 #include <TestingClass.hh>
@@ -288,7 +280,7 @@ TEST_CASE("Test HelperMethods Specific UseCase") {
                                param->testStr == "111";
                     }));
             testClass.getDepGettable().checkCustomStructInputVariablePtr(&structTest);
-            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariablePtr::NAME));
+            REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariablePtr::NAME, 1));
 
             SECTION("Not Matching Arg check") {
                 fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructInputVariablePtr>(
@@ -298,7 +290,7 @@ TEST_CASE("Test HelperMethods Specific UseCase") {
                                    param->testStr == "42";
                         }), FSeam::NeverCalled{});
                 testClass.getDepGettable().checkCustomStructInputVariablePtr(&structTest);
-                REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariablePtr::NAME));
+                REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCustomStructInputVariablePtr::NAME, 2));
 
             } // End section : Not Matching Arg check
 

@@ -1,6 +1,9 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/FreeYourSoul/FSeam/master/LICENSE)
+
 # FSeam
-Python script to generate cpp mock for FSeam,  
+![FSeam logo](https://github.com/FreeYourSoul/FSeam/blob/master/artwork/logo.png?raw=true)
+  
+  Python script to generate cpp mock for FSeam,  
 
 ## What is a Link Seam mock?
 A seam is a term introduced by Michael Feathers in his book [Working effectively with legacy code](https://www.abebooks.fr/Working-Effectively-Legacy-Code-Michael-Feathers/18824529190/bd?cm_mmc=gmc-_-new-_-PLA-_-v01&gclid=CjwKCAjwp_zkBRBBEiwAndwD9Ts6XzzhpZnVafPtxti_UMnsxTM8g4EMqE7aqr-IyJDlPRvFdlmCXxoCHbMQAvD_BwE). It basically describe a way to change the behavior of a function/functionality, which is very usefull for testing while ignoring external dependencies.
