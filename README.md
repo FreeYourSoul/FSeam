@@ -27,7 +27,8 @@ FSeam python script is used to generate cpp files that contains implementation o
 In case of dependencies issue : [follow this link](docs/usage.md#dependencies)
 
 ## Documentation
-[documentation link](docs/README.md#reference)  
+* Complete documentation : [documentation link](docs/README.md#reference)  
+* Cheat sheet doc : [documentation link](docs/cheat-sheet.md#cheat-sheet)  
 
 
 ## Dependencies  

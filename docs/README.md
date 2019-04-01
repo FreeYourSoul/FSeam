@@ -6,6 +6,7 @@ Reference materials.
 The tests case shown in this documentation are going to use the Catch2 framework. But there is no direct dependency between FSeam and any testing framework (you can use [GTest](https://github.com/google/googletest), [CppUnit](https://github.com/Ultimaker/CppUnit) or any [other testing framework](https://en.wikipedia.org/wiki/List_of_unit_testing_frameworks#C++) with FSeam).
 
 **Globals:**
+* [Quick Start](cheat-sheet.md#cheat-sheet)
 * [Why FSeam?](why-fseam.md#fseam-answer)
 
 **Usage:**
@@ -20,7 +21,7 @@ The tests case shown in this documentation are going to use the Catch2 framework
 **Other:**
 
 * [Release Notes](release-notes.md#top)
-* [Known limitations](limitations.md#top)
+* [Known limitations](limitations.md#known-limitations)
 
 ### Internal documentation
 
