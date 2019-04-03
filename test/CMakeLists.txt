@@ -34,12 +34,21 @@ enable_testing()
 addFSeamTests(
         DESTINATION_TARGET testFSeam
         TARGET_AS_SOURCE testLib
-        TST_SRC 
-                ${CMAKE_CURRENT_SOURCE_DIR}/testMain.cpp 
-                ${CMAKE_CURRENT_SOURCE_DIR}/FSeamBasicMockTestCase.cpp 
-                ${CMAKE_CURRENT_SOURCE_DIR}/FSeamDefaultMockTestCase.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/FSeamSingletonTestCase.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/FSeamGeneratedHelperUsageTestCase.cpp
+        TST_SRC
+            ${CMAKE_CURRENT_SOURCE_DIR}/testMain.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/FSeamBasicMockTestCase.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/FSeamDefaultMockTestCase.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/FSeamSingletonTestCase.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/FSeamGeneratedHelperUsageTestCase.cpp
         TO_MOCK
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.hh 
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.hh)
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.hh
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.hh)
+
+addFSeamTests(
+        DESTINATION_TARGET testFSeamFreeFunction
+        TARGET_AS_SOURCE testLib
+        TST_SRC
+            ${CMAKE_CURRENT_SOURCE_DIR}/testMain.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/FSeamFreeFunctionTestCase.cpp
+        TO_MOCK
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/FreeFunctionClass.hh)

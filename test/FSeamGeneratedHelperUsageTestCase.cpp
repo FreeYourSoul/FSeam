@@ -46,7 +46,6 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
         REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, false));
         fseamMock->clearExpectations();
         REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
-        REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, testClass));
     } // End section : Clear expectations
 
     SECTION("Test ExpectArg") {

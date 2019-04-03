@@ -81,7 +81,7 @@ namespace FSeam {
             std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
         uint _toCompare = 0;
     };
-    struct IsNot { // Todo: Improve is not to take a list of params to check agains instead of a single value
+    struct IsNot {
         explicit IsNot(uint toCompare) : _toCompare(toCompare) {}
         bool compare(uint number) const { return _toCompare != number; }
         std::string expectStr(uint number) { return std::string("we expected other value than ") +
@@ -160,7 +160,7 @@ namespace FSeam {
         };
 
         struct CustomComparator {
-            CustomComparator(std::any predicate) : _comparePredicate(predicate) {}
+            CustomComparator(std::any predicate) : _comparePredicate(std::move(predicate)) {}
 
             template<typename TypeToCompare>
             bool compare(TypeToCompare value) const {
@@ -531,16 +531,25 @@ namespace FSeam {
 
     /**
      * @brief This method get the MockClassVerifier instance for the given class type
-     * @details Get the Default MockClassVerifier correspond to the templated class
+     * @details Get the Default MockClassVerifier correspond to the class template
      *          This method has to be used in order to set default behaviors on a class type without needing to access
      *          the actual instance you want to mock
      *
      * @tparam T Class type that is going to be default mocked
-     * @return std::shared_ptr<MockClassVerifier>& 
+     * @return the mock verifier instance class, if not referenced yet, create one by calling the ::addMock(T) method
      */
     template <typename T>
     std::shared_ptr<MockClassVerifier> &getDefault() {
         return FSeam::MockVerifier::instance().getDefaultMock(TypeParseTraits<T>::ClassName);
+    }
+
+    /**
+     * @brief This method get the MockClassVerifier instance for the static / free functions calls
+     * @return the mock verifier instance class, if not referenced yet, create one by calling the ::addMock(T) method
+     */
+    template<typename T = void>
+    std::shared_ptr<MockClassVerifier> &getFreeFunc() {
+        return FSeam::MockVerifier::instance().getDefaultMock("FreeFunction");
     }
 
 }

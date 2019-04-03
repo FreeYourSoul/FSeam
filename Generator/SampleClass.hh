@@ -72,9 +72,17 @@ namespace Alpha
     };
 }
 
-int sampleFreeFunction(int i)
-{
-	return i + 1;
+class FreeFunctionClass {
+
+public:
+    static int staticFunction();
+};
+
+namespace TESTING {
+    int sampleFreeFunction(int i)
+    {
+        return i + 1;
+    }
 }
 
 int anotherFreeFunction(void);
