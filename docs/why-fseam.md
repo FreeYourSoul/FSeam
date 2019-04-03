@@ -49,6 +49,10 @@ In summary, FSeam will try to resolve multiple issues classic testing has :
 ### Untouched code
 FSeam doesn't bother with code refactoring issues and so you don't need to have the entirety of your code thought in a testing way which could imply performance impact (virtual)
 
+On top of that, FSeam makes it possible to mock static/free functions also without any code modifications. Which is a big plus compared to any other mocking framework available. Google mock makes it possible. But it is hardly doable and need specific syntax. 
+With FSeam, the syntax to mock/verify a class or a free function is kept the same as you basically end up manipulating the same objects that represent a mocking handler of your class/function. 
+
+
 ### Legacy testing
 With link seam, it is possible to test legacy features with little to no re-factoring by just seam mocking database access class for instance.  
 It is possible to give a default behavior and monitor the default behaviors of FSeam mock. Which means (in opposition with the template dependency injection) you don't need to get the actual instance of the mock to alter it's behavior and verify its usage.
