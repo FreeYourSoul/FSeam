@@ -417,6 +417,7 @@ namespace FSeam {
             if constexpr (std::is_integral<Comparator>())
                 return verify(std::move(methodName), VerifyCompare{ static_cast<uint>(comp) });
             else {
+                static_assert(isCalledComparator<Comparator>::v, "Type  should be AtLeast, AtMost, Never, IsNot or VerifyCompare");
                 std::string key = _className + std::move(methodName);
 
                 if (_verifiers.find(key) == _verifiers.end()) {
