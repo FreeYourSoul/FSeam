@@ -3,7 +3,7 @@
 # FSeam
 ![FSeam logo](https://github.com/FreeYourSoul/FSeam/blob/master/artwork/logo.png?raw=true)
   
-  Python script to generate cpp mock for FSeam,  
+  Python script to generate cpp mock for FSeam  
 
 ## What is a Link Seam mock?
 A seam is a term introduced by Michael Feathers in his book [Working effectively with legacy code](https://www.abebooks.fr/Working-Effectively-Legacy-Code-Michael-Feathers/18824529190/bd?cm_mmc=gmc-_-new-_-PLA-_-v01&gclid=CjwKCAjwp_zkBRBBEiwAndwD9Ts6XzzhpZnVafPtxti_UMnsxTM8g4EMqE7aqr-IyJDlPRvFdlmCXxoCHbMQAvD_BwE). It basically describe a way to change the behavior of a function/functionality, which is very usefull for testing while ignoring external dependencies.
@@ -17,6 +17,16 @@ The goal of such seam is to change the behavior of a class by tweaking the order
 
 ### In Other words
 FSeam python script is used to generate cpp files that contains implementation of class, this is a what we will call a seam mocked implementation. This implementation is going to replace the actual implementation at Linking time (thanks to CMake helpers functions). And thanks to the header only FSeam library, you will be able to manipulate those mocks (changing behavior, verify usage).
+
+### Advantage of FSeam
+
+* Mocking without impacting production code
+* Mocking default behavior (no need to access a particular instance of the mocked object to manipulate its behavior)
+* Mocking of static / free functions as easily as any classes
+* Easy to setup (all of those thing are installed and ready to use when following the installation step below):
+  * Header only library to include in test file
+  * A Python script
+  * CMake file to include in order to easily do the compile tweaking and code generation
 
 ## How to install
 ```Bash
