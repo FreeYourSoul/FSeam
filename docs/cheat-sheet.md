@@ -38,6 +38,24 @@ auto fseamMock = FSeam::get(&testingClass.getDepGettable());
 auto fseamDefaultMock = FSeam::getDefault<source::DependencyNonGettable>();
 ```
 
+### Never forget to cleanup
+FSeam is, under the hood, using singletons and statically allocated memory in order to be able to make the magic happen. In order to ensure the isolation of each test. You need to add cleanup each test at the end of it.
+
+```cpp
+TEST_CASE("...") {
+
+    // ...
+
+    SECTION("...") {
+        // ...
+    }
+    
+    FSeam::MockVerifier::cleanUp(); // Needed in order to ensure each test is correctly isolated
+}
+```
+
+***
+
 ### Dupe Return Value
 
 Method to use
@@ -85,7 +103,7 @@ REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::N
 
 // Check checkSimpleInputVariable has been called exactly 3 times (both are equivalent)
 REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 3));
-REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, {3}));
+REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, VerifyCompare{3}));
 
 // Check checkSimpleInputVariable has been called at most 3 times
 REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, AtMost{1}));

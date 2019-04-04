@@ -12,7 +12,7 @@ Basically depending on [dependency injection](https://en.wikipedia.org/wiki/Depe
 The easiest way to manage a dependency injection, is to send an interface to a function/class. And changing the class that implement the interface at runtime (testing implementation when in a test, and normal implementation when in the production code).  
 This implicitly implies that the code is going to use inheritance. In Java, it is a normal thing to do and it doesn't change anything in everyday Java code (as the usage of interface is recommended and very regular in Java).  
   
-  But in C++, working inheritance implies virtual functions. And [virtual functions has a cost](), which means that most of the time, you are going to pay for the price of a virtual just in order to enable testing into your code.  
+  But in C++, working inheritance implies virtual functions. And [virtual functions has a cost](https://stackoverflow.com/questions/667634/what-is-the-performance-cost-of-having-a-virtual-method-in-a-c-class), not incredible one if there are no jump to do (if the cost is only for the lookup) but still a cost. Which means that most of the time, you are going to pay for the price of a virtual just in order to enable testing into your code.  
   This is one of the problematic that **FSeam can resolve**.
 
   

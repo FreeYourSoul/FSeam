@@ -70,7 +70,7 @@ class FSeamerFile:
             print(e)
             sys.exit(1)
 
-    def seamParse(self) -> str:
+    def seamParse(self):
         """
         Parse the header file and return the cpp file corresponding to the FSeam mock implementation of the given
         header file
@@ -101,7 +101,7 @@ class FSeamerFile:
             self.fullClassNameMap[FREE_FUNC_FAKE_CLASS] = FREE_FUNC_FAKE_CLASS
         return self.codeSeam
 
-    def isSeamFileUpToDate(self, fileFSeamPath) -> bool:
+    def isSeamFileUpToDate(self, fileFSeamPath):
         """
         Check if the newly created file (the FSeam mock file) has been updated sooner than the header it is originated
         from
@@ -115,13 +115,13 @@ class FSeamerFile:
         fileToMockTime = os.stat(self.headerPath).st_mtime
         return fileMockedTime > fileToMockTime
 
-    def getFSeamGeneratedFileName(self) -> str:
+    def getFSeamGeneratedFileName(self):
         """
         :return: name of the file to generate: <headerFileNameWithoutExtension>.fseam.cc
         """
         return self.fileName.replace(".hh", ".fseam.cc").replace("hpp", "fseam.cc")
 
-    def generateDataStructureContent(self, content) -> str:
+    def generateDataStructureContent(self, content):
         """
         Generate a MockData.hpp file that contains:
         - DataModel structures used by FSeam in order to track the number of call made for each method,
@@ -167,7 +167,7 @@ class FSeamerFile:
         content = re.sub("struct [a-zA-Z0-9_]+ {[\n ]+};\n", "", content)
         return content + LOCKING_FOOTER
 
-    def getSpecializationContent(self, content) -> str:
+    def getSpecializationContent(self, content):
         """
         Fil the FSeamSpecialization.cpp file with template specialization for the dupeReturn / expectArg methods
         :param content: string representing the current content of FSeamSpecialization.cpp
@@ -182,7 +182,7 @@ class FSeamerFile:
 
     # =====Privates methods =====
 
-    def _extractHeaders(self, ) -> str:
+    def _extractHeaders(self, ):
         _fseamerCodeHeaders = "// includes\n"
         for incl in self.cppHeader.includes:
             _fseamerCodeHeaders += BASE_HEADER_CODE + incl + "\n"
@@ -191,7 +191,7 @@ class FSeamerFile:
         _fseamerCodeHeaders += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         return _fseamerCodeHeaders
 
-    def _extractDataStructMethod(self, className, methodName) -> str:
+    def _extractDataStructMethod(self, className, methodName):
         _methodData = ""
         if methodName in self.functionSignatureMapping[className].keys():
             _methodData = INDENT + "/**\n" + INDENT + " * method metadata : " + className + "::" + methodName + "\n" + INDENT + "**/\n"
@@ -215,7 +215,7 @@ class FSeamerFile:
         self.functionSignatureMapping[className][methodName]["rtnType"] = retType.replace("static ", "")
         self.functionSignatureMapping[className][methodName]["params"] = params
 
-    def _extractFreeFunctions(self, freeFunctionData) -> str:
+    def _extractFreeFunctions(self, freeFunctionData):
         _functionFakeClassMethod = ""
         _functionName = freeFunctionData["name"]
         _returnType = freeFunctionData["rtnType"].replace("static ", "")
@@ -233,7 +233,7 @@ class FSeamerFile:
         _functionFakeClassMethod += self._generateMethodContent(_returnType, FREE_FUNC_FAKE_CLASS, _functionName, True)
         return _functionFakeClassMethod + "\n}\n"
 
-    def _extractMethodsFromClass(self, className, methodsData) -> str:
+    def _extractMethodsFromClass(self, className, methodsData):
         _methods = "\n// Methods Mocked Implementation for class " + className + "\n"
         _lstMethodName = list()
 
@@ -265,7 +265,7 @@ class FSeamerFile:
         self.mapClassMethods[className] = _lstMethodName
         return _methods
 
-    def _generateDupeVerifyTemplateSpecialization(self, className) -> str:
+    def _generateDupeVerifyTemplateSpecialization(self, className):
         _genSpecial = "// ClassMethodIdentifiers\n"
         _genSpecial += "namespace " + className + " {\n"
         for methodName, methodsMapping in self.functionSignatureMapping[className].items():
@@ -295,7 +295,7 @@ class FSeamerFile:
         self.specContent += "// End of Specialization for " + className + "\n\n"
         return _genSpecial
 
-    def _generateSpecializationVerifyArg(self, className, methodName, methodMapping, comparator=None) -> str:
+    def _generateSpecializationVerifyArg(self, className, methodName, methodMapping, comparator=None):
         _gen = "template <> void FSeam::MockClassVerifier::expectArg<FSeam::" + className + "::" + methodName + ", "
         for param in methodMapping["params"]:
             _gen += "FSeam::ArgComp, "
@@ -326,7 +326,7 @@ class FSeamerFile:
 
     def _generateMethodContent(self, returnType, className, methodName, isFreeFunction=False):
         if isFreeFunction:
-            _content = INDENT + "auto mockVerifier = FSeam::getFreeFunc();\n"
+            _content = INDENT + "auto mockVerifier = FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n"
         else:
             _content = INDENT + "auto mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
             _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this, \"" + className + "\") :\n"
@@ -347,7 +347,7 @@ class FSeamerFile:
         return _content
 
     @staticmethod
-    def _clearDataStructureData(content, className) -> str:
+    def _clearDataStructureData(content, className):
         indexBegin = content.find("//Beginning of " + className)
         # indexBegin = content.find("struct " + className + "Data")
         indexEnd = content.find("// End of DataStructure" + className) + len("// End of DataStructure" + className)
@@ -356,7 +356,7 @@ class FSeamerFile:
         return content
 
     @staticmethod
-    def _clearSpecialization(content, className) -> str:
+    def _clearSpecialization(content, className):
         indexBegin = content.find("\n\n// Duping/Expectations specializations for " + className + "\n")
         indexEnd = content.find("// End of Specialization for " + className + "\n\n") + len(
             "// End of Specialization for " + className + "\n\n")

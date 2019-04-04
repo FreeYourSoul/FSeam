@@ -43,3 +43,6 @@ fseamMock->dupeMethod(FSeam::DependencyGettable::functionWithIntegerAndNonCopiab
     }); 
 REQUIRE(isOk);
 ```
+
+### Todo
+Check out the [todo list](future.md#future-to-be-implemented) in the "Functional Improvement" section in order to find out other potential known limitation.

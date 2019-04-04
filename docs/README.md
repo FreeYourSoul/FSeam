@@ -15,12 +15,12 @@ The tests case shown in this documentation are going to use the Catch2 framework
 
 **Writing tests:**
 * [Verifications](testing.md#verifications)
-* [Arguments comparator](testing.md#Argument-comparators)
+* [Arguments expectations](testing.md#argument-expectation)
 * [Custom Logging](logging.md#top)
 
 **Other:**
 
-* [Release Notes](release-notes.md#top)
+* [Todo list](future.md#future-to-be-implemented)
 * [Known limitations](limitations.md#known-limitations)
 
 ### Internal documentation

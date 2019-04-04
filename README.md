@@ -40,12 +40,11 @@ FSeam python script is used to generate cpp files that contains implementation o
 In case of dependencies issue : [follow this link](docs/usage.md#dependencies)
 
 ## Documentation
-* Complete documentation : [documentation link](docs/README.md#reference)  
-* Cheat sheet doc : [documentation link](docs/cheat-sheet.md#cheat-sheet)  
-
+* [Complete documentation](docs/README.md#reference)  
+* [Cheat sheet](docs/cheat-sheet.md#cheat-sheet)  
 
 ## Dependencies  
 
-Using extensively CppHeaderParser, originally developed by https://bitbucket.org/senex/cppheaderparser Jashua Cloutier([original repo](https://bitbucket.org/senex/cppheaderparser))   
+Using extensively CppHeaderParser, originally developed by Jashua Cloutier([original repo](https://bitbucket.org/senex/cppheaderparser))   
 The project is currently handled by robotpy ([current repo](https://github.com/robotpy/robotpy-cppheaderparser)) 
 
