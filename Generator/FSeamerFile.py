@@ -63,13 +63,14 @@ class FSeamerFile:
         self.specContent = ""
         self.functionSignatureMapping = {}
         self.fullClassNameMap = {}
+        self.staticFunction = list()
         try:
             self.cppHeader = CppHeaderParser.CppHeader(self.headerPath)
         except CppHeaderParser.CppParseError as e:
             print(e)
             sys.exit(1)
 
-    def seamParse(self):
+    def seamParse(self) -> str:
         """
         Parse the header file and return the cpp file corresponding to the FSeam mock implementation of the given
         header file
@@ -80,11 +81,14 @@ class FSeamerFile:
         _classes = self.cppHeader.classes
         for c in _classes:
             _className = c
-            self.fullClassNameMap[c] = _classes[c]["namespace"] + "::" + _className
+            self.fullClassNameMap[c] = _className
+            if len(_classes[c]["namespace"]) > 0:
+                self.fullClassNameMap[c] = _classes[c]["namespace"] + "::" + _className
             for encapsulationLevel in _classes[c]["methods"]:
                 self.codeSeam += "\n// " + _className + " " + encapsulationLevel
                 self.codeSeam += self._extractMethodsFromClass(_className, _classes[c]["methods"][encapsulationLevel])
             self.codeSeam = self.codeSeam.replace(CLASSNAME, _className)
+        self.cppHeader.functions.extend(self.staticFunction)
         if len(self.cppHeader.functions) > 0:
             _listFunc = list()
             if FREE_FUNC_FAKE_CLASS in self.mapClassMethods:
@@ -97,7 +101,7 @@ class FSeamerFile:
             self.fullClassNameMap[FREE_FUNC_FAKE_CLASS] = FREE_FUNC_FAKE_CLASS
         return self.codeSeam
 
-    def isSeamFileUpToDate(self, fileFSeamPath):
+    def isSeamFileUpToDate(self, fileFSeamPath) -> bool:
         """
         Check if the newly created file (the FSeam mock file) has been updated sooner than the header it is originated
         from
@@ -111,13 +115,13 @@ class FSeamerFile:
         fileToMockTime = os.stat(self.headerPath).st_mtime
         return fileMockedTime > fileToMockTime
 
-    def getFSeamGeneratedFileName(self):
+    def getFSeamGeneratedFileName(self) -> str:
         """
         :return: name of the file to generate: <headerFileNameWithoutExtension>.fseam.cc
         """
         return self.fileName.replace(".hh", ".fseam.cc").replace("hpp", "fseam.cc")
 
-    def generateDataStructureContent(self, content):
+    def generateDataStructureContent(self, content) -> str:
         """
         Generate a MockData.hpp file that contains:
         - DataModel structures used by FSeam in order to track the number of call made for each method,
@@ -145,6 +149,7 @@ class FSeamerFile:
             content += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         content += "namespace FSeam {\n"
         for className, methods in self.mapClassMethods.items():
+            content += "//Beginning of " + className
             if methods or className in content:
                 content = self._clearDataStructureData(content, className)
             _struct = "\nstruct " + className + "Data {\n"
@@ -156,22 +161,28 @@ class FSeamerFile:
                            "> {\n" + INDENT + "inline static const std::string ClassName = \"" + className + "\";\n};\n"
             if className in self.functionSignatureMapping:
                 content += self._generateDupeVerifyTemplateSpecialization(className)
-            content += " // End of DataStructure" + className + "\n\n\n"
+            content += "// End of DataStructure" + className + "\n\n\n"
         content += "}\n"
         content = re.sub("namespace FSeam {[\n ]+}\n", "", content)
+        content = re.sub("struct [a-zA-Z0-9_]+ {[\n ]+};\n", "", content)
         return content + LOCKING_FOOTER
 
-    def getSpecializationContent(self, content):
+    def getSpecializationContent(self, content) -> str:
+        """
+        Fil the FSeamSpecialization.cpp file with template specialization for the dupeReturn / expectArg methods
+        :param content: string representing the current content of FSeamSpecialization.cpp
+        :return: updated content (final file)
+        """
         if not content or len(content) < 10:
             content = HEADER_INFO.replace(FILENAME, "FSeamSpecialization.hpp")
-            content += "#include <MockData.hpp>\n\nstatic std::size_t EXPECTATION_ID = 0;\n\n"
+            content += "#include <MockData.hpp>\n\n"
         for className, methods in self.mapClassMethods.items():
             content = self._clearSpecialization(content, className)
         return content + self.specContent
 
     # =====Privates methods =====
 
-    def _extractHeaders(self, ):
+    def _extractHeaders(self, ) -> str:
         _fseamerCodeHeaders = "// includes\n"
         for incl in self.cppHeader.includes:
             _fseamerCodeHeaders += BASE_HEADER_CODE + incl + "\n"
@@ -180,7 +191,7 @@ class FSeamerFile:
         _fseamerCodeHeaders += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         return _fseamerCodeHeaders
 
-    def _extractDataStructMethod(self, className, methodName):
+    def _extractDataStructMethod(self, className, methodName) -> str:
         _methodData = ""
         if methodName in self.functionSignatureMapping[className].keys():
             _methodData = INDENT + "/**\n" + INDENT + " * method metadata : " + className + "::" + methodName + "\n" + INDENT + "**/\n"
@@ -204,7 +215,7 @@ class FSeamerFile:
         self.functionSignatureMapping[className][methodName]["rtnType"] = retType.replace("static ", "")
         self.functionSignatureMapping[className][methodName]["params"] = params
 
-    def _extractFreeFunctions(self, freeFunctionData):
+    def _extractFreeFunctions(self, freeFunctionData) -> str:
         _functionFakeClassMethod = ""
         _functionName = freeFunctionData["name"]
         _returnType = freeFunctionData["rtnType"].replace("static ", "")
@@ -222,14 +233,18 @@ class FSeamerFile:
         _functionFakeClassMethod += self._generateMethodContent(_returnType, FREE_FUNC_FAKE_CLASS, _functionName, True)
         return _functionFakeClassMethod + "\n}\n"
 
-    def _extractMethodsFromClass(self, className, methodsData):
+    def _extractMethodsFromClass(self, className, methodsData) -> str:
         _methods = "\n// Methods Mocked Implementation for class " + className + "\n"
         _lstMethodName = list()
 
         if className in self.mapClassMethods:
             _lstMethodName = self.mapClassMethods[className]
         for methodData in methodsData:
-            if not methodData["defined"]:
+            if methodData["static"]:
+                if len(methodData["namespace"]) > 0:
+                    methodData["namespace"] += className + "::"
+                self.staticFunction.append(methodData)
+            elif not methodData["defined"]:
                 _classFullName = methodData["path"]
                 _returnType = methodData["rtnType"].replace("static ", "")
                 _methodsName = methodData["name"]
@@ -244,13 +259,13 @@ class FSeamerFile:
                     if (i + 1) < len(_parametersType):
                         _signature += ", "
                 _signature += ")"
-                methodContent = self._generateMethodContent(_returnType, className, _methodsName, methodData["static"])
+                methodContent = self._generateMethodContent(_returnType, className, _methodsName)
                 _methods += "\n" + _signature + " {\n" + methodContent + "\n}\n"
 
         self.mapClassMethods[className] = _lstMethodName
         return _methods
 
-    def _generateDupeVerifyTemplateSpecialization(self, className):
+    def _generateDupeVerifyTemplateSpecialization(self, className) -> str:
         _genSpecial = "// ClassMethodIdentifiers\n"
         _genSpecial += "namespace " + className + " {\n"
         for methodName, methodsMapping in self.functionSignatureMapping[className].items():
@@ -280,7 +295,7 @@ class FSeamerFile:
         self.specContent += "// End of Specialization for " + className + "\n\n"
         return _genSpecial
 
-    def _generateSpecializationVerifyArg(self, className, methodName, methodMapping, comparator=None):
+    def _generateSpecializationVerifyArg(self, className, methodName, methodMapping, comparator=None) -> str:
         _gen = "template <> void FSeam::MockClassVerifier::expectArg<FSeam::" + className + "::" + methodName + ", "
         for param in methodMapping["params"]:
             _gen += "FSeam::ArgComp, "
@@ -311,7 +326,7 @@ class FSeamerFile:
 
     def _generateMethodContent(self, returnType, className, methodName, isFreeFunction=False):
         if isFreeFunction:
-            _content = INDENT + "auto mockVerifier = FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n"
+            _content = INDENT + "auto mockVerifier = FSeam::getFreeFunc();\n"
         else:
             _content = INDENT + "auto mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
             _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this, \"" + className + "\") :\n"
@@ -332,15 +347,16 @@ class FSeamerFile:
         return _content
 
     @staticmethod
-    def _clearDataStructureData(content, className):
-        indexBegin = content.find("struct " + className + "Data")
+    def _clearDataStructureData(content, className) -> str:
+        indexBegin = content.find("//Beginning of " + className)
+        # indexBegin = content.find("struct " + className + "Data")
         indexEnd = content.find("// End of DataStructure" + className) + len("// End of DataStructure" + className)
         if indexBegin > 0 and indexEnd > len("// End of DataStructure" + className) + 1:
             content = content[0: indexBegin] + content[indexEnd + 1:]
         return content
 
     @staticmethod
-    def _clearSpecialization(content, className):
+    def _clearSpecialization(content, className) -> str:
         indexBegin = content.find("\n\n// Duping/Expectations specializations for " + className + "\n")
         indexEnd = content.find("// End of Specialization for " + className + "\n\n") + len(
             "// End of Specialization for " + className + "\n\n")

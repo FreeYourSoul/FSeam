@@ -47,7 +47,7 @@ namespace FSeam {
      */
     template <typename T>
     struct TypeParseTraits {
-        inline static const std::string ClassName = "Undefined";
+        inline static const std::string ClassName = "FreeFunction";
     };
 
     /**
@@ -514,7 +514,7 @@ namespace FSeam {
         std::map<std::string, std::shared_ptr<MockClassVerifier> > _defaultMockedClass;
     };
 
-    // ------------------------ Helper Client Free functions -------------------------- 
+    // ------------------------ Helper Client Free functions --------------------------
 
     /**
      * @brief This method get the MockClassVerifier instance class
@@ -549,7 +549,7 @@ namespace FSeam {
      */
     template<typename T = void>
     std::shared_ptr<MockClassVerifier> &getFreeFunc() {
-        return FSeam::MockVerifier::instance().getDefaultMock("FreeFunction");
+        return getDefault<void>();
     }
 
 }

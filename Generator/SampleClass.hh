@@ -72,7 +72,7 @@ namespace Alpha
     };
 }
 
-class FreeFunctionClass {
+class StaticClassContender {
 
 public:
     static int staticFunction();
