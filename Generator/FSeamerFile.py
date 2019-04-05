@@ -123,7 +123,7 @@ class FSeamerFile:
 
     def generateDataStructureContent(self, content):
         """
-        Generate a MockData.hpp file that contains:
+        Generate a FSeamMockData.hpp file that contains:
         - DataModel structures used by FSeam in order to track the number of call made for each method,
                     the dupe made on those method, the arguments used when called, the return value and so on...
         - Helpers   some helper variable to be used by the client of FSeam in test, in order to not misspell methods
@@ -134,8 +134,8 @@ class FSeamerFile:
         If no content is provided as argument, a brand new file is generated, if a content is provided. The data for the
         each method re-made are overridden by the new one.
 
-        :param content: content of the current MockData.hpp file (if any)
-        :return: Content of the MockData.hpp file
+        :param content: content of the current FSeamMockData.hpp file (if any)
+        :return: Content of the FSeamMockData.hpp file
         """
         if not content or len(content) < 10:
             content = HEADER_INFO.replace(FILENAME, "DataMock.hpp")
@@ -144,7 +144,7 @@ class FSeamerFile:
                 content += BASE_HEADER_CODE + incl + "\n"
             content += "#include <type_traits>\n"
             content += "#include <optional>\n"
-            content += "#include <MockVerifier.hpp>\n\n"
+            content += "#include <FSeam.hpp>\n\n"
         if BASE_HEADER_CODE + "<" + self.fileName + ">\n" not in content:
             content += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         content += "namespace FSeam {\n"
@@ -175,7 +175,7 @@ class FSeamerFile:
         """
         if not content or len(content) < 10:
             content = HEADER_INFO.replace(FILENAME, "FSeamSpecialization.hpp")
-            content += "#include <MockData.hpp>\n\n"
+            content += "#include <FSeamMockData.hpp>\n\n"
         for className, methods in self.mapClassMethods.items():
             content = self._clearSpecialization(content, className)
         return content + self.specContent
@@ -187,7 +187,7 @@ class FSeamerFile:
         for incl in self.cppHeader.includes:
             _fseamerCodeHeaders += BASE_HEADER_CODE + incl + "\n"
         _fseamerCodeHeaders += "#include <functional>\n"
-        _fseamerCodeHeaders += "#include <MockData.hpp>\n#include <MockVerifier.hpp>\n"
+        _fseamerCodeHeaders += "#include <FSeamMockData.hpp>\n#include <FSeam.hpp>\n"
         _fseamerCodeHeaders += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         return _fseamerCodeHeaders
 
@@ -199,10 +199,10 @@ class FSeamerFile:
                 _paramType = param["type"]
                 _paramName = param["name"]
                 if _paramName not in ["&", "", None, "*", "&&"]:
-                    type = _paramType
-                    if "&" in type:
-                        type = "std::reference_wrapper<" + type.replace("&", "") + "> "
-                    _methodData += INDENT + "std::optional<" + type + "> " + methodName + "_" + _paramName + PARAM_SUFFIX + ";\n"
+                    typeStr = _paramType
+                    if "&" in typeStr:
+                        typeStr = "std::reference_wrapper<" + typeStr.replace("&", "") + "> "
+                    _methodData += INDENT + "std::optional<" + typeStr + "> " + methodName + "_" + _paramName + PARAM_SUFFIX + ";\n"
             _returnType = self.functionSignatureMapping[className][methodName]["rtnType"].replace("&", "").replace("static ", "")
             if _returnType != "void":
                 _methodData += INDENT + _returnType + " " + methodName + RETURN_SUFFIX + ";\n\n"
@@ -295,9 +295,32 @@ class FSeamerFile:
         self.specContent += "// End of Specialization for " + className + "\n\n"
         return _genSpecial
 
-    def _generateSpecializationVerifyArg(self, className, methodName, methodMapping, comparator=None):
+    def _generateMethodContent(self, returnType, className, methodName, isFreeFunction=False):
+        if isFreeFunction:
+            _content = INDENT + "auto mockVerifier = FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n"
+        else:
+            _content = INDENT + "auto mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
+            _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this, \"" + className + "\") :\n"
+            _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n"
+        if "&" in returnType:
+            _content += INDENT + "static std::vector<FSeam::" + className + "Data> datas;\n"
+            _content += INDENT + "datas.emplace_back();\n"
+            _content += INDENT + "FSeam::" + className + "Data &data = datas.back();\n\n"
+        else:
+            _content += INDENT + "FSeam::" + className + "Data data {};\n\n"
+        for p in self.functionSignatureMapping[className][methodName]["params"]:
+            _content += INDENT + "if (std::is_copy_constructible<std::decay<" + p["type"] + ">>())\n"
+            _content += INDENT2 + "data." + methodName + "_" + p["name"] + PARAM_SUFFIX + " = " + p["name"] + ";\n"
+        _content += INDENT + "mockVerifier->invokeDupedMethod(__func__, &data);\n"
+        _content += INDENT + "mockVerifier->methodCall(__func__, &data);\n"
+        if 'void' != returnType:
+            _content += INDENT + "return data." + methodName + "_ReturnValue;"
+        return _content
+
+    @staticmethod
+    def _generateSpecializationVerifyArg(className, methodName, methodMapping, comparator=None):
         _gen = "template <> void FSeam::MockClassVerifier::expectArg<FSeam::" + className + "::" + methodName + ", "
-        for param in methodMapping["params"]:
+        for _ in methodMapping["params"]:
             _gen += "FSeam::ArgComp, "
         if comparator is not None:
             _gen += comparator
@@ -323,28 +346,6 @@ class FSeamerFile:
             _gen += ", FSeam::AtLeast{1}"
         _gen += " });\n}\n"
         return _gen
-
-    def _generateMethodContent(self, returnType, className, methodName, isFreeFunction=False):
-        if isFreeFunction:
-            _content = INDENT + "auto mockVerifier = FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n"
-        else:
-            _content = INDENT + "auto mockVerifier = (FSeam::MockVerifier::instance().isMockRegistered(this)) ?\n"
-            _content += INDENT2 + "FSeam::MockVerifier::instance().getMock(this, \"" + className + "\") :\n"
-            _content += INDENT2 + "FSeam::MockVerifier::instance().getDefaultMock(\"" + className + "\");\n"
-        if "&" in returnType:
-            _content += INDENT + "static std::vector<FSeam::" + className + "Data> datas;\n"
-            _content += INDENT + "datas.emplace_back();\n"
-            _content += INDENT + "FSeam::" + className + "Data &data = datas.back();\n\n"
-        else:
-            _content += INDENT + "FSeam::" + className + "Data data {};\n\n"
-        for p in self.functionSignatureMapping[className][methodName]["params"]:
-            _content += INDENT + "if (std::is_copy_constructible<std::decay<" + p["type"] + ">>())\n"
-            _content += INDENT2 + "data." + methodName + "_" + p["name"] + PARAM_SUFFIX + " = " + p["name"] + ";\n"
-        _content += INDENT + "mockVerifier->invokeDupedMethod(__func__, &data);\n"
-        _content += INDENT + "mockVerifier->methodCall(__func__, &data);\n"
-        if 'void' != returnType:
-            _content += INDENT + "return data." + methodName + "_ReturnValue;"
-        return _content
 
     @staticmethod
     def _clearDataStructureData(content, className):
@@ -372,7 +373,7 @@ def generateFSeamFile(filePath, destinationFolder, forceGeneration=False):
     :param filePath: path of the cpp header file to parse in order to generate the seam mock
     :param destinationFolder: folder in which the generated folder will be created
     :param forceGeneration: if there are no need to generate the FSeam mock (mock, apparently, up to date) this flag
-                            make it able to bypass those check and to generate brand new mock anyway (the MockData.hpp
+                            make it able to bypass those check and to generate brand new mock anyway (the FSeamMockData.hpp
                             won't be deleted, the usual process of removing only the part re-generated will stays as is)
                             by default, this flag is set to False
     :return: no return
@@ -391,14 +392,14 @@ def generateFSeamFile(filePath, destinationFolder, forceGeneration=False):
         _fileCreated.write(_fSeamerFile.seamParse())
     print("FSeam generated file " + _fileName + " at " + os.path.abspath(destinationFolder))
 
-    _fileCreatedMockDataPath = os.path.normpath(destinationFolder + "/MockData.hpp")
+    _fileCreatedMockDataPath = os.path.normpath(destinationFolder + "/FSeamMockData.hpp")
     _fileCreatedMockDataContent = ""
     if os.path.exists(_fileCreatedMockDataPath):
         with open(_fileCreatedMockDataPath, "r") as _fileCreatedMockData:
             _fileCreatedMockDataContent = _fileCreatedMockData.read().replace(LOCKING_FOOTER, "")
     with open(_fileCreatedMockDataPath, "w") as _fileCreatedMockData:
         _fileCreatedMockData.write(_fSeamerFile.generateDataStructureContent(_fileCreatedMockDataContent))
-    print("FSeam generated file MockData.hpp at " + os.path.abspath(destinationFolder))
+    print("FSeam generated file FSeamMockData.hpp at " + os.path.abspath(destinationFolder))
     _fileCreatedSpecializationPath = os.path.normpath(destinationFolder + "/FSeamSpecialization.cpp")
     _fileCreatedSpecializationContent = ""
     if os.path.exists(_fileCreatedSpecializationPath):

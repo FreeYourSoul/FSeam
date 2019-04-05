@@ -28,6 +28,10 @@
 #ifndef FREESOULS_MOCKVERIFIER_HH
 #define FREESOULS_MOCKVERIFIER_HH
 
+#ifdef FSEAM_USE_CATCH2
+#include <catch.hpp>
+#endif
+
 #include <utility>
 #include <string>
 #include <functional>
@@ -210,6 +214,58 @@ namespace FSeam {
     template <typename T>
     static ArgComp CustomComparator(std::function<bool (std::decay_t<T>)> && t) {
         return ArgComp(comparator::internal::CustomComparator(std::forward<std::function<bool (std::decay_t<T>)>>(t)));
+    }
+
+    namespace Logging {
+
+
+        enum class Level {
+            INFO,
+            WARNING,
+            ERROR
+        };
+
+        struct Logger {
+
+            inline static bool customEnabled = false;
+
+            static std::function<void(Level, const std::string &)> &custom(
+                    std::optional<std::function<void(Level, const std::string &)> > logging = std::nullopt) {
+
+                static std::function<void(Level, const std::string &)> customLogger =
+                        logging.value_or([](Level l, const std::string &msg) {
+
+                    if (l == Level::ERROR)
+                        std::cerr << msg << "\n";
+                    else
+                        std::cout << msg << "\n";
+                });
+                customEnabled = true;
+                return customLogger;
+            }
+
+            static void log(Level level, const std::string &msg) {
+                if (!customEnabled) {
+                    #ifdef FSEAM_USE_CATCH2
+                    if (level == Level::INFO) {
+                        INFO(msg);
+                    }
+                    else
+                        WARN(msg);
+                    #elif FSEAM_USE_GTEST
+                    if (level == Level::ERROR)
+                        std::cerr << msg << "\n";
+                    else
+                        std::cout << msg << "\n";
+                    #else
+                    custom()(level, msg);
+                    #endif
+                }
+                else
+                    custom()(level, msg);
+            }
+
+        };
     }
 
     /**
@@ -399,7 +455,7 @@ namespace FSeam {
         /**
          * @brief Verify if a method has been called under certain conditions (number of times)
          * 
-         * @tparam Comparator  comparator class used, can be also an Integer, those comparator are defined under the namespace FSeam::VerifierComparator, 
+         * @tparam Comparator  comparator class used, can be also an Integer, those comparator are defined under the namespace FSeam,
          *          VerifyCompare/Integral value : Check if the method has been called exactly the number provided
          *          NeverCalled : Check if the method has never been called
          *          AtLeast : Check if the method has been called at least the number provided
@@ -415,26 +471,26 @@ namespace FSeam {
         template <typename Comparator>
         bool verify(std::string methodName, Comparator &&comp, bool verbose = true) const {
             if constexpr (std::is_integral<Comparator>())
-                return verify(std::move(methodName), VerifyCompare{ static_cast<uint>(comp) });
+                return verify(std::move(methodName), VerifyCompare{ static_cast<uint>(comp) }, verbose);
             else {
                 static_assert(isCalledComparator<Comparator>::v, "Type  should be AtLeast, AtMost, Never, IsNot or VerifyCompare");
                 std::string key = _className + std::move(methodName);
 
                 if (_verifiers.find(key) == _verifiers.end()) {
                     if (verbose && comp._toCompare > 0u) {
-                        std::cout << "Verify error for method " << key << ", method never have been called while "
-                                  << comp.expectStr(0u) << " method call \n";
+                        Logging::Logger::log(Logging::Level::ERROR,
+                                "Verify error for method " + key + ", method never have been called while " + comp.expectStr(0u) + " method call \n");
                     }
                     return comp._toCompare == 0u;
                 }
-                bool result = true;
+                bool result = comp.compare(_verifiers.at(key)->_called);
+                if (verbose && !result) {
+                    Logging::Logger::log(Logging::Level::ERROR,
+                                         "Verify error for method " + key + ", method has been called but " +
+                                                 comp.expectStr(_verifiers.at(key)->_called) + " method call \n");
+                }
                 for (auto &expect : _verifiers.at(key)->_expectations)
                     result &= expect();
-                result &= comp.compare(_verifiers.at(key)->_called);
-//                if (verbose && !result) {
-//                    std::cout << "Verify error for method " << key << ", method has been called but "
-//                              << comp.expectStr(_verifiers.at(key)->_called) << " method call\n";
-//                }
                 return result;
             }
         }

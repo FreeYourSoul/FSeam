@@ -21,7 +21,7 @@ configure_file (
 message(STATUS "FSeam v${FSEAM_VERSION}")
 
 set(FSEAM_HEADERS
-        ${CMAKE_CURRENT_SOURCE_DIR}/FSeam/MockVerifier.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/FSeam/FSeam.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/FSeam/Versioner.hh)
 
 set(FSEAM_GENERATOR_PYTH

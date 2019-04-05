@@ -5,12 +5,18 @@ set(FSEAM_GENERATOR_DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 option(FSEAM_FORCE_GENERATION "Force the generation of the file " ON)
 option(FSEAM_CLEANUP_DATA "Cleanup the data file  " OFF)
 
+option(FSEAM_USE_CATCH2 "fseam catch2 usage" ON)
+option(FSEAM_USE_GTEST "fseam catch2 usage" OFF)
+
 #find_package(FSeam REQUIRED)
 set(FSEAM_GENERATOR_COMMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/../Generator/FSeamerFile.py)
 
-find_package(Catch2 REQUIRED)
+if (FSEAM_USE_CATCH2)
+    find_package(Catch2 REQUIRED)
+    include(Catch)
+endif ()
+
 include(CTest)
-include(Catch)
 
 ##
 ## Function used by client in order to :
@@ -76,9 +82,9 @@ function(addFSeamTests)
     setup_FSeam_test()
 
     # Create testing target
-    execute_process(COMMAND touch ${FSEAM_GENERATOR_DESTINATION}/MockData.hpp ${FSEAM_GENERATOR_DESTINATION}/FSeamSpecialization.cpp)
+    execute_process(COMMAND touch ${FSEAM_GENERATOR_DESTINATION}/FSeamMockData.hpp ${FSEAM_GENERATOR_DESTINATION}/FSeamSpecialization.cpp)
     add_executable(${ADDFSEAMTESTS_DESTINATION_TARGET} ${ADDFSEAMTESTS_TST_SRC} ${FSEAM_TEST_SRC}
-            ${FSEAM_GENERATOR_DESTINATION}/MockData.hpp
+            ${FSEAM_GENERATOR_DESTINATION}/FSeamMockData.hpp
             ${FSEAM_GENERATOR_DESTINATION}/FSeamSpecialization.cpp)
     set_target_properties(${ADDFSEAMTESTS_DESTINATION_TARGET} PROPERTIES CXX_STANDARD 17)
     target_include_directories(${ADDFSEAMTESTS_DESTINATION_TARGET}
@@ -86,7 +92,11 @@ function(addFSeamTests)
                 ${FSEAM_TEST_INCLUDES}
                 ${FSEAM_GENERATOR_DESTINATION}
                 ${CMAKE_CURRENT_SOURCE_DIR}/../FSeam)
-    target_link_libraries(${ADDFSEAMTESTS_DESTINATION_TARGET} FSeam Catch2::Catch2)
-    catch_discover_tests(${ADDFSEAMTESTS_DESTINATION_TARGET})
+
+    if (FSEAM_USE_CATCH2)
+        target_compile_definitions(${ADDFSEAMTESTS_DESTINATION_TARGET} PRIVATE FSEAM_USE_CATCH2)
+        target_link_libraries(${ADDFSEAMTESTS_DESTINATION_TARGET} FSeam Catch2::Catch2)
+        catch_discover_tests(${ADDFSEAMTESTS_DESTINATION_TARGET})
+    endif ()
 
 endfunction(addFSeamTests)

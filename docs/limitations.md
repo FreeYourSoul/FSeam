@@ -1,9 +1,9 @@
 # Known Limitations
 
-## Argument expecation on Non copiable object
+## Argument expectation on Non copyable object
 
-When using argument expectation with FSeam::Eq or FSeam::NotEq FSeam internally does copy of object into a tempory std::any in order to make the comparaison in the verify.
-This imply that it is impossible to use with non-copiable object :  
+When using argument expectation with FSeam::Eq or FSeam::NotEq FSeam internally does copy of object into a temporary std::any in order to make the comparison in the verify.
+This imply that it is impossible to use with non-copyable object :  
   
 For instance the following code is illegal  
 ```cpp
@@ -15,7 +15,7 @@ NonCopiableObject obj(1);
 // illegal to use non-copiable object with Eq or NonEq
 fseamMock->expectArg<FSeam::DependencyGettable::functionWithIntegerAndNonCopiableInput>(Eq(1), Eq(obj)); 
 ```
-If only the copiable argument are to be checked you can use FSeam::Any in order to mitigate this issue
+If only the copyable argument are to be checked you can use FSeam::Any in order to mitigate this issue
 
 ```cpp
 using namespace FSeam;
@@ -26,10 +26,10 @@ auto fseamMock = FSeam::get(&testClass.getDepGettable());
 fseamMock->expectArg<FSeam::DependencyGettable::functionWithIntegerAndNonCopiableInput>(Eq(1), Any()); 
 ```
 
-If you absolutely need to do a comparison with a non-copiable object. It is assumed that it is going to be sent to the function as reference or pointer. 
+If you absolutely need to do a comparison with a non-copyable object. It is assumed that it is going to be sent to the function as reference or pointer. 
 So you can use the RAW dupeMethod version in order to do the check.
 The Raw method is closely related to the internal way FSeam works, and should be avoided as the interface is not user friendly. But it bypass this issue.
-It is important to note that if you need to know how many time the method has been called, you will need to implement such a mecanism
+It is important to note that if you need to know how many time the method has been called, you will need to implement such a mechanism
 
 ```cpp
 source::TestingClass testClass{};

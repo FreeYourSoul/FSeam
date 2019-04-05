@@ -11,12 +11,12 @@ The tests case shown in this documentation are going to use the Catch2 framework
 
 **Usage:**
 * [Install fseam](usage.md#install)
-* [CMake integration](usage.md#compile-with-fseam)
+* [CMake integration](usage.md#cmake-with-fseam)
 
 **Writing tests:**
 * [Verifications](testing.md#verifications)
 * [Arguments expectations](testing.md#argument-expectation)
-* [Custom Logging](logging.md#top)
+* [Custom Logging](logging.md#logging)
 
 **Other:**
 

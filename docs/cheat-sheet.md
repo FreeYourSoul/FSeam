@@ -12,14 +12,28 @@ addFSeamTests(
         DESTINATION_TARGET fseamTargetName
         TARGET_AS_SOURCE binaryWithContentToTest
         TST_SRC 
-                ${CMAKE_CURRENT_SOURCE_DIR}/catch2TestFile.cpp          #Or any other framework
+                ${CMAKE_CURRENT_SOURCE_DIR}/catch2TestFile.cpp #Testing source files
         TO_MOCK
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyToMock.hh     #Give header to mock
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyToMock.hh #Give header to mock
 )
+```
 
+Options:
+* If using Google Test
+```bash
+cmake -DFSEAM_USE_GTEST=ON
+```
+* If using Catch2
+```bash
+cmake -DFSEAM_USE_CATCH2=ON
 ```
 
 ## Use into a test
+
+Include to use:
+```cpp
+#include <FSeam.hpp> // Contains the FSeam mocking tools
+```
 
 ### Get Mock from instance
 
@@ -86,7 +100,9 @@ verify(FSeam::ClassMocked::methodOfClassMocked::NAME ObjectToReturn, Comparator)
 ```
 Example : 
 ```cpp
+#include <FSeam.hpp> // Contains the FSeam mocking tools
 using namespace FSeam;
+
 source::TestingClass testingClass {};
 auto fseamMock = FSeam::get(&testingClass.getDepGettable());
 

@@ -3,7 +3,6 @@
 //
 
 #include <iostream>
-#include <assert.h>
 #include "TestingClass.hh"
 
 namespace source {

@@ -3,7 +3,7 @@
 //
 
 #include <catch.hpp>
-#include <MockData.hpp>
+#include <FSeamMockData.hpp>
 #include <TestingClass.hh>
 #include <FreeFunctionClass.hh>
 

@@ -22,7 +22,7 @@ int source::DependencyGettable::checkSimpleReturnValue() {
 }
 
 void source::DependencyGettable::checkCustomStructInputVariablePtr(source::StructTest *testStr) {
-    std::cout << "Original " << __func__ << " called\n";
+    std::cout << "Original " << __func__ << " called with " << testStr->testInt << " " << testStr->testShort << " " << testStr->testStr << " \n";
     _hasOriginalBeenCalled = true;
 }
 
@@ -44,6 +44,6 @@ void source::DependencyGettable::checkCustomStructInputVariableRef(const source:
 }
 
 void source::DependencyGettable::checkCustomStructInputVariable(source::StructTest testStr) {
-    std::cout << "Original " << __func__ << " called\n";
+    std::cout << "Original " << __func__ << " called with " << testStr.testInt << " " << testStr.testShort << " " << testStr.testStr << " \n";
     _hasOriginalBeenCalled = true;
 }

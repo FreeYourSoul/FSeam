@@ -5,9 +5,9 @@
 #include <catch.hpp>
 #include <iostream>
 #include <any>
-#include <MockVerifier.hpp>
+#include <FSeam.hpp>
 #include <TestingClass.hh>
-#include <MockData.hpp>
+#include <FSeamMockData.hpp>
 
 TEST_CASE( "FSeamBasicTest" ) {
     source::TestingClass testingClass {};
@@ -38,13 +38,13 @@ TEST_CASE( "FSeamBasicTest" ) {
         CHECK(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::VerifyCompare{5}));
 
         CHECK(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::IsNot{1}));
-        CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::IsNot{5}));
+        CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::IsNot{5}, false));
 
         CHECK(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::AtLeast{4}));
-        CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::AtLeast{6}));
+        CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::AtLeast{6}, false));
 
         CHECK(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::AtMost{6}));
-        CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::AtMost{4}));
+        CHECK_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::AtMost{4}, false));
 
     } // End section : FSeam_Verify
 

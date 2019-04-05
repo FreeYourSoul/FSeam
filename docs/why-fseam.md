@@ -58,7 +58,7 @@ With link seam, it is possible to test legacy features with little to no re-fact
 It is possible to give a default behavior and monitor the default behaviors of FSeam mock. Which means (in opposition with the template dependency injection) you don't need to get the actual instance of the mock to alter it's behavior and verify its usage.
 
 ### The Trap
-A code thought to be tested is going to be more readeable and provide more [pure functions/methods](https://en.wikipedia.org/wiki/Pure_function).
-Splitting dependencies from the functionnality is usually making the classes less couple, and so more flexible and easier to modify.  
+A code thought to be tested is going to be more readable and provide more [pure functions/methods](https://en.wikipedia.org/wiki/Pure_function).
+Splitting dependencies from the functionality is usually making the classes less couple, and so more flexible and easier to modify.  
 
-**Using FSeam in a way to not have to think about software architecture is the trap to not fall into**. FSeam is supposed to be used in order for the user to not have impact on the code performance, or building time/readibility, but should in no way be a reason to stop making the code testable by default as it going to make better code anyway.
+**Using FSeam in a way to not have to think about software architecture is the trap to not fall into**. FSeam is supposed to be used in order for the user to not have impact on the code performance, or building time/readability, but should in no way be a reason to stop making the code testable by default as it going to make better code anyway.

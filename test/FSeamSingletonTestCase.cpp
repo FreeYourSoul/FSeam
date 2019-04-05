@@ -6,7 +6,7 @@
 #include <iostream>
 #include <any>
 #include <TestingClass.hh>
-#include <MockData.hpp>
+#include <FSeamMockData.hpp>
 
 TEST_CASE("Test Singleton") {
     source::TestingClass testingClass {};

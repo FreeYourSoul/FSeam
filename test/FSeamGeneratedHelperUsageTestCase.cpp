@@ -5,7 +5,7 @@
 #include <catch.hpp>
 #include <any>
 #include <TestingClass.hh>
-#include <MockData.hpp>
+#include <FSeamMockData.hpp>
 
 using namespace FSeam;
 
@@ -57,7 +57,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
             testClass.getDepGettable().checkSimpleInputVariable(33, "FyS");
             testClass.getDepGettable().checkSimpleInputVariable(41, "FyS");
 
-            // overall check is only on 1 but 4 hapenned
+            // overall check is only on 1 but 4 happened
             REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME, 1, false));
             REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkSimpleInputVariable::NAME));
             fseamMock->clearExpectations();
