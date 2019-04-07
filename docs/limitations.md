@@ -1,5 +1,10 @@
 # Known Limitations
 
+## Code structure
+
+What is usually a good practice, for one header file, one cpp file to compile. Is now an obligation as FSeam is going to provide another implementation of the class/functions defined in the header. If the implementation of the header file is scatered in different source file.   
+Compilation time issue could occurs as FSeam is going to create a second implementation of the same function/class.
+
 ## Argument expectation on Non copyable object
 
 When using argument expectation with FSeam::Eq or FSeam::NotEq FSeam internally does copy of object into a temporary std::any in order to make the comparison in the verify.

@@ -9,15 +9,99 @@ If you need any more usage example than this, please request them by [opening a 
 > To use the functionality below, you need to include FSeam.hpp which contains the mocking tools.  
 >  For low level usage (dupe), including FSeamMockData.hpp could be required
 
+## Get a FSeam mock handler
+
+In order to dupe/verify behavior of a mocked class/function you need to get a handler to manipulate.
+
+**Two handler type exist:**
+* Instance mock handlers: it is a handler on a specific instance of the mocked class. Make you able to have multiple instances of the same mocked class have different dupped behaviors.
+```cpp
+TestClass testingClass;
+auto fseamMock = FSeam::get(&testingClass); // get the specific instance mock
+```
+* Default mock handlers: it is a default behavior for a given mocked class type.
+```cpp
+auto fseamMock = FSeam::getDefault<TestClass>(); // get the default behavior for the mocked TestClass
+```
+
+> Static method and free functions are, internally, using the Default mock handler mechanism on a class called FSeam::FreeFunction [more explanation](free-functions.md#free-functions)
+
 ## Verifications
 
-< todo >  
-[you can use the any of the called comparator](testing.md#called-comparator)
+Verification is the basic of FSeam. It is used to check how many times a method has been called and 
+[calling comparator](testing.md#called-comparator)
 
 ## Argument Expectation
 
-The mock object used into test has a ```expectArg``` method that makes you able to check with what arguments the function has been called.
-It is also possible to check how many times the function met this requirement, for that [you can use the any of the called comparator](testing.md#called-comparator).  
+The mock object used into test has a ```expectArg``` method that makes you able to check with what arguments the function has been called. This function has the following signature:  
+```cpp
+template <typename ClassMethodIdentifier, typename ...Verifiers>
+void expectArg(Verifiers ... verifiers);
+```
+**ClassMethodIdentifier** type being a fseam generated empty structure present in the include ```#include<FSeamMockData.hpp>``` whose is representing the method you want to mock.
+
+**Verifiers** variadic template being [arguments comparator](testing.md#argument-comparator), used to compare the argument of the mocked function.  
+A [calling comparator](testing.md#calling-comparator) argument can be added (after the arguments comparator still part of the variadic template). Thanks to that argument it is possible to check how many times the function met this requirement.
+
+More information on how to use argument expectations (with example) with [arguments comparators](testing.md#argument-comparator)
+  
+
+## Comparators
+
+Do not be confused about the comparators, there is just two types of them:
+* **The calling comparator**: used to do comparison on how many time the match has been called [detailed here](testing.md#calling-comparator) 
+* **The argument comparator**: used to do comparison of arguments in argument expectation [detailed here](testing.md#argument-comparator)
+
+### Calling comparator
+
+When using verifications (or expectations) you can specify how many times you the functions has been called. There are multiple way to do so.
+* You can check if the function has been called **exactly a given number of times** by using FSeam::VerifyCompare  
+For the case of verify, it is possible to just send an integral value which is going to be automatically taken into a VerifyCompare comparator object:
+```cpp
+// Check the function DependencyGettable::checkCalled has been called exactly 5 times
+REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::VerifyCompare{5}));
+```
+
+* You can check if the function has been called **at least a given number of times** by using FSeam::AtLeast:
+```cpp
+// Check the function DependencyGettable::checkCalled has been called at least 5 times
+REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::AtLeast{5})); 
+```
+
+* You can check if the function has been called **at most a given times** by using FSeam::AtMost:
+```cpp
+// Check the function DependencyGettable::checkCalled has been called at most 5 times
+REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::AtMost{5})); 
+```
+
+* You can check if the function **has never been called** by using FSeam::NeverCalled:
+```cpp
+// Check the function DependencyGettable::checkCalled has been never been called
+REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::NeverCalled{})); 
+```
+
+### Usage advice on never called
+
+If you want to check that a method has never been called it is better to use the FSeam::NeverCalled comparator instead of doing a false assertion.    
+_For example:_ 
+```cpp
+// Bad practice
+REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, false));
+
+// Good practice
+REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::NeverCaled{});
+```
+It is important to note that verify is going to return false in case of any error in the verifying process. Which means it could return false if an argument didn't feel the requirements it should have (because of a call to [expectArg](testing.md#argument-expectation)).  
+By doing so, you are taking the assumption that the verify returned false because the function has never been called. While it could be because of another reason. If you use the FSeam::NeverCalled{}, you assert for sure that the function has never been called.  
+
+But if you want to check a false expectation anyway (for whatever reason) don't forget it's possible to disable the logging in the verification by adding the verbose argument (last argument of verify) in order to not pollute your test log with expected error log.
+
+```cpp
+REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, AtLeast{1}, false));
+```
+
+### Argument Comparator
+
 There are 4 argument comparator available in FSeam available by calling the following functions: 
 * FSeam::Eq comparator : signature ```template<typename T> FSeam::Eq(T)```
 Takes any object as argument, if the object type cannot be deduced, you need to add the template parameter explicitly.  
@@ -30,9 +114,17 @@ Doesn't take argument, doesn't apply check on this argument
 * FSeam::CustomComparator : [Described here](testing.md#custom-argument-comparator)  
 
 ```cpp
-#include <FSeam.hpp> // Contains the FSeam mocking tools
-using namespace FSeam; // used in order to be able to use comparator without specifying FSeam
+/**
+ * Signature of the method mocked on which we will expect args
+ */
+ void TestingClass::functionCalled(int, int, std::string);
+```
 
+```cpp
+#include <FSeam.hpp> // Contains the FSeam mocking tools
+#include<FSeamMockData.hpp> // Contains the ClassMethodIdentifiers
+using namespace FSeam; // used in order to be able to use comparator without specifying FSeam
+ 
 /**
  * This expectArg call is registing a check that the method TestingClass::functionCalled is called at least 2 times with
  *  the first integer argument equal to 42,
@@ -51,6 +143,7 @@ _Example of wrong and good usage of argument expectations:_
 
 ```cpp
 #include <FSeam.hpp> // Contains the FSeam mocking tools
+#include<FSeamMockData.hpp> // Contains the ClassMethodIdentifiers
 using namespace FSeam; // used in order to be able to use comparator without specifying FSeam
 
 // BAD
@@ -119,57 +212,33 @@ REQUIRE(fseamMock->verify(FSeam::TestingClass::checkCustomStructInputVariable::N
 
 It is unfortunately needed to specify the types of each argument into the Custom comparator. But the usage of C++17 templated lambda (auto as argument in the lambda) avoid us to do any repetition, so this is not that bad.
 
-## Called comparator
-
-When using verifications (or expectations) you can specify how many times you the functions has been called. There are multiple way to do so.
-* You can check if the function has been called **exactly a given number of times** by using FSeam::VerifyCompare  
-For the case of verify, it is possible to just send an integral value which is going to be automatically taken into a VerifyCompare comparator object:
-```cpp
-// Check the function DependencyGettable::checkCalled has been called exactly 5 times
-REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::VerifyCompare{5}));
-```
-
-* You can check if the function has been called **at least a given number of times** by using FSeam::AtLeast:
-```cpp
-// Check the function DependencyGettable::checkCalled has been called at least 5 times
-REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::AtLeast{5})); 
-```
-
-* You can check if the function has been called **at most a given times** by using FSeam::AtMost:
-```cpp
-// Check the function DependencyGettable::checkCalled has been called at most 5 times
-REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::AtMost{5})); 
-```
-
-* You can check if the function **has never been called** by using FSeam::NeverCalled:
-```cpp
-// Check the function DependencyGettable::checkCalled has been never been called
-REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::NeverCalled{})); 
-```
-
-### Usage advice on never called
-
-If you want to check that a method has never been called it is better to use the FSeam::NeverCalled comparator instead of doing a false assertion.    
-_For example:_ 
-```cpp
-// Bad practice
-REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, false));
-
-// Good practice
-REQUIRE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, FSeam::NeverCaled{});
-```
-It is important to note that verify is going to return false in case of any error in the verifying process. Which means it could return false if an argument didn't feel the requirements it should have (because of a call to [expectArg](testing.md#argument-expectation)).  
-By doing so, you are taking the assumption that the verify returned false because the function has never been called. While it could be because of another reason. If you use the FSeam::NeverCalled{}, you assert for sure that the function has never been called.  
-
-But if you want to check a false expectation anyway (for whatever reason) don't forget it's possible to disable the logging in the verification by adding the verbose argument (last argument of verify) in order to not pollute your test log with expected error log.
-
-```cpp
-REQUIRE_FALSE(fseamMock->verify(FSeam::DependencyGettable::checkCalled::NAME, AtLeast{1}, false));
-```
-
 ## Dupe return values
 
-< todo >
+It is possible to dupe return value of a method/function mocked by fseam thanks to the fseam function.
+```cpp
+// Signature of the FSeam mock method to dupe the return value
+template<typename ClassMethodIdentifier, typename RtnType> 
+void dupeReturn<ClassMethodIdentifier>(RtnType)
+```
+
+**ClassMethodIdentifier** type being a fseam generated empty structure present in the include ```#include<FSeamMockData.hpp>``` whose is representing the method you want to mock.
+
+**RtnType** Type of the value returned (can be deduced thanks to the argument).
+
+_Example:_
+
+```cpp
+fseamMock->dupeReturn<FSeam::TestinClass::returnIntMethod>(42);
+fseamMock->dupeReturn<FSeam::TestinClass::returnStringMethod>(std::string("okok")); // need to help the type deduction a little
+
+struct S {
+    int ok;
+    int ko;
+    int oo
+};
+fseamMock->dupeReturn<FSeam::TestinClass::returnStructMethod>(S{});
+```
+
 
 ## Dupe
 

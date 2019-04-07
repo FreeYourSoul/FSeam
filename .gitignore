@@ -1,6 +1,6 @@
 .idea
 **/*.fseam.cc
-**/MockData.hh
+**/FSeamMockData.hpp
 **/FSeamSpecialization.cpp
 **/build
 **/venv

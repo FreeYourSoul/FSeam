@@ -16,6 +16,7 @@ The tests case shown in this documentation are going to use the Catch2 framework
 **Writing tests:**
 * [Verifications](testing.md#verifications)
 * [Arguments expectations](testing.md#argument-expectation)
+* [Free functions mock](free-functions.md#free-functions) 
 * [Custom Logging](logging.md#logging)
 
 **Other:**
