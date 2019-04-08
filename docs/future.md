@@ -1,6 +1,10 @@
 # Future to be implemented
 
-#Improve Documentation
+## Other
+* Add Travis support
+* Add codecov support
+
+##Improve Documentation
 * Detailed documentation on dupe (into usage.md file)
 * ~~Detailed documentation on dupeReturn (into usage.md file)~~
 * ~~Detailed documentation on verify (into usage.md file)~~
