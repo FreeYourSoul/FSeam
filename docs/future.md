@@ -5,7 +5,8 @@
 * Add codecov support
 
 ## Improve Documentation
-* Detailed documentation on dupe (into usage.md file)
+* Detailed documentation on dupe (in
+to usage.md file)
 * ~~Detailed documentation on dupeReturn (into usage.md file)~~
 * ~~Detailed documentation on verify (into usage.md file)~~
 * ~~Improve documentation, add get mock handler (into testing.md file)~~
@@ -15,7 +16,8 @@
 
 ## V1.1.0:     
 * **Functional Improvements**
-  * **Adding inner-class-struct/class**: The code generation is wrong and not compilable when mocking a header file with a class embedded in another one
+  * **Adding inner-class-struct/class**: The code generation is wrong and not compilable when mocking a header file with a class embedded in another on
+  * **Add argument expectation non copiable support**ble  
   * ~~**Remove Catch dependency from the FSeam module**:~~  
     * ~~Replace it by an option (to keep it only if using Catch2 with a find_package not required)~~
   * ~~**Rename MockVerifier.hpp into FSeam.hpp**~~
