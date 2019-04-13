@@ -16,6 +16,7 @@ to usage.md file)
 
 ## V1.1.0:     
 * **Functional Improvements**
+use function overload instead of specialization for verifyarg
   * **Adding inner-class-struct/class**: The code generation is wrong and not compilable when mocking a header file with a class embedded in another on
   * **Add argument expectation non copiable support** using constexpr if and store uniqueptr in case of non copiable argument
   * ~~**Remove Catch dependency from the FSeam module**:~~  
