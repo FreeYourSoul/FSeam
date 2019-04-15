@@ -35,7 +35,7 @@ sudo pip install ply
 ```  
  
 ---
-**Usage of catch2** (v2.7.0 at this day 31/03/2019), if not installed yet you can do either :   
+**Usage of catch2** into the test (v2.7.0 at this day 31/03/2019), if not installed yet you can do either :   
 -- install the latest version from the repo directly
 ```Bash
 git clone https://github.com/catchorg/Catch2.git
@@ -45,7 +45,7 @@ sudo make install
 ```
    --  or download the file directly from the selected version (here v2.7.0):
 ```Bash
-cd /path/to/your/testing/directory
+cd /path/to/your/fseam/clone/test/
 curl -O https://raw.githubusercontent.com/catchorg/Catch2/v2.7.0/single_include/catch2/catch.hpp
 ```
   
