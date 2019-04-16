@@ -262,11 +262,7 @@ namespace FSeam {
         struct Expectation  {
             bool operator()() {
                 return std::visit(overload {
-                        [this](FSeam::IsNot& c) { return c.compare(_numberTimeMatched); },
-                        [this](FSeam::AtLeast& c) { return c.compare(_numberTimeMatched); },
-                        [this](FSeam::AtMost& c) { return c.compare(_numberTimeMatched); },
-                        [this](FSeam::VerifyCompare& c) { return c.compare(_numberTimeMatched); },
-                        [this](FSeam::NeverCalled& c) { return c.compare(_numberTimeMatched); }
+                    [this](auto& c) { return c.compare(_numberTimeMatched); }
                 }, _comparator);
             }
             void check(void *data) {
