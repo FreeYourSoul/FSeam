@@ -60,13 +60,13 @@ namespace FSeam {
      */
     struct VerifyCompare {
         explicit VerifyCompare(uint toCompare) : _toCompare(toCompare) {}
-        bool compare(uint number) { return _toCompare == number; } 
+        bool compare(uint number) const { return _toCompare == number; }
         std::string expectStr(uint number) const { return std::string("we expected exactly ") +
             std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
         int _toCompare = 0;
     };
     struct NeverCalled {
-        bool compare(uint number) { return !number; } 
+        bool compare(uint number) const { return !number; }
         std::string expectStr(uint number) const { return std::string("we expected this method to never be called ") +
             std::to_string(_toCompare) + std::string(" but received ") + std::to_string(number); };
         int _toCompare = 0;
@@ -100,24 +100,6 @@ namespace FSeam {
     template <> struct isCalledComparator<AtLeast> { static const bool v = true; };
     template <> struct isCalledComparator<NeverCalled> { static const bool v = true; };
     template <> struct isCalledComparator<VerifyCompare> { static const bool v = true; };
-
-    struct StaticComparatorCaller {
-        using CalledCompare = std::variant<IsNot, AtMost, AtLeast, NeverCalled, VerifyCompare>;
-
-        static bool compare(CalledCompare &comparator, uint value) {
-            if (auto varNever = std::get_if<NeverCalled>(&comparator))
-                return varNever->compare(value);
-            else if (auto varComp = std::get_if<VerifyCompare>(&comparator))
-                return varComp->compare(value);
-            else if (auto varAl = std::get_if<AtLeast>(&comparator))
-                return varAl->compare(value);
-            else if (auto varAm = std::get_if<AtMost>(&comparator))
-                return varAm->compare(value);
-            else if (auto varIn = std::get_if<IsNot>(&comparator))
-                return varIn->compare(value);
-            return false;
-        }
-    };
 
     /**
      * @brief Comparators option used in verify in order to give more flexibility into the check possible via te verify option
@@ -271,15 +253,29 @@ namespace FSeam {
     /**
      * @brief basic structure that contains description and usage metadata of a mocked method
      */
+    template<class... Ts> struct overload : Ts... { using Ts::operator()...; };
+    template<class... Ts> overload(Ts...) -> overload<Ts...>;
+
     struct MethodCallVerifier {
-        struct Expectation  { 
-            bool operator()() { return StaticComparatorCaller::compare(_comparator, _numberTimeMatched); }
+        using CalledCompare = std::variant<IsNot, AtMost, AtLeast, NeverCalled, VerifyCompare>;
+
+        struct Expectation  {
+            bool operator()() {
+                return std::visit(overload {
+                        [this](FSeam::IsNot& c) { return c.compare(_numberTimeMatched); },
+                        [this](FSeam::AtLeast& c) { return c.compare(_numberTimeMatched); },
+                        [this](FSeam::AtMost& c) { return c.compare(_numberTimeMatched); },
+                        [this](FSeam::VerifyCompare& c) { return c.compare(_numberTimeMatched); },
+                        [this](FSeam::NeverCalled& c) { return c.compare(_numberTimeMatched); }
+                }, _comparator);
+            }
             void check(void *data) {
                 if (_expectator(data))
                     ++_numberTimeMatched;
             }
             std::function<bool(void*)> _expectator;
-            StaticComparatorCaller::CalledCompare _comparator;
+
+            CalledCompare _comparator;
             uint _numberTimeMatched = 0;
         };
 
