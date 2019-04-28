@@ -18,8 +18,8 @@ endif ()
 
 include(CTest)
 
-##
-## Function used by client in order to :
+## ============ NOT CLIENT FACING ====================
+## Function used internally in order to :
 ## - generate C++ Seam mock classess
 ## - create a cmake variable FSEAM_TEST_SRC containing all source for the current test
 ##
@@ -56,9 +56,10 @@ with command : ${PYTHON_EXECUTABLE} ${FSEAM_GENERATOR_COMMMAND} ${fileToMockPath
     set(FSEAM_TEST_SRC ${FSEAM_TEST_SRC} PARENT_SCOPE)
 endfunction (setup_FSeam_test)
 
-##
+## ============ CLIENT FACING ====================
 ## Function to call in order to generate a test executable from the generated FSeam mock and the provided test source
 ##
+## Using CMake Parse Argument (explicitly named in the function call)
 ## Mandatory
 ## arg DESTINATION_TARGET  : target name of the test executable generated via this method
 ## arg TST_SRC             : catch2 test files containing the actual test to compile
