@@ -65,21 +65,34 @@ endfunction (setup_FSeam_test)
 ## arg TST_SRC             : catch2 test files containing the actual test to compile
 ## arg TO_MOCK             : files to mock for this specific given test
 ##
-## either
+## either 
 ## arg TARGET_AS_SOURCE    : target of the library that contains the code to test
 ## arg FILES_AS_SOURCE       or source file containing the code to test
+## arg FOLDER_INCLUDES       with includes folder
+## The above either would be translated to : TARGET_AS_SOURCE || (FILES_AS_SOURCE && FOLDER_INCLUDES)
+## 
+## optional 
+## arg MAIN_FILE           : file containing the main (if any), this file will be removed from the compilation of the test
 ##
 function(addFSeamTests)
 
-    set(oneValueArgs DESTINATION_TARGET TARGET_AS_SOURCE)
-    set(multiValueArgs TO_MOCK TST_SRC)
+    set(oneValueArgs DESTINATION_TARGET TARGET_AS_SOURCE MAIN_FILE)
+    set(multiValueArgs TO_MOCK TST_SRC FILES_AS_SOURCE)
     cmake_parse_arguments(ADDFSEAMTESTS "" "${oneValueArgs}" "${multiValueArgs}"  ${ARGN} )
 
     # Check arguments
 
     # Get input arguments and generate sources
-    get_target_property(FSEAM_TEST_SRC ${ADDFSEAMTESTS_TARGET_AS_SOURCE} SOURCES)
-    get_target_property(FSEAM_TEST_INCLUDES ${ADDFSEAMTESTS_TARGET_AS_SOURCE} INCLUDE_DIRECTORIES)
+    if (NOT ADDFSEAMTESTS_TARGET_AS_SOURCE STREQUAL "")
+        get_target_property(FSEAM_TEST_SRC ${ADDFSEAMTESTS_TARGET_AS_SOURCE} SOURCES)
+        get_target_property(FSEAM_TEST_INCLUDES ${ADDFSEAMTESTS_TARGET_AS_SOURCE} INCLUDE_DIRECTORIES)
+    else ()
+        set(FSEAM_TEST_SRC ${ADDFSEAMTESTS_FILES_AS_SOURCE})
+        set(FSEAM_TEST_INCLUDES ${ADDFSEAMTESTS_FOLDER_INCLUDES})
+    endif ()
+    if (NOT ADDFSEAMTESTS_MAIN_FILE STREQUAL "")
+        list(FILTER FSEAM_TEST_SRC EXCLUDE REGEX .*${ADDFSEAMTESTS_MAIN_FILE})
+    endif ()
     setup_FSeam_test()
 
     # Create testing target
