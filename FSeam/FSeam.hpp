@@ -128,33 +128,33 @@ namespace FSeam {
         };
 
         struct Eq {
-            Eq(std::any toCompare) : _toCompare(std::move(toCompare)) {}
+            Eq(std::shared_ptr<std::any> toCompare) : _toCompare(std::move(toCompare)) {}
 
             template<typename TypeToCompare>
-            bool compare(TypeToCompare value) const { return value == std::any_cast<TypeToCompare>(_toCompare); }
+            bool compare(TypeToCompare value) const { return value == std::any_cast<TypeToCompare>(*_toCompare); }
 
-            std::any _toCompare;
+            std::shared_ptr<std::any> _toCompare;
         };
 
         struct NotEq {
-            NotEq(std::any toCompare) : _toCompare(std::move(toCompare)) {}
+            NotEq(std::shared_ptr<std::any> toCompare) : _toCompare(std::move(toCompare)) {}
 
             template<typename TypeToCompare>
-            bool compare(TypeToCompare value) const { return value != std::any_cast<TypeToCompare>(_toCompare); }
+            bool compare(TypeToCompare value) const { return value != std::any_cast<TypeToCompare>(*_toCompare); }
 
-            std::any _toCompare;
+            std::shared_ptr<std::any> _toCompare;
         };
 
         struct CustomComparator {
-            CustomComparator(std::any predicate) : _comparePredicate(std::move(predicate)) {}
+            CustomComparator(std::shared_ptr<std::any> predicate) : _comparePredicate(std::move(predicate)) {}
 
             template<typename TypeToCompare>
             bool compare(TypeToCompare value) const {
-                bool ok = std::invoke(std::any_cast<std::function<bool(std::decay_t<TypeToCompare>)> >(_comparePredicate), (std::forward<TypeToCompare>(value)));
+                bool ok = std::invoke(std::any_cast<std::function<bool(std::decay_t<TypeToCompare>)> >(*_comparePredicate), (std::forward<TypeToCompare>(value)));
                 return ok;
             }
 
-            std::any _comparePredicate;
+            std::shared_ptr<std::any> _comparePredicate;
         };
 
         using ArgComparatorType = std::variant<CustomComparator, NotEq, Eq, Any>;
@@ -187,15 +187,15 @@ namespace FSeam {
     }
     template <typename T>
     static ArgComp Eq(T && t) {
-        return ArgComp(comparator::internal::Eq(std::forward<T>(t)));
+        return ArgComp(comparator::internal::Eq(std::make_shared<std::any>(t)));
     }
     template <typename T>
     static ArgComp NotEq(T && t) {
-        return ArgComp(comparator::internal::NotEq(std::forward<T>(t)));
+        return ArgComp(comparator::internal::NotEq(std::make_unique<std::any>(t)));
     }
     template <typename T>
     static ArgComp CustomComparator(std::function<bool (std::decay_t<T>)> && t) {
-        return ArgComp(comparator::internal::CustomComparator(std::forward<std::function<bool (std::decay_t<T>)>>(t)));
+        return ArgComp(comparator::internal::CustomComparator(std::make_shared<std::any>(t)));
     }
 
     namespace Logging {
