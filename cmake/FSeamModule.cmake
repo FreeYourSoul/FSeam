@@ -63,7 +63,7 @@ endfunction (setup_FSeam_test)
 ## Using CMake Parse Argument (explicitly named in the function call)
 ## Mandatory
 ## arg DESTINATION_TARGET  : target name of the test executable generated via this method
-## arg TST_SRC             : catch2 test files containing the actual test to compile
+## arg TST_SRC             : files containing the actual test to compile (Catch2, GTest test files for example)
 ## arg TO_MOCK             : files to mock for this specific given test
 ##
 ## either 
