@@ -7,6 +7,7 @@
 ## Improve Documentation
 * Detailed documentation on dupe (in
 to usage.md file)
+* Improve documentation on CMake usage (giving the different possibilities with either using a target or a list of file)
 * ~~Detailed documentation on dupeReturn (into usage.md file)~~
 * ~~Detailed documentation on verify (into usage.md file)~~
 * ~~Improve documentation, add get mock handler (into testing.md file)~~
