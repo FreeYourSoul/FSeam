@@ -65,6 +65,7 @@ class FSeamerFile:
         self.functionSignatureMapping = {}
         self.fullClassNameMap = {}
         self.staticFunction = list()
+        self.freeFunctionClassMethodId = None
         self.freeFunctionDataStructContent = None
         try:
             self.cppHeader = CppHeaderParser.CppHeader(self.headerPath)
@@ -153,7 +154,8 @@ class FSeamerFile:
         for className, methods in self.mapClassMethods.items():
             content += "//Beginning of " + className
             if FREE_FUNC_FAKE_CLASS is className:
-                self.freeFunctionDataStructContent = self._getCurrentFreeFunctionContent(content)
+                self.freeFunctionDataStructContent = self._getCurrentFreeFunctionDataContent(content)
+                self.freeFunctionClassMethodId = self._getCurrentFreeFunctionClassMethodIdContent(content)
             if methods or className in content:
                 content = self._clearDataStructureData(content, className)
             _struct = "\nstruct " + className + "Data {\n"
@@ -200,7 +202,7 @@ class FSeamerFile:
         _fseamerCodeHeaders += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         return _fseamerCodeHeaders
 
-    def _extractDataStructMethod(self, className, methodName, excluderStruct = None):
+    def _extractDataStructMethod(self, className, methodName, excluderStruct=None):
         _methodData = ""
         if methodName in self.functionSignatureMapping[className].keys():
             if excluderStruct is None or methodName not in excluderStruct:
@@ -277,8 +279,11 @@ class FSeamerFile:
     def _generateDupeVerifyTemplateSpecialization(self, className):
         _genSpecial = "// ClassMethodIdentifiers\n"
         _genSpecial += "namespace " + className + " {\n"
+        if self.freeFunctionClassMethodId is not None:
+            _genSpecial += self.freeFunctionClassMethodId
         for methodName, methodsMapping in self.functionSignatureMapping[className].items():
-            _genSpecial += INDENT + "struct " + methodName + " { inline static const std::string NAME = \"" + methodName + "\";};\n"
+            if self.freeFunctionClassMethodId is None or methodName not in self.freeFunctionClassMethodId:
+                _genSpecial += INDENT + "struct " + methodName + " { inline static const std::string NAME = \"" + methodName + "\";};\n"
         _genSpecial += "}\n"
 
         self.specContent += "\n\n// Duping/Expectations specializations for " + className + "\n"
@@ -304,11 +309,19 @@ class FSeamerFile:
         self.specContent += "// End of Specialization for " + className + "\n\n"
         return _genSpecial
 
-    def _getCurrentFreeFunctionContent(self, content):
+    def _getCurrentFreeFunctionDataContent(self, content):
         indexBegin = content.find("struct FreeFunctionData {\n") + len("struct FreeFunctionData {\n")
         indexEnd = content.find("};\n", indexBegin)
         if indexBegin > len("struct FreeFunctionData {\n") and \
                 indexEnd > (len("struct FreeFunctionData {\n") + len("};\n")):
+            return content[indexBegin:indexEnd]
+        return ""
+
+    def _getCurrentFreeFunctionClassMethodIdContent(self, content):
+        indexBegin = content.find("namespace FreeFunction {\n") + len("namespace FreeFunction {\n")
+        indexEnd = content.find("}\n", indexBegin)
+        if indexBegin > len("namespace FreeFunction {\\n") and \
+                indexEnd > (len("namespace FreeFunction {\\n") + len("}\n")):
             return content[indexBegin:indexEnd]
         return ""
 
