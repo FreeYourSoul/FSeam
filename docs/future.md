@@ -32,6 +32,7 @@ use function overload instead of specialization for verifyarg
   
 * **Bug Fix** (if any :p)
   * ~~Multiple free function/ static method mocking in a row are overwritting the FreeFunction data structure~~
+  * ~~Static method mock of static method of class without namespace weren't correctly generated~~
   * ?
 
 ## V1.2.0

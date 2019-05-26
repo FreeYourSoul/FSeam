@@ -15,6 +15,9 @@ endif ()
 if (FSEAM_USE_CATCH2)
     find_package(Catch2 REQUIRED)
     include(Catch)
+elseif(FSEAM_USE_GTEST)
+    find_package(GTest REQUIRED)
+    include(GoogleTest)
 endif ()
 
 include(CTest)
@@ -45,7 +48,7 @@ with command : ${PYTHON_EXECUTABLE} ${FSEAM_GENERATOR_COMMMAND} ${fileToMockPath
             USES_TERMINAL
             COMMENT "Generating FSEAM code for ${fileToMockPath}")
 
-        add_custom_target(${FSEAM_GENERATED_BASENAME}Run ALL
+        add_custom_target(${ADDFSEAMTESTS_DESTINATION_TARGET}${FSEAM_GENERATED_BASENAME}Run ALL
                 DEPENDS
                     ${FSEAM_GENERATOR_DESTINATION}/${FSEAM_GENERATED_BASENAME}.fseam.cc)
 
@@ -112,6 +115,10 @@ function(addFSeamTests)
         target_compile_definitions(${ADDFSEAMTESTS_DESTINATION_TARGET} PRIVATE FSEAM_USE_CATCH2)
         target_link_libraries(${ADDFSEAMTESTS_DESTINATION_TARGET} FSeam Catch2::Catch2)
         catch_discover_tests(${ADDFSEAMTESTS_DESTINATION_TARGET})
+    elseif(FSEAM_USE_GTEST)
+#        target_compile_definitions(${ADDFSEAMTESTS_DESTINATION_TARGET} PRIVATE )
+#        target_link_libraries(${ADDFSEAMTESTS_DESTINATION_TARGET} FSeam )
+#        gtest_discover_tests(${ADDFSEAMTESTS_DESTINATION_TARGET})
     endif ()
 
 endfunction(addFSeamTests)

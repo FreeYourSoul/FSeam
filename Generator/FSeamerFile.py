@@ -251,8 +251,7 @@ class FSeamerFile:
             _lstMethodName = self.mapClassMethods[className]
         for methodData in methodsData:
             if methodData["static"]:
-                if len(methodData["namespace"]) > 0:
-                    methodData["namespace"] += className + "::"
+                methodData["namespace"] += className + "::"
                 self.staticFunction.append(methodData)
             elif not methodData["defined"]:
                 _classFullName = methodData["path"]
