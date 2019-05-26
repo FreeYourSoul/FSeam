@@ -26,8 +26,10 @@ use function overload instead of specialization for verifyarg
   * ~~**Add logging functionality** : Would be useful in order to have detailed explanation on failures (instead of just a return true/false on the verify)~~
     * ~~Customization of the logging via registering method to do the logging~~
     * ~~Pre-defined logging with Catch2 and GTest~~
+  * ~~Improve the Cmake utility; able to choose between a target or a list of file in order to compile FSeam tests.~~
   
 * **Bug Fix** (if any :p)
+  * Multiple free function/ static method mocking in a row are overwritting the FreeFunction data structure
   * ?
 
 ## V1.2.0

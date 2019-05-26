@@ -8,8 +8,9 @@ option(FSEAM_CLEANUP_DATA "Cleanup the data file  " OFF)
 option(FSEAM_USE_CATCH2 "fseam catch2 usage" ON)
 option(FSEAM_USE_GTEST "fseam catch2 usage" OFF)
 
-#find_package(FSeam REQUIRED)
-set(FSEAM_GENERATOR_COMMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/../Generator/FSeamerFile.py)
+if (NOT FSEAM_GENERATOR_COMMMAND)
+    set(FSEAM_GENERATOR_COMMMAND FSeamerFile.py)
+endif ()
 
 if (FSEAM_USE_CATCH2)
     find_package(Catch2 REQUIRED)

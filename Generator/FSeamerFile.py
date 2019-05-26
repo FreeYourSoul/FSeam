@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 # MIT License
 #
 # Copyright (c) 2019 Quentin Balland
@@ -64,6 +65,7 @@ class FSeamerFile:
         self.functionSignatureMapping = {}
         self.fullClassNameMap = {}
         self.staticFunction = list()
+        self.freeFunctionDataStructContent = ""
         try:
             self.cppHeader = CppHeaderParser.CppHeader(self.headerPath)
         except CppHeaderParser.CppParseError as e:
@@ -93,7 +95,7 @@ class FSeamerFile:
             _listFunc = list()
             if FREE_FUNC_FAKE_CLASS in self.mapClassMethods:
                 _listFunc = self.mapClassMethods[FREE_FUNC_FAKE_CLASS]
-            self.codeSeam += "\n// Free functions (put into fake class " + FREE_FUNC_FAKE_CLASS + "\n"
+            self.codeSeam += "\n// Free functions (put into fake class " + FREE_FUNC_FAKE_CLASS + ")\n"
             for functionData in self.cppHeader.functions:
                 _listFunc.append(functionData["name"])
                 self.codeSeam += self._extractFreeFunctions(functionData)
@@ -144,13 +146,15 @@ class FSeamerFile:
                 content += BASE_HEADER_CODE + incl + "\n"
             content += "#include <type_traits>\n"
             content += "#include <optional>\n"
-            content += "#include <FSeam.hpp>\n\n"
+            content += "#include <FSeam/FSeam.hpp>\n\n"
         if BASE_HEADER_CODE + "<" + self.fileName + ">\n" not in content:
             content += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         content += "namespace FSeam {\n"
         for className, methods in self.mapClassMethods.items():
             content += "//Beginning of " + className
             if methods or className in content:
+                if FREE_FUNC_FAKE_CLASS is className:
+                    self.freeFunctionDataStructContent = self._getCurrentFreeFunctionContent()
                 content = self._clearDataStructureData(content, className)
             _struct = "\nstruct " + className + "Data {\n"
             for methodName in methods:
@@ -187,7 +191,7 @@ class FSeamerFile:
         for incl in self.cppHeader.includes:
             _fseamerCodeHeaders += BASE_HEADER_CODE + incl + "\n"
         _fseamerCodeHeaders += "#include <functional>\n"
-        _fseamerCodeHeaders += "#include <FSeamMockData.hpp>\n#include <FSeam.hpp>\n"
+        _fseamerCodeHeaders += "#include <FSeamMockData.hpp>\n#include <FSeam/FSeam.hpp>\n"
         _fseamerCodeHeaders += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         return _fseamerCodeHeaders
 
@@ -294,6 +298,9 @@ class FSeamerFile:
             "(\n)", "()")
         self.specContent += "// End of Specialization for " + className + "\n\n"
         return _genSpecial
+
+    def _getCurrentFreeFunctionContent(self):
+        return ""
 
     def _generateMethodContent(self, returnType, className, methodName, isFreeFunction=False):
         if isFreeFunction:
