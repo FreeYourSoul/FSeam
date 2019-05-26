@@ -30,7 +30,7 @@ use function overload instead of specialization for verifyarg
   * ~~Improve the Cmake utility; able to choose between a target or a list of file in order to compile FSeam tests.~~
   
 * **Bug Fix** (if any :p)
-  * Multiple free function/ static method mocking in a row are overwritting the FreeFunction data structure
+  * ~~Multiple free function/ static method mocking in a row are overwritting the FreeFunction data structure~~
   * ?
 
 ## V1.2.0

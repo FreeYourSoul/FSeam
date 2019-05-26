@@ -65,7 +65,7 @@ class FSeamerFile:
         self.functionSignatureMapping = {}
         self.fullClassNameMap = {}
         self.staticFunction = list()
-        self.freeFunctionDataStructContent = ""
+        self.freeFunctionDataStructContent = None
         try:
             self.cppHeader = CppHeaderParser.CppHeader(self.headerPath)
         except CppHeaderParser.CppParseError as e:
@@ -152,13 +152,18 @@ class FSeamerFile:
         content += "namespace FSeam {\n"
         for className, methods in self.mapClassMethods.items():
             content += "//Beginning of " + className
+            if FREE_FUNC_FAKE_CLASS is className:
+                self.freeFunctionDataStructContent = self._getCurrentFreeFunctionContent(content)
             if methods or className in content:
-                if FREE_FUNC_FAKE_CLASS is className:
-                    self.freeFunctionDataStructContent = self._getCurrentFreeFunctionContent()
                 content = self._clearDataStructureData(content, className)
             _struct = "\nstruct " + className + "Data {\n"
+            if FREE_FUNC_FAKE_CLASS is className and self.freeFunctionDataStructContent is not None:
+                _struct += self.freeFunctionDataStructContent
             for methodName in methods:
-                _struct += self._extractDataStructMethod(className, methodName)
+                if FREE_FUNC_FAKE_CLASS is className:
+                    _struct += self._extractDataStructMethod(className, methodName, self.freeFunctionDataStructContent)
+                else:
+                    _struct += self._extractDataStructMethod(className, methodName)
             content += _struct + "};\n\n"
             if className is not FREE_FUNC_FAKE_CLASS:
                 content += "// NameTypeTraits\ntemplate <> struct TypeParseTraits<" + self.fullClassNameMap[className] + \
@@ -195,21 +200,22 @@ class FSeamerFile:
         _fseamerCodeHeaders += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         return _fseamerCodeHeaders
 
-    def _extractDataStructMethod(self, className, methodName):
+    def _extractDataStructMethod(self, className, methodName, excluderStruct = None):
         _methodData = ""
         if methodName in self.functionSignatureMapping[className].keys():
-            _methodData = INDENT + "/**\n" + INDENT + " * method metadata : " + className + "::" + methodName + "\n" + INDENT + "**/\n"
-            for param in self.functionSignatureMapping[className][methodName]["params"]:
-                _paramType = param["type"]
-                _paramName = param["name"]
-                if _paramName not in ["&", "", None, "*", "&&"]:
-                    typeStr = _paramType
-                    if "&" in typeStr:
-                        typeStr = "std::reference_wrapper<" + typeStr.replace("&", "") + "> "
-                    _methodData += INDENT + "std::optional<" + typeStr + "> " + methodName + "_" + _paramName + PARAM_SUFFIX + ";\n"
-            _returnType = self.functionSignatureMapping[className][methodName]["rtnType"].replace("&", "").replace("static ", "")
-            if _returnType != "void":
-                _methodData += INDENT + _returnType + " " + methodName + RETURN_SUFFIX + ";\n\n"
+            if excluderStruct is None or methodName not in excluderStruct:
+                _methodData = INDENT + "/**\n" + INDENT + " * method metadata : " + className + "::" + methodName + "\n" + INDENT + "**/\n"
+                for param in self.functionSignatureMapping[className][methodName]["params"]:
+                    _paramType = param["type"]
+                    _paramName = param["name"]
+                    if _paramName not in ["&", "", None, "*", "&&"]:
+                        typeStr = _paramType
+                        if "&" in typeStr:
+                            typeStr = "std::reference_wrapper<" + typeStr.replace("&", "") + "> "
+                        _methodData += INDENT + "std::optional<" + typeStr + "> " + methodName + "_" + _paramName + PARAM_SUFFIX + ";\n"
+                _returnType = self.functionSignatureMapping[className][methodName]["rtnType"].replace("&", "").replace("static ", "")
+                if _returnType != "void":
+                    _methodData += INDENT + _returnType + " " + methodName + RETURN_SUFFIX + ";\n\n"
         return _methodData
 
     def _registerMethodIntoMethodSignatureMap(self, className, methodName, retType, params):
@@ -299,7 +305,12 @@ class FSeamerFile:
         self.specContent += "// End of Specialization for " + className + "\n\n"
         return _genSpecial
 
-    def _getCurrentFreeFunctionContent(self):
+    def _getCurrentFreeFunctionContent(self, content):
+        indexBegin = content.find("struct FreeFunctionData {\n") + len("struct FreeFunctionData {\n")
+        indexEnd = content.find("};\n", indexBegin)
+        if indexBegin > len("struct FreeFunctionData {\n") and \
+                indexEnd > (len("struct FreeFunctionData {\n") + len("};\n")):
+            return content[indexBegin:indexEnd]
         return ""
 
     def _generateMethodContent(self, returnType, className, methodName, isFreeFunction=False):
