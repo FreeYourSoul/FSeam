@@ -16,11 +16,11 @@ to usage.md file)
 * ~~Detailed documentation on free function (into free-function.md)~~
 
 ## V1.1.0:     
-* **Functional Improvements**
-use function overload instead of specialization for verifyarg
+* **Functional Improvements**  
+  * **Use function overload instead of specialization** for verify arg
   * **Adding inner-class-struct/class**: The code generation is wrong and not compilable when mocking a header file with a class embedded in another on
-  * **Add argument expectation non copiable support** using constexpr if and store uniqueptr in case of non copiable argument
-  * **Implement a cleanup for the FreeFunctionDataStructure** as it currently is concatenated infinitly, it would be needed to ensure a cleanup at each build.
+  * **Add argument expectation non copyable support** using constexpr if and store uniqueptr in case of non copyable argument
+  * **Implement a cleanup for the FreeFunctionDataStructure** as it currently is concatenated infinitely, it would be needed to ensure a cleanup at each build.
   * ~~**Remove Catch dependency from the FSeam module**:~~  
     * ~~Replace it by an option (to keep it only if using Catch2 with a find_package not required)~~
   * ~~**Rename MockVerifier.hpp into FSeam.hpp**~~
@@ -37,5 +37,7 @@ use function overload instead of specialization for verifyarg
 
 ## V1.2.0
 
+* **Design Improvements**
+  * **Change position of template specialization** Do the specialization in the fseam.cc file
 * **Functional Improvements**
   * **Provide a multi-threaded safety option**: Currently using singleton and static memory without having any synchronization mechanism. Any multithreading test would make the verify not being accurate.

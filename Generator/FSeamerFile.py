@@ -67,6 +67,7 @@ class FSeamerFile:
         self.staticFunction = list()
         self.freeFunctionClassMethodId = None
         self.freeFunctionDataStructContent = None
+        self.freeFunctionTemplateSpecContent = None
         try:
             self.cppHeader = CppHeaderParser.CppHeader(self.headerPath)
         except CppHeaderParser.CppParseError as e:
@@ -188,6 +189,11 @@ class FSeamerFile:
             content = HEADER_INFO.replace(FILENAME, "FSeamSpecialization.hpp")
             content += "#include <FSeamMockData.hpp>\n\n"
         for className, methods in self.mapClassMethods.items():
+            # if FREE_FUNC_FAKE_CLASS is className:
+            #     for method in methods:
+            #         if method in self.specContent:
+            #             content = self._clearSpecializationFreeFunction(content, method)
+            # else:
             content = self._clearSpecialization(content, className)
         return content + self.specContent
 
@@ -380,7 +386,6 @@ class FSeamerFile:
     @staticmethod
     def _clearDataStructureData(content, className):
         indexBegin = content.find("//Beginning of " + className)
-        # indexBegin = content.find("struct " + className + "Data")
         indexEnd = content.find("// End of DataStructure" + className) + len("// End of DataStructure" + className)
         if indexBegin > 0 and indexEnd > len("// End of DataStructure" + className) + 1:
             content = content[0: indexBegin] + content[indexEnd + 1:]
@@ -392,6 +397,15 @@ class FSeamerFile:
         indexEnd = content.find("// End of Specialization for " + className + "\n\n") + len(
             "// End of Specialization for " + className + "\n\n")
         if indexBegin > 0 and indexEnd > len("// End of Specialization for " + className + "\n\n"):
+            content = content[0: indexBegin] + content[indexEnd:]
+        return content
+
+    @staticmethod
+    def _clearSpecializationFreeFunction(content, freeFunctionName):
+        indexBegin = content.find("\n\n// Duping/Expectations specializations for " + freeFunctionName + "\n")
+        indexEnd = content.find("// End of Specialization for " + freeFunctionName + "\n\n") + len(
+            "// End of Specialization for " + freeFunctionName + "\n\n")
+        if indexBegin > 0 and indexEnd > len("// End of Specialization for " + freeFunctionName + "\n\n"):
             content = content[0: indexBegin] + content[indexEnd:]
         return content
 
