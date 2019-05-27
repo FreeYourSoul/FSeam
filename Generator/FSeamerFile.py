@@ -67,7 +67,7 @@ class FSeamerFile:
         self.staticFunction = list()
         self.freeFunctionClassMethodId = None
         self.freeFunctionDataStructContent = None
-        self.freeFunctionTemplateSpecContent = None
+        self.freeFunctionTemplateSpecContent = ""
         try:
             self.cppHeader = CppHeaderParser.CppHeader(self.headerPath)
         except CppHeaderParser.CppParseError as e:
