@@ -81,7 +81,7 @@ endfunction (setup_FSeam_test)
 function(addFSeamTests)
 
     set(oneValueArgs DESTINATION_TARGET TARGET_AS_SOURCE MAIN_FILE)
-    set(multiValueArgs TO_MOCK TST_SRC FILES_AS_SOURCE)
+    set(multiValueArgs TO_MOCK TST_SRC FILES_AS_SOURCE FOLDER_INCLUDES)
     cmake_parse_arguments(ADDFSEAMTESTS "" "${oneValueArgs}" "${multiValueArgs}"  ${ARGN} )
 
     # Check arguments
@@ -101,7 +101,7 @@ function(addFSeamTests)
 
     # Create testing target
     execute_process(COMMAND touch ${FSEAM_GENERATOR_DESTINATION}/FSeamMockData.hpp ${FSEAM_GENERATOR_DESTINATION}/FSeamSpecialization.cpp)
-    add_executable(${ADDFSEAMTESTS_DESTINATION_TARGET} ${ADDFSEAMTESTS_TST_SRC} ${FSEAM_TEST_SRC}
+    add_executable(${ADDFSEAMTESTS_DESTINATION_TARGET} ${FSEAM_TEST_SRC} ${ADDFSEAMTESTS_TST_SRC}
             ${FSEAM_GENERATOR_DESTINATION}/FSeamMockData.hpp
             ${FSEAM_GENERATOR_DESTINATION}/FSeamSpecialization.cpp)
     set_target_properties(${ADDFSEAMTESTS_DESTINATION_TARGET} PROPERTIES CXX_STANDARD 17)
