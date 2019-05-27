@@ -189,12 +189,12 @@ class FSeamerFile:
             content = HEADER_INFO.replace(FILENAME, "FSeamSpecialization.hpp")
             content += "#include <FSeamMockData.hpp>\n\n"
         for className, methods in self.mapClassMethods.items():
-            # if FREE_FUNC_FAKE_CLASS is className:
-            #     for method in methods:
-            #         if method in self.specContent:
-            #             content = self._clearSpecializationFreeFunction(content, method)
-            # else:
-            content = self._clearSpecialization(content, className)
+            if FREE_FUNC_FAKE_CLASS is className:
+                for method in methods:
+                    if method in self.freeFunctionTemplateSpecContent:
+                        content = self._clearSpecializationFreeFunction(content, method)
+            else:
+                content = self._clearSpecialization(content, className)
         return content + self.specContent
 
     # =====Privates methods =====
@@ -282,7 +282,8 @@ class FSeamerFile:
         self.mapClassMethods[className] = _lstMethodName
         return _methods
 
-    def _generateDupeVerifyTemplateSpecialization(self, className):
+    def _generateDupeVerifyTemplateSpecialization(self, className): 
+        ### TODO: extract _genSpecial for the MethodIdentifier in another method
         _genSpecial = "// ClassMethodIdentifiers\n"
         _genSpecial += "namespace " + className + " {\n"
         if self.freeFunctionClassMethodId is not None:
@@ -292,27 +293,31 @@ class FSeamerFile:
                 _genSpecial += INDENT + "struct " + methodName + " { inline static const std::string NAME = \"" + methodName + "\";};\n"
         _genSpecial += "}\n"
 
-        self.specContent += "\n\n// Duping/Expectations specializations for " + className + "\n"
+        _specContent = "\n\n// Duping/Expectations specializations for " + className + "\n"
         for methodName, methodMapping in self.functionSignatureMapping[className].items():
+            _specContent += "// Generated duping for method " + className + "::" + methodName + " begin\n"
             # Specialization for dupeReturn
             if methodMapping["rtnType"].replace("static ", "") != "void":
                 _rtnType = "std::decay_t<" + methodMapping["rtnType"].replace("static ", "") + ">"
-                self.specContent += "template <> void FSeam::MockClassVerifier::dupeReturn<FSeam::" + className + "::" + methodName + ", " + _rtnType + "> (" + _rtnType + " returnValue) {\n"
-                self.specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [=](void *methodCallData) { \n"
-                self.specContent += INDENT2 + "static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + RETURN_SUFFIX + " = returnValue;\n"
-                self.specContent += INDENT + "}, true);\n}\n"
+                _specContent += "template <> void FSeam::MockClassVerifier::dupeReturn<FSeam::" + className + "::" + methodName + ", " + _rtnType + "> (" + _rtnType + " returnValue) {\n"
+                _specContent += INDENT + "this->dupeMethod(\"" + methodName + "\", [=](void *methodCallData) { \n"
+                _specContent += INDENT2 + "static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + RETURN_SUFFIX + " = returnValue;\n"
+                _specContent += INDENT + "}, true);\n}\n"
 
             # Specialization for verifyArg
             if len(methodMapping["params"]) > 0:
-                self.specContent += "// Expectation specializations for " + className + "::" + methodName + "\n"
-                for comparator in [None, "FSeam::IsNot", "FSeam::AtMost", "FSeam::AtLeast", "FSeam::NeverCalled",
-                                   "FSeam::VerifyCompare"]:
-                    self.specContent += self._generateSpecializationVerifyArg(className, methodName, methodMapping,
-                                                                              comparator)
+                _specContent += "// Expectation specializations for " + className + "::" + methodName + "\n"
+                for comparator in [None, "FSeam::IsNot", "FSeam::AtMost", "FSeam::AtLeast", "FSeam::NeverCalled", "FSeam::VerifyCompare"]:
+                    _specContent += self._generateSpecializationVerifyArg(className, methodName, methodMapping, comparator)
+            _specContent += "// Generated duping for method " + className + "::" + methodName + " end\n"
         # cleanup loops last separator tokens
-        self.specContent = self.specContent.replace(", >", ">").replace(", )", ")").replace(", \n);", ");").replace(
+        _specContent = _specContent.replace(", >", ">").replace(", )", ")").replace(", \n);", ");").replace(
             "(\n)", "()")
-        self.specContent += "// End of Specialization for " + className + "\n\n"
+        _specContent += "// End of Specialization for " + className + "\n\n"
+        if FREE_FUNC_FAKE_CLASS is className:
+            self.freeFunctionTemplateSpecContent = _specContent
+        else:
+            self.specContent += _specContent
         return _genSpecial
 
     def _getCurrentFreeFunctionDataContent(self, content):
@@ -402,10 +407,10 @@ class FSeamerFile:
 
     @staticmethod
     def _clearSpecializationFreeFunction(content, freeFunctionName):
-        indexBegin = content.find("\n\n// Duping/Expectations specializations for " + freeFunctionName + "\n")
-        indexEnd = content.find("// End of Specialization for " + freeFunctionName + "\n\n") + len(
-            "// End of Specialization for " + freeFunctionName + "\n\n")
-        if indexBegin > 0 and indexEnd > len("// End of Specialization for " + freeFunctionName + "\n\n"):
+        indexBegin = content.find("// Generated duping for method " + FREE_FUNC_FAKE_CLASS + "::" + freeFunctionName + " begin\n")
+        strEnd = "// Generated duping for method " + FREE_FUNC_FAKE_CLASS + "::" + freeFunctionName + " end\n"
+        indexEnd = content.find(strEnd) + len(strEnd)
+        if indexBegin > 0 and indexEnd > len(strEnd):
             content = content[0: indexBegin] + content[indexEnd:]
         return content
 
