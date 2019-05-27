@@ -195,7 +195,7 @@ class FSeamerFile:
                         content = self._clearSpecializationFreeFunction(content, method)
             else:
                 content = self._clearSpecialization(content, className)
-        return content + self.specContent
+        return content + self.specContent + self.freeFunctionTemplateSpecContent
 
     # =====Privates methods =====
 
@@ -293,9 +293,12 @@ class FSeamerFile:
                 _genSpecial += INDENT + "struct " + methodName + " { inline static const std::string NAME = \"" + methodName + "\";};\n"
         _genSpecial += "}\n"
 
-        _specContent = "\n\n// Duping/Expectations specializations for " + className + "\n"
+        _specContent = ""
+        if FREE_FUNC_FAKE_CLASS is not className:
+            _specContent = "\n\n// Duping/Expectations specializations for " + className + "\n"
         for methodName, methodMapping in self.functionSignatureMapping[className].items():
-            _specContent += "// Generated duping for method " + className + "::" + methodName + " begin\n"
+            if (FREE_FUNC_FAKE_CLASS is className):
+                _specContent += "// Generated duping for method " + className + "::" + methodName + " begin\n"
             # Specialization for dupeReturn
             if methodMapping["rtnType"].replace("static ", "") != "void":
                 _rtnType = "std::decay_t<" + methodMapping["rtnType"].replace("static ", "") + ">"
@@ -309,11 +312,12 @@ class FSeamerFile:
                 _specContent += "// Expectation specializations for " + className + "::" + methodName + "\n"
                 for comparator in [None, "FSeam::IsNot", "FSeam::AtMost", "FSeam::AtLeast", "FSeam::NeverCalled", "FSeam::VerifyCompare"]:
                     _specContent += self._generateSpecializationVerifyArg(className, methodName, methodMapping, comparator)
-            _specContent += "// Generated duping for method " + className + "::" + methodName + " end\n"
+            if (FREE_FUNC_FAKE_CLASS is className):
+                _specContent += "// Generated duping for method " + className + "::" + methodName + " end\n"
         # cleanup loops last separator tokens
-        _specContent = _specContent.replace(", >", ">").replace(", )", ")").replace(", \n);", ");").replace(
-            "(\n)", "()")
-        _specContent += "// End of Specialization for " + className + "\n\n"
+        _specContent = _specContent.replace(", >", ">").replace(", )", ")").replace(", \n);", ");").replace("(\n)", "()")
+        if FREE_FUNC_FAKE_CLASS is not className:
+            _specContent += "// End of Specialization for " + className + "\n\n"
         if FREE_FUNC_FAKE_CLASS is className:
             self.freeFunctionTemplateSpecContent = _specContent
         else:
