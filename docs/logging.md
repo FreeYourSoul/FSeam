@@ -82,7 +82,7 @@ auto defaultCustomLogger = [](Level l, const std::string &msg) {
 
  **In resume the priority is the following:**   
  1. User defined custom logger  
- 2. If no custom logger defined : A default one is provided (see above lambda representing it) 
- 3. Framework specific defined logger (Catch2, Gtest as of today)
+ 2. Framework specific defined logger (Catch2, Gtest as of today)
+ 3. If no custom logger defined && No Framework specified : A default one is provided (see above lambda representing it) 
 
 > If a custom logger is defined, the framework specific one is ignored (Gtest or Catch2 enabled with the FSEAM_USE_CATCH2/FSEAM_USE_GTEST define).  
