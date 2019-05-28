@@ -101,8 +101,7 @@ addFSeamTests(
         TO_MOCK
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyToMock.hh     #Give header to mock
 )
-```
- 
+``` 
 
 ### Options
 * If using Google Test, you can specify it as an option, by doing so the library will be linked by default to the test target and logging will be using standard output (iostream std::cout / std::cerr)
@@ -115,3 +114,11 @@ cmake -DFSEAM_USE_CATCH2=ON
 ```
 
 If both options are specified, Catch2 is prioritized (because I prefer catch2 NAaah :p !~)
+
+### Pratical Example
+
+The [FSeam tutorial](http://freeyoursoul.online/fseam-a-mocking-framework-that-requires-no-change-in-code-part-2/) provides examples on how to use the CMake helper function.
+
+### Babel implementation
+
+[A future implementation via babel may be in development](future.md#v110)
