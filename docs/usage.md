@@ -40,7 +40,7 @@ sudo pip install ply
 ```Bash
 git clone https://github.com/catchorg/Catch2.git
 cd Catch2 && mkdir build && cd build
-cmake .. -H. -DBUILD_TESTING=OFF
+cmake .. -DBUILD_TESTING=OFF
 sudo make install
 ```
    --  or download the file directly from the selected version (here v2.7.0):
@@ -69,14 +69,20 @@ After including FSeamModule.cmake, FSeam helper function become available,
 
 The addFSeamTests cmake function is a to call in order to generate a test executable from the generated FSeam mock and the provided test source
 
-Mandatory
+**Mandatory**
 * arg **DESTINATION_TARGET**: target name of the test executable generated via this method  
 * arg **TST_SRC**: catch2 test files containing the actual test to compile  
 * arg **TO_MOCK**: files to mock for this specific given test  
 
 **Either**  
 * arg **TARGET_AS_SOURCE**: target of the library that contains the code to test  
-* arg **FILES_AS_SOURCE**: or source file containing the code to test  
+**Or**
+* arg **FILES_AS_SOURCE**: source file containing the code to test  
+* arg **FOLDER_INCLUDES**: includes folder to attach to the test target DESTINATION_TARGET
+
+**optional**
+* arg **MAIN_FILE**: file containing the main (if any), this file will be removed from the compilation of the test  
+
 
 function(addFSeamTests)
 ```CMake

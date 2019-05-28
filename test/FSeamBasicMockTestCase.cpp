@@ -2,7 +2,7 @@
 // Created by FyS on 3/24/19.
 //
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <iostream>
 #include <any>
 #include <FSeam.hpp>

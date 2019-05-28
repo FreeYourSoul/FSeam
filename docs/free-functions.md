@@ -22,7 +22,7 @@ _Example:_
 int freeFunctionWithInReturned();
 
 // test.cpp
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <FSeam.hpp>
 #include <FSeamMockData.hpp> // contains ClassMethodIndentifiers 
 

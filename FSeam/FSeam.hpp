@@ -29,7 +29,7 @@
 #define FREESOULS_MOCKVERIFIER_HH
 
 #ifdef FSEAM_USE_CATCH2
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #endif
 
 #include <utility>

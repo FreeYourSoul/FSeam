@@ -2,7 +2,7 @@
 // Created by FyS on 4/3/19.
 //
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <FSeamMockData.hpp>
 #include <TestingClass.hh>
 #include <FreeFunctionClass.hh>

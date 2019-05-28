@@ -1,5 +1,9 @@
 # Known Limitations
 
+## Usage of CMake
+
+It is undeniable that the usage of the CMake utility function is strongly recommenced. It is still possible to manually generate the code yourself using the python script, but it would be bothersome and certainly not worth the effort.
+
 ## Code structure
 
 What is usually a good practice, for one header file, one cpp file to compile. Is now an obligation as FSeam is going to provide another implementation of the class/functions defined in the header. If the implementation of the header file is scatered in different source file.   
