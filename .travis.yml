@@ -1,6 +1,6 @@
 # Travis CI script
 
-dist: trusty
+dist: bionic
 #sudo: false
 language: cpp
 
