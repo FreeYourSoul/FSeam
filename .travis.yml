@@ -31,7 +31,7 @@ install:
   - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
 
 before_script:
-
+  - cd ${TRAVIS_BUILD_DIR}
   #install catch2
   - git clone https://github.com/catchorg/Catch2.git
   - cd Catch2
