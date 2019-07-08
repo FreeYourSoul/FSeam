@@ -62,7 +62,7 @@ before_script:
 
   #FSeam Python generator dependencies
   - sudo apt-get install python3-pip
-  - sudo pip --user install ply
+  - sudo pip install ply
 
   # Use Debug builds for running Valgrind and building examples
   #  - cmake -H. -BBuild-Debug -DCMAKE_BUILD_TYPE=Debug -DTRAVIS_BUILD=ON
