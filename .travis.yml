@@ -46,6 +46,7 @@ before_script:
     elif [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
         which cmake || brew install cmake;
     fi
+  - cmake --version
 
   #install catch2
   - git clone https://github.com/catchorg/Catch2.git
