@@ -62,7 +62,6 @@ before_script:
 
   #FSeam Python generator dependencies
   - sudo apt-get install python3-pip
-  - pip install --user --upgrade pip
   - sudo pip --user install ply
 
   # Use Debug builds for running Valgrind and building examples
