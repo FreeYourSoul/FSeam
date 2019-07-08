@@ -32,9 +32,9 @@ install:
 
 before_script:
   - cd ${TRAVIS_BUILD_DIR}
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
-  - sudo apt-get install gcc-8 g++-8
+  - sudo apt-get install gcc-8 g++-8 -y
   - gcc-8 --version
   - export CXX=g++-8
 
