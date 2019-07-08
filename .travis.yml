@@ -75,4 +75,5 @@ before_script:
 
 script:
   - cd Build-Release
+  - cat test/FSeamMockData.hpp
   - make -j 2
