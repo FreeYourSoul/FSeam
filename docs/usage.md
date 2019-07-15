@@ -7,6 +7,8 @@ The following references shows how to use FSeam
 
 ### Dependencies
 
+**CMake** required to use the cmake tooling (version minimum required is the 3.10.0)
+
 **Usage of cpp 17,** it is needed to compile with gcc 7 or later.  
 ``` bash
 # bash command line
