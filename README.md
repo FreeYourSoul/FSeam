@@ -6,7 +6,7 @@
   
   Python script to generate cpp mock for FSeam  
    
-  Python and CMake are required to use FSeam
+  Python and CMake (version minimum 3.10.0) are required to use FSeam
 
 ## What is a Link Seam mock?
 A seam is a term introduced by Michael Feathers in his book [Working effectively with legacy code](https://www.abebooks.fr/Working-Effectively-Legacy-Code-Michael-Feathers/18824529190/bd?cm_mmc=gmc-_-new-_-PLA-_-v01&gclid=CjwKCAjwp_zkBRBBEiwAndwD9Ts6XzzhpZnVafPtxti_UMnsxTM8g4EMqE7aqr-IyJDlPRvFdlmCXxoCHbMQAvD_BwE). It basically describe a way to change the behavior of a function/functionality, which is very usefull for testing while ignoring external dependencies.
