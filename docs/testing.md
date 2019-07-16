@@ -28,8 +28,43 @@ auto fseamMock = FSeam::getDefault<TestClass>(); // get the default behavior for
 
 ## Verifications
 
-Verification is the basic of FSeam. It is used to check how many times a method has been called and 
-[calling comparator](testing.md#called-comparator)
+Verification is the basic of FSeam, a verify function is implemented at the level of any mock handler. It is used to check how many times a method has been called and also does additional check if any [argument expectations](testing.md#argument-expectation) has been set.  
+  
+Here are the verify function signatures:
+
+```cpp
+/**
+ * @brief Verify if the given method has been called at least one time
+ * 
+ * @param methodName Name of the method to check on the mock (Use the helpers constant to ensure no typo)
+ * @param verbose flag if a debug string is required in case of false response (set to true by default)
+ * @return true if the method encounter the provided comparator conditions, false otherwise
+ */
+bool verify(const std::string &methodName, bool verbose = true) constconst {
+    return verify(methodName, AtLeast(1), verbose);
+}
+
+/**
+ * @brief Verify if a method has been called under certain conditions (number of times)
+ * 
+ * @tparam Comparator  comparator class used, can be also an Integer, those comparator are defined under the namespace FSeam,
+ *          VerifyCompare/Integral value : Check if the method has been called exactly the number provided
+ *          NeverCalled : Check if the method has never been called
+ *          AtLeast : Check if the method has been called at least the number provided
+ *          AtMost  : Check if the method has been called at most the number provided
+ *          IsNot   : Check if the method is not the number provided
+ *          
+ * @param methodName Name of the method to check on the mock (Use the helpers constant to ensure no typo)
+ * @param comp comparator instance on which the number of times the mock method is called on a provided value
+ *         is checked against
+ * @param verbose flag if a debug string is required in case of false response (set to true by default)
+ * @return true if the method encounter the provided comparator conditions, false otherwise
+ */
+template <typename Comparator>
+bool verify(std::string methodName, Comparator &&comp, bool verbose = true) const;
+```
+The code above is directly taken from the header as it is quite self explanatory, the first method is the "light one", it basically just an override that calls the real verify function (the second one) with a [calling comparator](testing.md#called-comparator) AtLeast{1} (to check that the function has been called at least once).  
+A verbose argument can be provided (set to true by default), when set to true, error are logged (and so visible in the test output). If this flag is set to false, no output are generated from the verify call.
 
 ## Argument Expectation
 
@@ -38,7 +73,7 @@ The mock object used into test has a ```expectArg``` method that makes you able 
 template <typename ClassMethodIdentifier, typename ...Verifiers>
 void expectArg(Verifiers ... verifiers);
 ```
-**ClassMethodIdentifier** type being a fseam generated empty structure present in the include ```#include<FSeamMockData.hpp>``` whose is representing the method you want to mock.
+**ClassMethodIdentifier** type being a fseam generated empty structure (under the namespace FSeam::<ClassMockedName>::) present in the include ```#include<FSeamMockData.hpp>``` whose is representing the method you want to mock. For destructor, as it is impossible to create a type with a '~' character, the name is Destructor_<ClassName>.
 
 **Verifiers** variadic template being [arguments comparator](testing.md#argument-comparator), used to compare the argument of the mocked function.  
 A [calling comparator](testing.md#calling-comparator) argument can be added (after the arguments comparator still part of the variadic template). Thanks to that argument it is possible to check how many times the function met this requirement.
@@ -54,7 +89,7 @@ Do not be confused about the comparators, there is just two types of them:
 
 ### Calling comparator
 
-When using verifications (or expectations) you can specify how many times you the functions has been called. There are multiple way to do so.
+When using verifications (or expectations) you can specify how many times you the functions has been called. There are multiple way to do so.  
 * You can check if the function has been called **exactly a given number of times** by using FSeam::VerifyCompare  
 For the case of verify, it is possible to just send an integral value which is going to be automatically taken into a VerifyCompare comparator object:
 ```cpp
