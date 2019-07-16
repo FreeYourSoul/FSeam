@@ -22,7 +22,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
 import ntpath
 import os
 import re
@@ -211,7 +210,9 @@ class FSeamerFile:
     def _extractDataStructMethod(self, className, methodName, excluderStruct=None):
         _methodData = ""
         if methodName in self.functionSignatureMapping[className].keys():
-            if excluderStruct is None or methodName not in excluderStruct:
+            if self.functionSignatureMapping[className][methodName]["isConstructorOrDestructor"] is True:
+                pass
+            elif excluderStruct is None or methodName not in excluderStruct:
                 _methodData = INDENT + "/**\n" + INDENT + " * method metadata : " + className + "::" + methodName + "\n" + INDENT + "**/\n"
                 for param in self.functionSignatureMapping[className][methodName]["params"]:
                     _paramType = param["type"]
@@ -226,11 +227,14 @@ class FSeamerFile:
                     _methodData += INDENT + _returnType + " " + methodName + RETURN_SUFFIX + ";\n\n"
         return _methodData
 
-    def _registerMethodIntoMethodSignatureMap(self, className, methodName, retType, params):
+    def _registerMethodIntoMethodSignatureMap(self, className, methodName, retType, params, isConstructor = False, isDestructor = False):
         if className not in self.functionSignatureMapping.keys():
             self.functionSignatureMapping[className] = {}
         self.functionSignatureMapping[className][methodName] = {}
-        self.functionSignatureMapping[className][methodName]["rtnType"] = retType.replace("static ", "")
+        self.functionSignatureMapping[className][methodName]["isConstructorOrDestructor"] = isConstructor or isDestructor
+        if self.functionSignatureMapping[className][methodName]["isConstructorOrDestructor"] is True:
+            retType = "void"
+        self.functionSignatureMapping[className][methodName]["rtnType"] = retType.replace("static ", "").replace("~", "Destructor_")
         self.functionSignatureMapping[className][methodName]["params"] = params
 
     def _extractFreeFunctions(self, freeFunctionData):
@@ -263,19 +267,27 @@ class FSeamerFile:
                 self.staticFunction.append(methodData)
             elif not methodData["defined"]:
                 _classFullName = methodData["path"]
-                _returnType = methodData["rtnType"].replace("static ", "")
-                _methodsName = methodData["name"]
+                _returnType = ""
+                if methodData["constructor"] is False and methodData["destructor"] is False:
+                    _returnType = methodData["rtnType"].replace("static ", "")
+                _methodsName = ""
+                if methodData["destructor"] is True:
+                    _methodsName += "~"
+                _methodsName += methodData["name"]
                 _lstMethodName.append(_methodsName)
                 _signature = _returnType + " " + _classFullName + "::" + _methodsName + "("
                 _parametersType = [t["type"] for t in methodData["parameters"]]
                 _parametersName = [t["name"] for t in methodData["parameters"]]
                 self._registerMethodIntoMethodSignatureMap(className, _methodsName, _returnType,
-                                                           methodData["parameters"])
+                                                           methodData["parameters"],
+                                                           methodData["constructor"], methodData["destructor"])
                 for i in range(len(_parametersType)):
                     _signature += _parametersType[i] + " " + _parametersName[i]
                     if (i + 1) < len(_parametersType):
                         _signature += ", "
                 _signature += ")"
+                if methodData["const"] is True:
+                    _signature += " const"
                 methodContent = self._generateMethodContent(_returnType, className, _methodsName)
                 _methods += "\n" + _signature + " {\n" + methodContent + "\n}\n"
 
@@ -290,13 +302,18 @@ class FSeamerFile:
             _genSpecial += self.freeFunctionClassMethodId
         for methodName, methodsMapping in self.functionSignatureMapping[className].items():
             if self.freeFunctionClassMethodId is None or methodName not in self.freeFunctionClassMethodId:
-                _genSpecial += INDENT + "struct " + methodName + " { inline static const std::string NAME = \"" + methodName + "\";};\n"
+                mn = methodName
+                if methodName.startswith("~"):
+                    mn = methodName.replace("~", "Destructor_")
+                _genSpecial += INDENT + "struct " + mn + " { inline static const std::string NAME = \"" + methodName + "\";};\n"
         _genSpecial += "}\n"
 
         _specContent = ""
         if FREE_FUNC_FAKE_CLASS is not className:
             _specContent = "\n\n// Duping/Expectations specializations for " + className + "\n"
         for methodName, methodMapping in self.functionSignatureMapping[className].items():
+            if methodName.startswith("Destructor_"):
+                methodName.replace("Destructor_", "~")
             if (FREE_FUNC_FAKE_CLASS is className):
                 _specContent += "// Generated duping for method " + className + "::" + methodName + " begin\n"
             # Specialization for dupeReturn
@@ -358,7 +375,7 @@ class FSeamerFile:
             _content += INDENT2 + "data." + methodName + "_" + p["name"] + PARAM_SUFFIX + " = " + p["name"] + ";\n"
         _content += INDENT + "mockVerifier->invokeDupedMethod(__func__, &data);\n"
         _content += INDENT + "mockVerifier->methodCall(__func__, &data);\n"
-        if 'void' != returnType:
+        if 'void' != returnType and self.functionSignatureMapping[className][methodName]["isConstructorOrDestructor"] is False:
             _content += INDENT + "return data." + methodName + "_ReturnValue;"
         return _content
 

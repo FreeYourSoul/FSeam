@@ -14,6 +14,8 @@ endif ()
 include(../cmake/FSeamModule.cmake)
 
 add_library(testLib
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/ClassWithConstructor.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/ClassWithConstructor.hh
         ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.hh
         ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.hh
@@ -35,10 +37,12 @@ addFSeamTests(
         TST_SRC
             ${CMAKE_CURRENT_SOURCE_DIR}/testMain.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/FSeamBasicMockTestCase.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/FSeamClassWithConstructorTestCase.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/FSeamDefaultMockTestCase.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/FSeamSingletonTestCase.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/FSeamGeneratedHelperUsageTestCase.cpp
         TO_MOCK
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/ClassWithConstructor.hh
             ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.hh
             ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyGettable.hh)
 

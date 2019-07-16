@@ -10,6 +10,7 @@ to usage.md file)
 * Improve documentation on CMake usage (giving the different possibilities with either using a target or a list of file)
 * Add detailed documentation on how to use the python script to generate the FSeam mock (in order to use FSeam without CMake)  
 * Add an example on how to use FSeam with another Testing framework, using the generated target to register test in CTest
+* Add documentation on the fact that destructor have their name prefixed by Destructor_ (instead of using ~)
 * ~~Detailed documentation on dupeReturn (into usage.md file)~~
 * ~~Detailed documentation on verify (into usage.md file)~~
 * ~~Improve documentation, add get mock handler (into testing.md file)~~
@@ -33,6 +34,8 @@ to usage.md file)
   * ~~Improve the Cmake utility; able to choose between a target or a list of file in order to compile FSeam tests.~~
   
 * **Bug Fix** (if any :p)
+  * ~~Error when mocking a class with a constructor not implemented in the header.~~
+  * ~~Doesn't properly generate constant method mock~~
   * ~~Multiple free function/ static method mocking in a row are overwritting the FreeFunction data structure~~
   * ~~Static method mock of static method of class without namespace weren't correctly generated~~
   * ?

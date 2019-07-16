@@ -5,6 +5,7 @@
 #ifndef PROJECT_TESTINGCLASS_HH
 #define PROJECT_TESTINGCLASS_HH
 
+#include <ClassWithConstructor.hh>
 #include <DependencyGettable.hh>
 #include <DependencyNonGettable.hh>
 
@@ -15,6 +16,11 @@ namespace source {
         TestingClass() {}
 
         void execute();
+
+        int instantiateClassWithConstructorAndRetFromMockedMethd() const {
+            ClassWithConstructor c;
+            return c.mockedMethod();
+        }
 
         int checkSimpleReturnValueNonGettable() {
             return _depNonGettable.checkSimpleReturnValue();
