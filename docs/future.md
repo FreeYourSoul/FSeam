@@ -42,6 +42,7 @@
 ## V1.2.0
 
 * **Design Improvements**
+  * **Implement Babel support** https://github.com/FreeYourSoul/FSeam/issues/7
   * **Change position of template specialization** Do the specialization in the fseam.cc file
 * **Functional Improvements**
   * **Provide a multi-threaded safety option**: Currently using singleton and static memory without having any synchronization mechanism. Any multithreading test would make the verify not being accurate.
