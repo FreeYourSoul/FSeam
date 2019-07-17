@@ -7,7 +7,7 @@ The tests case shown in this documentation are going to use the Catch2 framework
 
 **Globals:**
 * [Quick Start](cheat-sheet.md#cheat-sheet)
-* FSeam Tutorial (when published in freeyoursoul.online)
+* [FSeam Tutorial](http://freeyoursoul.online/fseam-a-mocking-framework-that-requires-no-change-in-code-part-2/)
 * [Why FSeam?](why-fseam.md#fseam-answer)
 
 **Usage:**
