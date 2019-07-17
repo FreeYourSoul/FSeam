@@ -118,3 +118,7 @@ If both options are specified, Catch2 is prioritized (because I prefer catch2 NA
 ### Pratical Example
 
 The [FSeam tutorial](http://freeyoursoul.online/fseam-a-mocking-framework-that-requires-no-change-in-code-part-2/) provides examples on how to use the CMake helper function.
+
+### Babel implementation
+
+[A future implementation via babel may be in development](future.md#v110)
