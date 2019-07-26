@@ -7,3 +7,4 @@
 **/*.pyc
 **/__pycache__
 **/cmake-build-*
+**/FSeam/Versioner.hh

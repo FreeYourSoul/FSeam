@@ -33,6 +33,7 @@
   * ~~Improve the Cmake utility; able to choose between a target or a list of file in order to compile FSeam tests.~~
   
 * **Bug Fix** (if any :p)
+  * ~~Installation doesn't create the FSeam folder (used by the generated includes)~~
   * ~~Error when mocking a class with a constructor not implemented in the header.~~
   * ~~Doesn't properly generate constant method mock~~
   * ~~Multiple free function/ static method mocking in a row are overwritting the FreeFunction data structure~~
