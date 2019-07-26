@@ -448,8 +448,8 @@ def generateFSeamFile(filePath, destinationFolder, forceGeneration=False):
                             by default, this flag is set to False
     :return: no return
     """
-    if not str.endswith(filePath, ".hh") and not str.endswith(filePath, ".hpp"):
-        raise NameError("Error file " + filePath + " is not a .hh file")
+    if not str.endswith(filePath, ".hh") and not str.endswith(filePath, ".hpp")  and not str.endswith(filePath, ".h"):
+        raise NameError("Error file " + filePath + " is not a .hh (or .hpp .h) file")
 
     _fSeamerFile = FSeamerFile(filePath)
     _fileName = _fSeamerFile.getFSeamGeneratedFileName()
