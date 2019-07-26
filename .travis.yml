@@ -1,7 +1,7 @@
 # Travis CI script
 
 dist: bionic
-#sudo: false
+sudo: required
 language: cpp
 
 matrix:

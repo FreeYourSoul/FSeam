@@ -32,7 +32,7 @@ cmake -DFSEAM_USE_CATCH2=ON
 
 Include to use:
 ```cpp
-#include <FSeam.hpp> // Contains the FSeam mocking tools
+#include <FSeamMockData.hpp> // Contains the FSeam generated object to create FSeam Mock Handlers
 ```
 
 ### Get Mock from instance
@@ -100,7 +100,7 @@ verify(FSeam::ClassMocked::methodOfClassMocked::NAME ObjectToReturn, Comparator)
 ```
 Example : 
 ```cpp
-#include <FSeam.hpp> // Contains the FSeam mocking tools
+#include <FSeamMockData.hpp> // Contains the FSeam mocking tools
 using namespace FSeam;
 
 source::TestingClass testingClass {};
