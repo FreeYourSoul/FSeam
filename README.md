@@ -49,11 +49,7 @@ In case of dependencies issue : [follow this link](docs/usage.md#dependencies)
 
 ## Ambition
 
-<<<<<<< HEAD
 This project is extensively used to test FyS, it is a Proof of Concept. The idea in itself is worth exploring and improving, and I intend to do that through this project. If this project can be of any interest for your personal and/or professional projects, any help to make it more stable and usable is welcomed.
-=======
-This project is extensively used to test FyS, it also a Proof of Concept. The idea in itself is worth exploring and improving, and I intend to do that through this project. If this project can be of any interest for your personal and/or professional projects, any help to make it more stable and usable is welcomed.
->>>>>>> b8348d8cc642fee3f47e123dc82d3095876387ca
 
 ## Dependencies  
 

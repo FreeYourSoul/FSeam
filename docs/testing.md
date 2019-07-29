@@ -172,7 +172,7 @@ mock->expectArg<FSeam::TestingClass::functionCalled>(Eq(42), Any(), NotEq(std::s
 >It is important to note that calling expectArg is going to register your expectations but not verifying them.
 
 In order to have your expectations checked you need to make a call to the [verify function](testing.md#verifications).  
-This also mean that the expectations are to be set before any call to the testing function (the expectation are checked when the functions, any late declared expectation are not taken into account into calls).
+This also mean that the expectations are to be set before any call to the testing function (the expectation are checked when the functions are called, any late declared expectation are not taken into account into calls).
   
 _Example of wrong and good usage of argument expectations:_
 
