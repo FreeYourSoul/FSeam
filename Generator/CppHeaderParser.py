@@ -52,6 +52,7 @@ import ply.lex as lex
 import os
 import sys
 import re
+import io
 
 import inspect
 
@@ -59,7 +60,7 @@ def lineno():
     """Returns the current line number in our program."""
     return inspect.currentframe().f_back.f_lineno
 
-version = __version__ = "2.7.4"
+version = __version__ = "2.7.5"
 
 tokens = [
     'NUMBER',
@@ -95,9 +96,11 @@ tokens = [
     'STRING_LITERAL',
     'NEW_LINE',
     'SQUOTE',
+    'ELLIPSIS',
+    'DOT',
 ]
 
-t_ignore = " \r.?@\f"
+t_ignore = " \r?@\f"
 t_NUMBER = r'[0-9][0-9XxA-Fa-f]*'
 t_FLOAT_NUMBER = r'[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?'
 t_TEMPLATE_NAME = r'CppHeaderParser_template_[0-9]+'
@@ -120,7 +123,7 @@ t_EXCLAMATION = r'!'
 t_PRECOMP_MACRO = r'\#.*'
 t_PRECOMP_MACRO_CONT = r'.*\\\n'
 def t_COMMENT_SINGLELINE(t):
-    r'\/\/.*\n'
+    r'\/\/.*\n?'
     global doxygenCommentCache
     if t.value.startswith("///") or t.value.startswith("//!"):
         if doxygenCommentCache:
@@ -138,6 +141,8 @@ t_AMPERSTAND = r'&'
 t_EQUALS = r'='
 t_CHAR_LITERAL = "'.'"
 t_SQUOTE = "'"
+t_ELLIPSIS = r'\.\.\.'
+t_DOT = r'\.'
 #found at http://wordaligned.org/articles/string-literals-and-regular-expressions
 #TODO: This does not work with the string "bla \" bla"
 t_STRING_LITERAL = r'"([^"\\]|\\.)*"'
@@ -733,14 +738,7 @@ class _CppMethod( dict ):
         stack = stack[ : len(stack)-(_end_+1) ]
         if '(' not in stack: return stack    # safe to return, no defaults that init a class
 
-        # transforms ['someclass', '(', '0', '0', '0', ')'] into "someclass(0,0,0)'"
-        r = []; hit=False
-        for a in stack:
-            if a == '(': hit=True
-            elif a == ')': hit=False
-            if hit or a == ')': r[-1] = r[-1] + a
-            else: r.append( a )
-        return r
+        return stack
 
     def _params_helper2( self, params ):
         for p in params:
@@ -791,6 +789,23 @@ class CppMethod( _CppMethod ):
         self["rtnType"] = self["rtnType"].replace(" <","<")
         self["rtnType"] = self["rtnType"].replace(" >",">").replace(">>", "> >").replace(">>", "> >")
         self["rtnType"] = self["rtnType"].replace(" ,",",")
+        
+        # deal with "noexcept" specifier/operator
+        cleaned = []
+        hit = False; parentCount = 0
+        self['noexcept'] = ''
+        for a in nameStack:
+            if a == 'noexcept': hit = True
+            if hit:
+                if a == '(': parentCount += 1
+                elif a == ')': parentCount -= 1
+                elif parentCount == 0 and a != 'noexcept': hit = False; cleaned.append( a ); continue  # noexcept without parenthesis
+                if a==')' and parentCount == 0: hit = False
+                self['noexcept'] += a
+            else:
+                cleaned.append( a )
+        nameStack = cleaned
+        self['noexcept'] = self['noexcept'] if self['noexcept'] else None
         
         for spec in ["const", "final", "override"]:
             self[spec] = False
@@ -854,11 +869,14 @@ class CppMethod( _CppMethod ):
                         doxyLine = doxyLine[doxyLine.find(" ") + 1:]
                         doxyVarDesc[lastParamDesc] += " " + doxyLine
                     except: pass
-        
+
+        # non-vararg by default
+        self["vararg"] = False
         #Create the variable now
         while (len(paramsStack)):
             # Find commas that are not nexted in <>'s like template types
             open_template_count = 0
+            open_paren_count = 0
             param_separator = 0
             i = 0
             for elm in paramsStack:
@@ -866,7 +884,11 @@ class CppMethod( _CppMethod ):
                     open_template_count += 1
                 elif '>' in elm:
                     open_template_count -= 1
-                elif elm == ',' and open_template_count == 0:
+                elif '(' in elm :
+                    open_paren_count += 1
+                elif ')' in elm:
+                    open_paren_count -= 1
+                elif elm == ',' and open_template_count == 0 and open_paren_count==0:
                     param_separator = i
                     break
                 i += 1
@@ -875,6 +897,9 @@ class CppMethod( _CppMethod ):
                 param = CppVariable(paramsStack[0:param_separator],  doxyVarDesc=doxyVarDesc)
                 if len(list(param.keys())): params.append(param)
                 paramsStack = paramsStack[param_separator + 1:]
+            elif len(paramsStack) and paramsStack[0] == "...":
+                self["vararg"] = True
+                paramsStack = paramsStack[1:]
             else:
                 param = CppVariable(paramsStack,  doxyVarDesc=doxyVarDesc)
                 if len(list(param.keys())): params.append(param)
@@ -943,7 +968,7 @@ class CppVariable( _CppVariable ):
             if nameStack.count("[") > 1:
                 debug_print("Multi dimensional array")
                 debug_print("arrayStack=%s"%arrayStack)
-                nums = filter(lambda x: x.isdigit(), arrayStack)
+                nums = [x for x in arrayStack if x.isdigit()]
                 # Calculate size by multiplying all dimensions
                 p = 1
                 for n in nums:
@@ -1277,6 +1302,9 @@ class Resolver(object):
         #    result['forward_decl'] = True
         if alias == '__extension__': result['fundamental_extension'] = True
         elif alias:
+            if alias in result['aliases']:
+                # already resolved
+                return
             result['aliases'].append( alias )
             if alias in C99_NONSTANDARD:
                 result['type'] = C99_NONSTANDARD[ alias ]
@@ -1711,12 +1739,13 @@ class _CppHeader( Resolver ):
             'namespace':self.cur_namespace(add_double_colon=True),
         }
 
-        for tag in 'defined pure_virtual operator constructor destructor extern template virtual static explicit inline friend returns returns_pointer returns_fundamental returns_class'.split(): info[tag]=False
+        for tag in 'defined pure_virtual operator constructor destructor extern template virtual static explicit inline friend returns returns_pointer returns_fundamental returns_class default'.split(): info[tag]=False
         header = stack[ : stack.index('(') ]
         header = ' '.join( header )
         header = header.replace(' : : ', '::' )
         header = header.replace(' < ', '<' )
         header = header.replace(' > ', '> ' )
+        header = header.replace('default ', 'default' )
         header = header.strip()
 
         if '{' in stack:
@@ -1771,9 +1800,15 @@ class _CppHeader( Resolver ):
 
         if name.startswith('~'):
             info['destructor'] = True
+            if 'default;' in stack:
+                info['defined'] = True
+                info['default'] = True
             name = name[1:]
         elif not a or (name == self.curClass and len(self.curClass)):
             info['constructor'] = True
+            if 'default;' in stack:
+                info['defined'] = True
+                info['default'] = True
 
         info['name'] = name
 
@@ -2039,7 +2074,7 @@ class CppHeader( _CppHeader ):
     def show(self):
         for className in list(self.classes.keys()):self.classes[className].show()
 
-    def __init__(self, headerFileName, argType="file", **kwargs):
+    def __init__(self, headerFileName, argType="file", encoding=None, **kwargs):
         """Create the parsed C++ header file parse tree
         
         headerFileName - Name of the file to parse OR actual file contents (depends on argType)
@@ -2092,12 +2127,12 @@ class CppHeader( _CppHeader ):
         self.anon_struct_counter = 0    
         self.anon_union_counter = [-1, 0]
         self.templateRegistry = []
-    
+
         if (len(self.headerFileName)):
-            fd = open(self.headerFileName)
+            fd = io.open(self.headerFileName, 'r', encoding=encoding)
             headerFileStr = "".join(fd.readlines())
-            fd.close()     
-        
+            fd.close()
+				
         # Make sure supportedAccessSpecifier are sane
         for i in range(0, len(supportedAccessSpecifier)):
             if " " not in supportedAccessSpecifier[i]: continue
@@ -2327,6 +2362,9 @@ class CppHeader( _CppHeader ):
                     self.nameStack.append(tok.value)
                 elif (tok.type == 'STRING_LITERAL'):
                     self.nameStack.append(tok.value)
+                elif (tok.type == 'ELLIPSIS'):
+                    self.nameStack.append(tok.value)
+                elif (tok.type == 'DOT'): pass # preserve behaviour and eat individual fullstops
                 elif (tok.type == 'NAME' or tok.type == 'AMPERSTAND' or tok.type == 'ASTERISK' or tok.type == 'CHAR_LITERAL'):
                     if tok.value in ignoreSymbols:
                         debug_print("Ignore symbol %s"%tok.value)
