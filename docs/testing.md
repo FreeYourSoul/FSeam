@@ -144,7 +144,7 @@ This comparator is checking that the given parameter is equal to the argument
 * FSeam::NotEq comparator :  signature ```template<typename T> FSeam::NotEq(T)```  
 Takes any object as argument, if the object type cannot be deduced, you need to add the template parameter explicitly.   
 This comparator is checking that the given parameter is not equal to the argument
-* FSeam::Any comparator : signature ```FSeam::Any()```  
+* FSeam::Any comparator : signature ```FSeam::Any()```, with a wildcard ```FSeam::_``` following the GoogleMock wildcard syntax   
 Doesn't take argument, doesn't apply check on this argument   
 * FSeam::CustomComparator : [Described here](testing.md#custom-argument-comparator)  
 

@@ -126,6 +126,7 @@ namespace FSeam {
 
         struct Any {
         };
+        static Any _; // google mock style
 
         struct Eq {
             Eq(std::shared_ptr<std::any> toCompare) : _toCompare(std::move(toCompare)) {}
