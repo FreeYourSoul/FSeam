@@ -8,10 +8,6 @@ option(FSEAM_CLEANUP_DATA "Cleanup the data file  " OFF)
 option(FSEAM_USE_CATCH2 "fseam catch2 usage" ON)
 option(FSEAM_USE_GTEST "fseam catch2 usage" OFF)
 
-if (NOT FSEAM_GENERATOR_COMMMAND)
-    set(FSEAM_GENERATOR_COMMMAND FSeamerFile.py)
-endif ()
-
 if (FSEAM_USE_CATCH2)
     find_package(Catch2 REQUIRED)
     include(Catch)
@@ -19,6 +15,13 @@ elseif(FSEAM_USE_GTEST)
     find_package(GTest REQUIRED)
     include(GoogleTest)
 endif ()
+
+find_package(PythonInterp 3 REQUIRED)
+
+if (NOT FSEAM_GENERATOR_COMMMAND)
+    set(FSEAM_GENERATOR_COMMMAND ${PYTHON_EXECUTABLE} FSeamerFile.py)
+endif ()
+
 
 include(CTest)
 
@@ -32,9 +35,11 @@ function (setup_FSeam_test)
 #    message(WARNING "BEFORE Source compiled ${FSEAM_TEST_SRC}")
     foreach (fileToMockPath ${ADDFSEAMTESTS_TO_MOCK})
         get_filename_component(FSEAM_GENERATED_BASENAME ${fileToMockPath} NAME_WE)
+        # TODO sanitize filename or use glob matching
         list(FILTER FSEAM_TEST_SRC EXCLUDE REGEX .*${FSEAM_GENERATED_BASENAME}.cpp)
-        message(STATUS "add custom command for ${ADDFSEAMTESTS_DESTINATION_TARGET} with fileToMock ${fileToMockPath}
-with command : ${PYTHON_EXECUTABLE} ${FSEAM_GENERATOR_COMMMAND} ${fileToMockPath} ${FSEAM_GENERATOR_DESTINATION}")
+        string(REPLACE ";" " " FSEAM_GENERATOR_PRINT "${FSEAM_GENERATOR_COMMMAND}")
+        message(STATUS "add custom command for ${ADDFSEAMTESTS_DESTINATION_TARGET} with fileToMock ${fileToMockPath}\n"
+            "with command : ${FSEAM_GENERATOR_PRINT} ${fileToMockPath} ${FSEAM_GENERATOR_DESTINATION}")
         add_custom_command(
             COMMAND
                 ${FSEAM_GENERATOR_COMMMAND}
