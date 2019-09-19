@@ -100,7 +100,7 @@ function(addFSeamTests)
     setup_FSeam_test()
 
     # Create testing target
-    execute_process(COMMAND touch ${FSEAM_GENERATOR_DESTINATION}/FSeamMockData.hpp ${FSEAM_GENERATOR_DESTINATION}/FSeamSpecialization.cpp)
+    execute_process(COMMAND ${CMAKE_COMMAND} -E touch ${FSEAM_GENERATOR_DESTINATION}/FSeamMockData.hpp ${FSEAM_GENERATOR_DESTINATION}/FSeamSpecialization.cpp)
     add_executable(${ADDFSEAMTESTS_DESTINATION_TARGET} ${FSEAM_TEST_SRC} ${ADDFSEAMTESTS_TST_SRC}
             ${FSEAM_GENERATOR_DESTINATION}/FSeamMockData.hpp
             ${FSEAM_GENERATOR_DESTINATION}/FSeamSpecialization.cpp)
