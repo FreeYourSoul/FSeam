@@ -46,6 +46,8 @@ BASE_HEADER_CODE = "#include "
 PARAM_SUFFIX = "_ParamValue"
 FREE_FUNC_FAKE_CLASS = "FreeFunction"
 RETURN_SUFFIX = "_ReturnValue"
+CLASS_START_FMT = "//Beginning of {}"
+CLASS_END_FMT = "// End of DataStructure {}\n\n\n"
 
 
 class FSeamerFile:
@@ -152,7 +154,7 @@ class FSeamerFile:
             content += BASE_HEADER_CODE + "<" + self.fileName + ">\n"
         content += "namespace FSeam {\n"
         for className, methods in self.mapClassMethods.items():
-            content += "//Beginning of " + className
+            content += CLASS_START_FMT.format(className)
             if FREE_FUNC_FAKE_CLASS is className:
                 self.freeFunctionDataStructContent = self._getCurrentFreeFunctionDataContent(content)
                 self.freeFunctionClassMethodId = self._getCurrentFreeFunctionClassMethodIdContent(content)
@@ -172,7 +174,7 @@ class FSeamerFile:
                            "> {\n" + INDENT + "inline static const std::string ClassName = \"" + className + "\";\n};\n"
             if className in self.functionSignatureMapping:
                 content += self._generateDupeVerifyTemplateSpecialization(className)
-            content += "// End of DataStructure" + className + "\n\n\n"
+            content += CLASS_END_FMT.format(className)
         content += "}\n"
         content = re.sub("namespace FSeam {[\n ]+}\n", "", content)
         content = re.sub("struct [a-zA-Z0-9_]+ {[\n ]+};\n", "", content)
@@ -411,11 +413,9 @@ class FSeamerFile:
 
     @staticmethod
     def _clearDataStructureData(content, className):
-        indexBegin = content.find("//Beginning of " + className)
-        indexEnd = content.find("// End of DataStructure" + className) + len("// End of DataStructure" + className)
-        if indexBegin > 0 and indexEnd > len("// End of DataStructure" + className) + 1:
-            content = content[0: indexBegin] + content[indexEnd + 1:]
-        return content
+        sb, sm, se = content.partition(CLASS_START_FMT.format(className))
+        eb, em, ee = content.partition(CLASS_END_FMT.format(className))
+        return sb + ee if sm is not "" and em is not "" else content
 
     @staticmethod
     def _clearSpecialization(content, className):
