@@ -215,6 +215,23 @@ def is_namespace(nameStack):
         return True
     return False
 
+def extract_namespace_namestack(nameStack):
+    if not is_namespace(nameStack):
+        return ""
+    ns = ""
+    nstack = nameStack[1:]
+    namespaceSeparator = 2
+    for i in range(len(nstack)):
+        if namespaceSeparator is 2:
+            ns += nstack[i]
+            if ns is not nstack[i] and i is not len(nstack) - 1:
+                ns += "::"
+            namespaceSeparator = 0
+        if nstack[i] == ":":
+            namespaceSeparator += 1
+    return ns
+
+
 def is_enum_namestack(nameStack):
     """Determines if a namestack is an enum namestack"""
     if len(nameStack) == 0:
@@ -2264,7 +2281,7 @@ class CppHeader( _CppHeader ):
                     if len(self.nameStack) >= 2 and is_namespace(self.nameStack):    # namespace {} with no name used in boost, this sets default?
                         if self.nameStack[1] == "__IGNORED_NAMESPACE__CppHeaderParser__":#Used in filtering extern "C"
                             self.nameStack[1] = ""
-                        self.nameSpaces.append(self.nameStack[1])
+                        self.nameSpaces.append(extract_namespace_namestack(self.nameStack))
                         ns = self.cur_namespace(); self.stack = []
                         if ns not in self.namespaces: self.namespaces.append( ns )
                     # Detect special condition of macro magic before class declaration so we
