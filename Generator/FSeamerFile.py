@@ -275,6 +275,7 @@ class FSeamerFile:
                     _methodsName += "~"
                 _methodsName += methodData["name"]
                 _lstMethodName.append(_methodsName)
+                print methodData, "\n"
                 _signature = _returnType + " " + _classFullName + "::" + _methodsName + "("
                 _parametersType = [t["type"] for t in methodData["parameters"]]
                 _parametersName = [t["name"] for t in methodData["parameters"]]
@@ -283,6 +284,7 @@ class FSeamerFile:
                                                            methodData["constructor"], methodData["destructor"])
                 for i in range(len(_parametersType)):
                     _signature += _parametersType[i] + " " + _parametersName[i]
+                    _signature = _signature.replace(" & & ", " && ")
                     if (i + 1) < len(_parametersType):
                         _signature += ", "
                 _signature += ")"
