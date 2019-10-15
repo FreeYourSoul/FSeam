@@ -24,6 +24,7 @@ The tests case shown in this documentation are going to use the Catch2 framework
 
 * [Todo list](future.md#future-to-be-implemented)
 * [Known limitations](limitations.md#known-limitations)
+* [Contributions](contributing.md#contributing-to-fseam)
 
 ### Internal documentation
 
