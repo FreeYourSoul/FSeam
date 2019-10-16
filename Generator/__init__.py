@@ -2,4 +2,4 @@
 
 import FSeamerFile
 
-FSeamerFile.generateFSeamFile("SampleClass.hh", ".", True)
+FSeamerFile.generateFSeamFile("/home/FyS/Project/FyS/services/arena/include/ConnectionHandler.hh", ".", True)

@@ -374,7 +374,7 @@ class FSeamerFile:
         else:
             _content += INDENT + "FSeam::" + className + "Data data {};\n\n"
         for p in self.functionSignatureMapping[className][methodName]["params"]:
-            _content += INDENT + "if (std::is_copy_constructible<std::decay<" + p["type"] + ">>())\n"
+            _content += INDENT + "if (std::is_copy_constructible<std::decay<" + p["type"].replace("& &", "&&") + ">>())\n"
             _content += INDENT2 + "data." + methodName + "_" + p["name"] + PARAM_SUFFIX + " = " + p["name"] + ";\n"
         _content += INDENT + "mockVerifier->invokeDupedMethod(__func__, &data);\n"
         _content += INDENT + "mockVerifier->methodCall(__func__, &data);\n"
