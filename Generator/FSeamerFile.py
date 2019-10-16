@@ -275,7 +275,6 @@ class FSeamerFile:
                     _methodsName += "~"
                 _methodsName += methodData["name"]
                 _lstMethodName.append(_methodsName)
-                print methodData, "\n"
                 _signature = _returnType + " " + _classFullName + "::" + _methodsName + "("
                 _parametersType = [t["type"] for t in methodData["parameters"]]
                 _parametersName = [t["name"] for t in methodData["parameters"]]
@@ -290,6 +289,9 @@ class FSeamerFile:
                 _signature += ")"
                 if methodData["const"] is True:
                     _signature += " const"
+                print methodData
+                if methodData["noexcept"] is not None:
+                    _signature += " noexcept"
                 methodContent = self._generateMethodContent(_returnType, className, _methodsName)
                 _methods += "\n" + _signature + " {\n" + methodContent + "\n}\n"
 
