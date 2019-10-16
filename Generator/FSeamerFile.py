@@ -289,7 +289,6 @@ class FSeamerFile:
                 _signature += ")"
                 if methodData["const"] is True:
                     _signature += " const"
-                print methodData
                 if methodData["noexcept"] is not None:
                     _signature += " noexcept"
                 methodContent = self._generateMethodContent(_returnType, className, _methodsName)
