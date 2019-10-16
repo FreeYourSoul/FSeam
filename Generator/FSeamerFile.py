@@ -215,7 +215,7 @@ class FSeamerFile:
             elif excluderStruct is None or methodName not in excluderStruct:
                 _methodData = INDENT + "/**\n" + INDENT + " * method metadata : " + className + "::" + methodName + "\n" + INDENT + "**/\n"
                 for param in self.functionSignatureMapping[className][methodName]["params"]:
-                    _paramType = param["type"]
+                    _paramType = param["type"].replace("& &", "&&")
                     _paramName = param["name"]
                     if _paramName not in ["&", "", None, "*", "&&"]:
                         typeStr = _paramType
@@ -248,6 +248,7 @@ class FSeamerFile:
                                                    freeFunctionData["parameters"])
         for i in range(len(_parametersType)):
             _signature += _parametersType[i] + " " + _parametersName[i]
+            _signature = _signature.replace(" & & ", " && ")
             if (i + 1) < len(_parametersType):
                 _signature += ", "
         _signature += ")"
@@ -400,7 +401,7 @@ class FSeamerFile:
         _gen += INDENT2 + "bool argCheck = true;\n"
         for param in methodMapping["params"]:
             _gen += INDENT2 + "argCheck &= " + param["name"] + ".compare<" + param[
-                "type"] + ">(*static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + "_" + param[
+                "type"].replace("& &", "&&") + ">(*static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + "_" + param[
                         "name"] + PARAM_SUFFIX + ");\n"
         _gen += INDENT2 + "return argCheck;\n"
         _gen += INDENT + "};\n"
