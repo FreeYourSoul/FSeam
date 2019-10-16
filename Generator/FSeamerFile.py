@@ -400,8 +400,10 @@ class FSeamerFile:
         _gen += INDENT + "auto expectationChecker = [=](void *methodCallData) { \n"
         _gen += INDENT2 + "bool argCheck = true;\n"
         for param in methodMapping["params"]:
-            _gen += INDENT2 + "argCheck &= " + param["name"] + ".compare<" + param[
-                "type"].replace("& &", "&&") + ">(*static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + "_" + param[
+            _paramValue = param["type"]
+            if "& &" in _paramValue:
+                _paramValue = "std::reference_wrapper<" + _paramValue.replace("& &", "") + ">"
+            _gen += INDENT2 + "argCheck &= " + param["name"] + ".compare<" + _paramValue + ">(*static_cast<FSeam::" + className + "Data *>(methodCallData)->" + methodName + "_" + param[
                         "name"] + PARAM_SUFFIX + ");\n"
         _gen += INDENT2 + "return argCheck;\n"
         _gen += INDENT + "};\n"
