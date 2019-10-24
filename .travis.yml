@@ -21,10 +21,22 @@ addons:
     sources:
       - george-edison55-precise-backports
     packages:
+      - python3
+      - python3-pip
       - cmake-data
       - cmake
 
-before_install: sudo apt-get update -qq
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install python3
+  - pyenv install 3.6.3
+  - pyenv global 3.6.3
+  #FSeam Python generator dependencies
+  - sudo apt-get install python3-pip
+  - sudo pip3 install ply
+  - sudo pip3 install pip --upgrade
+  - export PYTHONPATH=$PYTHONPATH:$(pwd):/usr/lib/python3/dist-packages:/usr/local/lib/python3.6/dist-packages
+  - echo $PYTHONPATH
 
 install:
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
@@ -44,10 +56,6 @@ before_script:
   - cd test/src
   - curl -O https://raw.githubusercontent.com/catchorg/Catch2/v2.7.0/single_include/catch2/catch.hpp
   - cd ../..
-
-  #FSeam Python generator dependencies
-  - sudo apt-get install python3-pip
-  - sudo pip install ply
 
   # Use Debug builds for running Valgrind and building examples
   #  - cmake -H. -BBuild-Debug -DCMAKE_BUILD_TYPE=Debug -DTRAVIS_BUILD=ON
