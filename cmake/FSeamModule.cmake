@@ -19,7 +19,8 @@ endif ()
 find_package(PythonInterp 3 REQUIRED)
 
 if (NOT FSEAM_GENERATOR_COMMMAND)
-    set(FSEAM_GENERATOR_COMMMAND ${PYTHON_EXECUTABLE} FSeamerFile.py)
+    find_file(FILE_FSEAMER_PY FSeamerFile.py)
+    set(FSEAM_GENERATOR_COMMMAND ${PYTHON_EXECUTABLE} ${FILE_FSEAMER_PY})
 endif ()
 
 
