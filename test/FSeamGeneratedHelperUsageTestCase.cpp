@@ -222,7 +222,7 @@ TEST_CASE("Test HelperMethods Specific UseCase") {
 
         SECTION("Check args") {
             fseamMock->expectArg<FSeam::DependencyGettable::checkCustomStructInputVariableRef>(
-                    FSeam::CustomComparator<source::StructTest>([](auto param) {
+                    FSeam::CustomComparator<const source::StructTest &>([](auto param) {
                         return param.testInt == 1 &&
                             param.testShort == 11 &&
                             param.testStr == "111";
