@@ -7,6 +7,8 @@ Before talking about FSeam, it is needed to talk about the other frameworks that
 The base of those frameworks are kind of following the same principle as Mockito does in Java([ps:what is mockito](https://site.mockito.org/)).  
 Basically depending on [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) where the dependency implementation injected is different in a testing binary than in production one.
 
+A blog has been written with code sample: [here](http://freeyoursoul.online/fseam-a-mocking-framework-that-requires-no-change-in-code-part-1/).
+
 ### Dependency injection : Inheritance
 
 The easiest way to manage a dependency injection, is to send an interface to a function/class. And changing the class that implement the interface at runtime (testing implementation when in a test, and normal implementation when in the production code).  
@@ -23,7 +25,7 @@ Another thing important to note is that this kind of dependency injection force 
 Another solution in C++, is to have the type dependencies of your class/function into templates.  
 With this method you have more possibilities to inject your dependency, you can do like with inheritance and send them as parameters (template parameters resolved at compile time).  
 
-Google Mock make it possible to create a standalone mocked object without using inheritance or virtuals methods. The google mock type can be passed as type [into a template](https://github.com/google/googlemock/blob/master/googlemock/docs/v1_6/CookBook.md#mocking-class-templates).  
+Google Mock make it possible to create a standalone mocked object without using inheritance or virtuals methods. The google mock type can be passed as type [into a template](https://github.com/google/googletest/blob/master/googlemock/docs/cook_book.md#mocking-class-templates).  
  Or just instantiate the mock inside of the class/function, but it will force you to add a getter on this instantiated dependency if you want to change it's behavior through GMock via ON_CALL macro for example (we will see that **FSeam can answer to that problem**).
 
 Another problem that can occur with this solution is that in some cases, a big load of template can be necessary in the code to cover all the dependencies (to be honest, this issue may be mitigated by having a class regrouping all/a part of the dependencies class, but it implies additional types to be created and may produce confusing and hard to read code)  
