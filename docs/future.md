@@ -6,9 +6,9 @@
 
 ## Improve Documentation
 * Detailed documentation on dupe (into usage.md file)
-* ~~Improve documentation on CMake usage (giving the different possibilities with either using a target or a list of file)~~
 * Add detailed documentation on how to use the python script to generate the FSeam mock (in order to use FSeam without CMake)  
 * Add an example on how to use FSeam with another Testing framework, using the generated target to register test in CTest
+* ~~Improve documentation on CMake usage (giving the different possibilities with either using a target or a list of file)~~
 * ~~Add documentation on the fact that destructor have their name prefixed by Destructor_~~
 * ~~Detailed documentation on dupeReturn (into usage.md file)~~
 * ~~Detailed documentation on verify (into usage.md file)~~
@@ -18,7 +18,10 @@
 * ~~Detailed documentation on free function (into free-function.md)~~
 
 ## V1.1.0:     
-* **Functional Improvements**  
+* **Functional Improvements**
+  * **Fix namespace method parameter** (not have to fully define the namespace of the parameters in a header) by either:
+    * **Wrap redefinition of method into class namespace** 
+    * **Add a using namespace at the begining of the class**
   * **Use function overload instead of specialization** for verify arg
   * **Adding inner-class-struct/class**: The code generation is wrong and not compilable when mocking a header file with a class embedded in another on
   * **Add argument expectation non copyable support** using constexpr if and store uniqueptr in case of non copyable argument
