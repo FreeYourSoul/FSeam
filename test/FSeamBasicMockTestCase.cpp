@@ -8,10 +8,18 @@
 #include <FSeam.hpp>
 #include <TestingClass.hh>
 #include <FSeamMockData.hpp>
+#include <EmptyClassTest.hh>
 
 TEST_CASE( "FSeamBasicTest" ) {
     source::TestingClass testingClass {};
     auto fseamMock = FSeam::get(&testingClass.getDepGettable());
+
+    SECTION("Test empty class") {
+        auto fseamEmptyMockClass = FSeam::getDefault<EmptyClass>();
+        std::unique_ptr<EmptyClass> em = std::make_unique<EmptyClass>();
+        CHECK(fseamEmptyMockClass->verify(FSeam::EmptyClass::EmptyClass::NAME));
+
+    } // End section : Test empty class
 
     SECTION("Test hasOriginalServiceBeenCalled") { 
         testingClass.execute();

@@ -2,4 +2,4 @@
 
 import FSeamerFile
 
-FSeamerFile.generateFSeamFile("/home/FyS/Project/FSeam/test/src/AbstractClass.hh", ".", True)
+FSeamerFile.generateFSeamFile("/home/FyS/Project/FyS/services/common/include/RandomGenerator.hh", ".", True)

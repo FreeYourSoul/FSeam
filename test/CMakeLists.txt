@@ -43,6 +43,7 @@ addFSeamTests(
             ${CMAKE_CURRENT_SOURCE_DIR}/FSeamSingletonTestCase.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/FSeamGeneratedHelperUsageTestCase.cpp
         TO_MOCK
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/EmptyClassTest.hh
             ${CMAKE_CURRENT_SOURCE_DIR}/src/ClassWithConstructor.hh
             ${CMAKE_CURRENT_SOURCE_DIR}/src/AbstractClass.hh
             ${CMAKE_CURRENT_SOURCE_DIR}/src/DependencyNonGettable.hh

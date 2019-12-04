@@ -177,7 +177,7 @@ class FSeamerFile:
             content += CLASS_END_FMT.format(className)
         content += "}\n"
         content = re.sub("namespace FSeam {[\n ]+}\n", "", content)
-        content = re.sub("struct [a-zA-Z0-9_]+ {[\n ]+};\n", "", content)
+        # content = re.sub("struct [a-zA-Z0-9_]+ {[\n ]+};\n", "", content)
         return content + LOCKING_FOOTER
 
     def getSpecializationContent(self, content):
