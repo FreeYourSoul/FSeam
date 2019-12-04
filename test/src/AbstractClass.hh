@@ -31,6 +31,7 @@
 
 class AbstractClass {
 public:
+    bool operator=(const AbstractClass& o) = delete;
     virtual bool pureVirtualMethod() = 0;
     bool nonPureVirtualMethod();
 };

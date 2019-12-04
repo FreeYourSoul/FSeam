@@ -1763,6 +1763,7 @@ class _CppHeader( Resolver ):
         header = header.replace(' < ', '<' )
         header = header.replace(' > ', '> ' )
         header = header.replace('default ', 'default' )
+        header = header.replace('delete ', 'delete' )
         header = header.strip()
 
         if '{' in stack:
@@ -1773,6 +1774,9 @@ class _CppHeader( Resolver ):
             info['defined'] = False
             self._method_body = None    # not a great idea to be clearing here
         else: assert 0
+
+        if len(stack) > 2 and (stack[-1] == ';' and stack[-2] == 'delete'):
+            info['defined'] = True
 
         if len(stack) > 3 and stack[-1] == ';' and stack[-2] == '0' and stack[-3] == '=':
             info['pure_virtual'] = True
@@ -1817,16 +1821,16 @@ class _CppHeader( Resolver ):
 
         if name.startswith('~'):
             info['destructor'] = True
-            if 'default;' in stack:
+            if 'default' in stack or 'delete' in stack:
                 info['defined'] = True
                 info['default'] = True
             name = name[1:]
         elif not a or (name == self.curClass and len(self.curClass)):
             info['constructor'] = True
-            if 'default;' in stack:
+            if 'default' in stack or 'delete' in stack:
+                print("DARON")
                 info['defined'] = True
                 info['default'] = True
-
         info['name'] = name
 
         for tag in 'extern virtual static explicit inline friend'.split():

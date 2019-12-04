@@ -25,6 +25,8 @@
   * **Use function overload instead of specialization** for verify arg
   * **Adding inner-class-struct/class**: The code generation is wrong and not compilable when mocking a header file with a class embedded in another on
   * **Add argument expectation non copyable support** using constexpr if and store uniqueptr in case of non copyable argument
+  * **operator** Make operator overload work
+  * ~~**Ignore deleted** Do not generate code for deleted method~~
   * ~~**Work with pure virtual** Do not implement mock implementation for abstract/interface class (has a pure virtual function cannot be implemented)~~
   * ~~**Implement a cleanup for the FreeFunctionDataStructure** as it currently is concatenated infinitely, it would be needed to ensure a cleanup at each build.~~
   * ~~**Remove Catch dependency from the FSeam module**:~~  
