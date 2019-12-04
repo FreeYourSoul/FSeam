@@ -265,7 +265,6 @@ class FSeamerFile:
         if className in self.mapClassMethods:
             _lstMethodName = self.mapClassMethods[className]
         for methodData in methodsData:
-            print (methodData["defined"], "  ", methodData["name"])
             if methodData["pure_virtual"] or methodData["defined"]:
                 continue
             elif methodData["static"]:

@@ -1828,7 +1828,6 @@ class _CppHeader( Resolver ):
         elif not a or (name == self.curClass and len(self.curClass)):
             info['constructor'] = True
             if 'default' in stack or 'delete' in stack:
-                print("DARON")
                 info['defined'] = True
                 info['default'] = True
         info['name'] = name
