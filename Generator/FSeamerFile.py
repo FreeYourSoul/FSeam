@@ -124,7 +124,7 @@ class FSeamerFile:
         """
         :return: name of the file to generate: <headerFileNameWithoutExtension>.fseam.cc
         """
-        return self.fileName.replace(".hh", ".fseam.cc").replace("hpp", "fseam.cc")
+        return self.fileName.replace(".hh", ".fseam.cc").replace(".hpp", ".fseam.cc").replace(".h", ".fseam.cc")
 
     def generateDataStructureContent(self, content):
         """
