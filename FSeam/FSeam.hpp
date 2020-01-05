@@ -203,9 +203,9 @@ namespace FSeam {
 
 
         enum class Level {
-            INFO,
-            WARNING,
-            ERROR
+            FSEAM_INFO,
+            FSEAM_WARNING,
+            FSEAM_ERROR
         };
 
         struct Logger {
@@ -218,7 +218,7 @@ namespace FSeam {
                 static std::function<void(Level, const std::string &)> customLogger =
                         logging.value_or([](Level l, const std::string &msg) {
 
-                    if (l == Level::ERROR)
+                    if (l == Level::FSEAM_ERROR)
                         std::cerr << msg << "\n";
                     else
                         std::cout << msg << "\n";
@@ -230,13 +230,13 @@ namespace FSeam {
             static void log(Level level, const std::string &msg) {
                 if (!customEnabled) {
                     #ifdef FSEAM_USE_CATCH2
-                    if (level == Level::INFO) {
+                    if (level == Level::FSEAM_INFO) {
                         INFO(msg);
                     }
                     else
                         WARN(msg);
                     #elif FSEAM_USE_GTEST
-                    if (level == Level::ERROR)
+                    if (level == Level::FSEAM_ERROR)
                         std::cerr << msg << "\n";
                     else
                         std::cout << msg << "\n";
@@ -471,14 +471,14 @@ namespace FSeam {
 
                 if (_verifiers.find(key) == _verifiers.end()) {
                     if (verbose && comp._toCompare > 0u) {
-                        Logging::Logger::log(Logging::Level::ERROR,
+                        Logging::Logger::log(Logging::Level::FSEAM_ERROR,
                                 "Verify error for method " + key + ", method never have been called while " + comp.expectStr(0u) + " method call \n");
                     }
                     return comp._toCompare == 0u;
                 }
                 bool result = comp.compare(_verifiers.at(key)->_called);
                 if (verbose && !result) {
-                    Logging::Logger::log(Logging::Level::ERROR,
+                    Logging::Logger::log(Logging::Level::FSEAM_ERROR,
                                          "Verify error for method " + key + ", method has been called but " +
                                                  comp.expectStr(_verifiers.at(key)->_called) + " method call \n");
                 }
