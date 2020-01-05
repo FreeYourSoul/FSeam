@@ -39,6 +39,7 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 install(TARGETS FSeam FSeam-static
+		NAMESPACE FSeam::
         EXPORT ${PROJECT_NAME}-targets)
 
 install(FILES ${FSEAM_HEADERS} DESTINATION share/include/FSeam)
