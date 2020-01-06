@@ -37,17 +37,22 @@ before_install:
   - sudo pip3 install pip --upgrade
   - export PYTHONPATH=$PYTHONPATH:$(pwd):/usr/lib/python3/dist-packages:/usr/local/lib/python3.6/dist-packages
   - echo $PYTHONPATH
+  - ls -la $(python-config --prefix)/
+  - ls -la $(python-config --prefix)/bin/
+  - ls -la $(python-config --prefix)/lib/
+  - ls -la $(python-config --prefix)/include/python3.6m
 
 install:
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
   - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
 
 before_script:
+  - python3.6 -m venv myenv
   - cd ${TRAVIS_BUILD_DIR}
   #install catch2
   - git clone https://github.com/catchorg/Catch2.git
   - cd Catch2
-  - cmake -Bbuild -H. -DBUILD_TESTING=OFF
+  - cmake -Bbuild -H. -DBUILD_TESTING=OFF -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython3.so -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python3.6m -DPython3_EXECUTABLE=$(python-config --prefix)/bin/python3
   - cd build && make
   - sudo make install
   - cd ../..
@@ -60,11 +65,10 @@ before_script:
   # Use Debug builds for running Valgrind and building examples
   #  - cmake -H. -BBuild-Debug -DCMAKE_BUILD_TYPE=Debug -DTRAVIS_BUILD=ON
   # Don't bother with release build for coverage build
-  - cmake -H. -BBuild-Release -DCMAKE_BUILD_TYPE=Release -DTRAVIS_BUILD=ON
+  - cmake -H. -BBuild-Release -DCMAKE_BUILD_TYPE=Release -DTRAVIS_BUILD=ON -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython3.so -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python3.6m -DPython3_EXECUTABLE=$(python-config --prefix)/bin/python3
 
 script:
   - cd Build-Release
   - make -j 2
-  - ./test/testFSeam
-  - ./test/testFSeamFreeFunction 
+  - make test
   
