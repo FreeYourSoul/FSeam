@@ -60,6 +60,7 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Conf
                         COMPATIBILITY AnyNewerVersion)
 
 install(EXPORT ${PROJECT_NAME}-targets
+		NAMESPACE FSeam::
         FILE ${PROJECT_NAME}Targets.cmake
         DESTINATION ${FSEAM_CMAKECONFIG_INSTALL_DIR})
 
