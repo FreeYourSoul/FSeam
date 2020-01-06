@@ -59,38 +59,38 @@ namespace FSeam {
      * @note To be used in order to check the number of time a method has been called 
      */
     struct VerifyCompare {
-        explicit VerifyCompare(uint toCompare) : _toCompare(toCompare) {}
-        bool compare(uint number) const { return _toCompare == number; }
-        std::string expectStr(uint number) const { return std::string("we expected exactly ") +
+        explicit VerifyCompare(unsigned int toCompare) : _toCompare(toCompare) {}
+        bool compare(unsigned int number) const { return _toCompare == number; }
+        std::string expectStr(unsigned int number) const { return std::string("we expected exactly ") +
             std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
         int _toCompare = 0;
     };
     struct NeverCalled {
-        bool compare(uint number) const { return !number; }
-        std::string expectStr(uint number) const { return std::string("we expected this method to never be called ") +
+        bool compare(unsigned int number) const { return !number; }
+        std::string expectStr(unsigned int number) const { return std::string("we expected this method to never be called ") +
             std::to_string(_toCompare) + std::string(" but received ") + std::to_string(number); };
         int _toCompare = 0;
     };
     struct AtLeast {
-        explicit AtLeast(uint toCompare) : _toCompare(toCompare) {}
-        bool compare(uint number) const { return _toCompare <= number; }
-        std::string expectStr(uint number) { return std::string("we expected at least ") +
+        explicit AtLeast(unsigned int toCompare) : _toCompare(toCompare) {}
+        bool compare(unsigned int number) const { return _toCompare <= number; }
+        std::string expectStr(unsigned int number) { return std::string("we expected at least ") +
             std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
-        uint _toCompare = 0;
+        unsigned int _toCompare = 0;
     };
     struct AtMost {
-        explicit AtMost(uint toCompare) : _toCompare(toCompare) {}
-        bool compare(uint number) const { return _toCompare >= number; }
-        std::string expectStr(uint number) { return std::string("we expected at most ") +
+        explicit AtMost(unsigned int toCompare) : _toCompare(toCompare) {}
+        bool compare(unsigned int number) const { return _toCompare >= number; }
+        std::string expectStr(unsigned int number) { return std::string("we expected at most ") +
             std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
-        uint _toCompare = 0;
+        unsigned int _toCompare = 0;
     };
     struct IsNot {
-        explicit IsNot(uint toCompare) : _toCompare(toCompare) {}
-        bool compare(uint number) const { return _toCompare != number; }
-        std::string expectStr(uint number) { return std::string("we expected other value than ") +
+        explicit IsNot(unsigned int toCompare) : _toCompare(toCompare) {}
+        bool compare(unsigned int number) const { return _toCompare != number; }
+        std::string expectStr(unsigned int number) { return std::string("we expected other value than ") +
             std::to_string(_toCompare) + std::string(" method call but received ") + std::to_string(number); };
-        uint _toCompare = 0;
+        unsigned int _toCompare = 0;
     };
 
     template <typename TypeTraitClass>
@@ -203,9 +203,9 @@ namespace FSeam {
 
 
         enum class Level {
-            INFO,
-            WARNING,
-            ERROR
+            FSEAM_INFO,
+            FSEAM_WARNING,
+            FSEAM_ERROR
         };
 
         struct Logger {
@@ -218,7 +218,7 @@ namespace FSeam {
                 static std::function<void(Level, const std::string &)> customLogger =
                         logging.value_or([](Level l, const std::string &msg) {
 
-                    if (l == Level::ERROR)
+                    if (l == Level::FSEAM_ERROR)
                         std::cerr << msg << "\n";
                     else
                         std::cout << msg << "\n";
@@ -230,13 +230,13 @@ namespace FSeam {
             static void log(Level level, const std::string &msg) {
                 if (!customEnabled) {
                     #ifdef FSEAM_USE_CATCH2
-                    if (level == Level::INFO) {
+                    if (level == Level::FSEAM_INFO) {
                         INFO(msg);
                     }
                     else
                         WARN(msg);
                     #elif FSEAM_USE_GTEST
-                    if (level == Level::ERROR)
+                    if (level == Level::FSEAM_ERROR)
                         std::cerr << msg << "\n";
                     else
                         std::cout << msg << "\n";
@@ -273,7 +273,7 @@ namespace FSeam {
             std::function<bool(void*)> _expectator;
 
             CalledCompare _comparator;
-            uint _numberTimeMatched = 0;
+            unsigned int _numberTimeMatched = 0;
         };
 
         std::string _methodName;
@@ -464,21 +464,21 @@ namespace FSeam {
         template <typename Comparator>
         bool verify(std::string methodName, Comparator &&comp, bool verbose = true) const {
             if constexpr (std::is_integral<Comparator>())
-                return verify(std::move(methodName), VerifyCompare{ static_cast<uint>(comp) }, verbose);
+                return verify(std::move(methodName), VerifyCompare{ static_cast<unsigned int>(comp) }, verbose);
             else {
                 static_assert(isCalledComparator<Comparator>::v, "Type  should be AtLeast, AtMost, Never, IsNot or VerifyCompare");
                 std::string key = _className + std::move(methodName);
 
                 if (_verifiers.find(key) == _verifiers.end()) {
                     if (verbose && comp._toCompare > 0u) {
-                        Logging::Logger::log(Logging::Level::ERROR,
+                        Logging::Logger::log(Logging::Level::FSEAM_ERROR,
                                 "Verify error for method " + key + ", method never have been called while " + comp.expectStr(0u) + " method call \n");
                     }
                     return comp._toCompare == 0u;
                 }
                 bool result = comp.compare(_verifiers.at(key)->_called);
                 if (verbose && !result) {
-                    Logging::Logger::log(Logging::Level::ERROR,
+                    Logging::Logger::log(Logging::Level::FSEAM_ERROR,
                                          "Verify error for method " + key + ", method has been called but " +
                                                  comp.expectStr(_verifiers.at(key)->_called) + " method call \n");
                 }
