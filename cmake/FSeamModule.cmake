@@ -16,11 +16,11 @@ elseif(FSEAM_USE_GTEST)
     include(GoogleTest)
 endif ()
 
-find_package(PythonInterp 3 REQUIRED)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 if (NOT FSEAM_GENERATOR_COMMMAND)
     find_file(FILE_FSEAMER_PY FSeamerFile.py)
-    set(FSEAM_GENERATOR_COMMMAND ${PYTHON_EXECUTABLE} ${FILE_FSEAMER_PY})
+    set(FSEAM_GENERATOR_COMMMAND ${Python3_EXECUTABLE} ${FILE_FSEAMER_PY})
 endif ()
 
 
