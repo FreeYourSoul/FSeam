@@ -119,7 +119,7 @@ function(addFSeamTests)
 
     if (FSEAM_USE_CATCH2)
         target_compile_definitions(${ADDFSEAMTESTS_DESTINATION_TARGET} PRIVATE FSEAM_USE_CATCH2)
-        target_link_libraries(${ADDFSEAMTESTS_DESTINATION_TARGET} FSeam::FSeam Catch2::Catch2)
+        target_link_libraries(${ADDFSEAMTESTS_DESTINATION_TARGET} Catch2::Catch2 FSeam::FSeam)
         catch_discover_tests(${ADDFSEAMTESTS_DESTINATION_TARGET})
     elseif(FSEAM_USE_GTEST)
 #        target_compile_definitions(${ADDFSEAMTESTS_DESTINATION_TARGET} PRIVATE )

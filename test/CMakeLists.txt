@@ -11,6 +11,7 @@ if (TRAVIS_BUILD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 endif ()
 
+add_library(FSeam::FSeam ALIAS FSeam)
 include(../cmake/FSeamModule.cmake)
 
 add_library(testLib
