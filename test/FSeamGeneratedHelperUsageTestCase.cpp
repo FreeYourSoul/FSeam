@@ -195,7 +195,7 @@ TEST_CASE("Test HelperMethods Simple UseCase") {
 
         SECTION("Multiple expectations") {
             fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Eq(29), Any(), VerifyCompare{2});
-            fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Eq(29), Any(), VerifyCompare{2});
+            fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Eq(29), _, VerifyCompare{2}); // wildcard test
             fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Eq(29), Eq(std::string("dede")), AtMost{1});
             fseamMock->expectArg<FSeam::DependencyGettable::checkSimpleInputVariable>(Any(),  Eq(std::string("FyS")), AtLeast{1});
             testClass.getDepGettable().checkSimpleInputVariable(29, "dede");

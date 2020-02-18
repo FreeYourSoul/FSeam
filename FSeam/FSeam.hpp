@@ -182,6 +182,8 @@ namespace FSeam {
         }
         comparator::internal::ArgComparatorType _comp;
     };
+    static ArgComp _(FSeam::comparator::internal::Any{}); // google mock style
+
     static ArgComp Any() {
         return ArgComp(comparator::internal::Any());
     }
