@@ -423,7 +423,7 @@ class FSeamerFile:
     def _clearDataStructureData(content, className):
         sb, sm, se = content.partition(CLASS_START_FMT.format(className))
         eb, em, ee = content.partition(CLASS_END_FMT.format(className))
-        return sb + ee if sm is not "" and em is not "" else content
+        return sb + ee if sm != "" and em != "" else content
 
     @staticmethod
     def _clearSpecialization(content, className):
