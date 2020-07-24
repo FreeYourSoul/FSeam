@@ -41,7 +41,7 @@ include(CMakePackageConfigHelpers)
 install(TARGETS FSeam FSeam-static
         EXPORT ${PROJECT_NAME}-targets)
 
-install(FILES ${FSEAM_HEADERS} DESTINATION share/include/FSeam)
+install(FILES ${FSEAM_HEADERS} DESTINATION include/FSeam)
 install(PROGRAMS ${FSEAM_GENERATOR_PYTH} DESTINATION share/bin)
 install(PROGRAMS ${FSEAM_GENERATOR_PYTH} DESTINATION bin)
 
