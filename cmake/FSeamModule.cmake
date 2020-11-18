@@ -118,6 +118,7 @@ function(addFSeamTests)
                 ${CMAKE_CURRENT_SOURCE_DIR}/../FSeam)
 
     if (FSEAM_USE_CATCH2)
+	message("FSean use Catch2 : link/register tests")
         target_compile_definitions(${ADDFSEAMTESTS_DESTINATION_TARGET} PRIVATE FSEAM_USE_CATCH2)
         target_link_libraries(${ADDFSEAMTESTS_DESTINATION_TARGET} Catch2::Catch2 FSeam::FSeam)
         catch_discover_tests(${ADDFSEAMTESTS_DESTINATION_TARGET})

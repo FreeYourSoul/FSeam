@@ -1,5 +1,3 @@
-#!/usr/bin/python
-#
 # Author: Jashua R. Cloutier (contact via https://bitbucket.org/senex)
 # Project: http://senexcanis.com/open-source/cppheaderparser/
 #
