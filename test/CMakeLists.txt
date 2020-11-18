@@ -30,7 +30,8 @@ target_include_directories(testLib
 set_target_properties(testLib PROPERTIES CXX_STANDARD 17)
 
 enable_testing()
-set(FSEAM_GENERATOR_COMMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../Generator/FSeamerFile.py)
+
+set(FILE_FSEAMER_PY ${CMAKE_CURRENT_SOURCE_DIR}/../Generator/FSeamerFile.py)
 
 addFSeamTests(
         DESTINATION_TARGET testFSeam

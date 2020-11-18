@@ -3,7 +3,7 @@
 ## Integrate with CMake
 
 ```CMake
-include(FSeamModule.cmake)
+find_package(FSeam)
 
 # Create a executable/library target called binaryWithContentToTest with the code you want to test 
 

@@ -220,7 +220,7 @@ def extract_namespace_namestack(nameStack):
     nstack = nameStack[1:]
     namespaceSeparator = 2
     for i in range(len(nstack)):
-        if namespaceSeparator is 2:
+        if namespaceSeparator == 2:
             ns += nstack[i]
             if ns is not nstack[i] and i is not len(nstack) - 1:
                 ns += "::"

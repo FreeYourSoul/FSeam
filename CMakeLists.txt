@@ -10,6 +10,8 @@ project(FSeam VERSION ${FSEAM_VERSION})
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
+
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # configure a header file to pass some of the CMake settings
@@ -41,7 +43,7 @@ include(CMakePackageConfigHelpers)
 install(TARGETS FSeam FSeam-static
         EXPORT ${PROJECT_NAME}-targets)
 
-install(FILES ${FSEAM_HEADERS} DESTINATION share/include/FSeam)
+install(FILES ${FSEAM_HEADERS} DESTINATION include/FSeam)
 install(PROGRAMS ${FSEAM_GENERATOR_PYTH} DESTINATION share/bin)
 install(PROGRAMS ${FSEAM_GENERATOR_PYTH} DESTINATION bin)
 

@@ -1,0 +1,13 @@
+# ===========================================================================
+# PYTHON/PIP REQUIREMENTS-FILE FOR: FSeam
+# ===========================================================================
+# REQUIRED-BY: FSeam/Generator/CppHeaderParser.py
+# DESCRIPTION:
+#   Simplify installation of python dependencies (packages).
+#
+# USE:
+#   pip3 install -r <THIS_FILE>
+#   pip3 install -r py.requirements.txt
+# ===========================================================================
+
+ply
