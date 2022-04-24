@@ -1,4 +1,3 @@
-![Travis](https://travis-ci.org/FreeYourSoul/FSeam.svg?branch=master) 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/FreeYourSoul/FSeam/master/LICENSE)
 
 # FSeam
